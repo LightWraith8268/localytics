@@ -29,13 +29,17 @@ jobs:
         with:
           node-version: 20
 
-      - name: Build CSS with Tailwind CLI
+      - name: Ensure CSS (use prebuilt if present; else build)
         run: |
           set -euxo pipefail
-          # Try the official CLI package first (works across versions)
-          npx -y @tailwindcss/cli@latest -c tailwind.config.js -i assets/css/tailwind.css -o assets/css/styles.css --minify \
-            || npx -y tailwindcss@3.4.14 -c tailwind.config.js -i assets/css/tailwind.css -o assets/css/styles.css --minify
-          test -s assets/css/styles.css
+          if [ -s assets/css/styles.css ]; then
+            echo "Using prebuilt assets/css/styles.css";
+          else
+            echo "No prebuilt CSS found; building with Tailwind CLI";
+            npx -y @tailwindcss/cli@latest -c tailwind.config.js -i assets/css/tailwind.css -o assets/css/styles.css --minify \
+              || npx -y tailwindcss@3.4.14 -c tailwind.config.js -i assets/css/tailwind.css -o assets/css/styles.css --minify;
+            test -s assets/css/styles.css;
+          fi
 
       - name: Inject Firebase config from secret (fallback to stub)
         env:
