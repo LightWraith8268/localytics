@@ -42,6 +42,10 @@ jobs:
             echo "export const firebaseConfig = {}; export default firebaseConfig;" > assets/js/firebase.js
           fi
 
+      - name: Stamp Service Worker with build id (force update)
+        run: |
+          echo "/* build: ${GITHUB_SHA} $(date -u +'%Y-%m-%dT%H:%M:%SZ') */" >> service-worker.js
+
       - name: Verify versions
         continue-on-error: true
         run: |
