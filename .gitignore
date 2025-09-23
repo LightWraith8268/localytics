@@ -1,0 +1,14 @@
+# Local meta files (not to be pushed)
+AGENTS.md
+TODO.md
+assets/js/firebase.js
+
+# Common system/editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+node_modules/
+dist/
+build/
