@@ -14,7 +14,9 @@ export async function parseCsv(fileOrText, options = {}) {
       error: reject,
     });
   });
-  const rows = res.data.filter(r => r && typeof r === 'object');
+  let rows = res.data.filter(r => r && typeof r === 'object');
+  // Drop last row if present (often a 'Totals' row not needed for analysis)
+  if (rows.length) rows = rows.slice(0, -1);
   const headers = res.meta?.fields || Object.keys(rows[0] || {});
   return { rows, headers };
 }
@@ -119,6 +121,8 @@ export async function parseCsvFiles(fileList, options = {}) {
       });
     });
   }
+  // Remove last row globally (common CSVs have a trailing totals row)
+  if (allRows.length) allRows = allRows.slice(0, -1);
   return { rows: allRows, headers: Array.from(headerSet) };
 }
 

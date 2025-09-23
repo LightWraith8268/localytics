@@ -499,6 +499,19 @@ function renderReport() {
   const topClients = state.byClient.slice(0, 10);
   state.chartTopClients = makeBarChart(document.getElementById('chart-top-clients'), topClients.map(x=>x.label), topClients.map(x=>x.revenue), 'Top Clients by Revenue');
 
+  // Additional summary charts
+  try {
+    const byClientTop = state.byClient.slice(0, 10);
+    const byStaffTop = state.byStaff.slice(0, 10);
+    const byOrderTop = state.byOrder.slice(0, 10);
+    const cClient = document.getElementById('chart-by-client');
+    if (cClient) { if (state.chartByClient) state.chartByClient.destroy(); state.chartByClient = makeBarChart(cClient, byClientTop.map(x=>x.label), byClientTop.map(x=>x.revenue), 'Revenue'); }
+    const cStaff = document.getElementById('chart-by-staff');
+    if (cStaff) { if (state.chartByStaff) state.chartByStaff.destroy(); state.chartByStaff = makeBarChart(cStaff, byStaffTop.map(x=>x.label), byStaffTop.map(x=>x.revenue), 'Revenue'); }
+    const cOrder = document.getElementById('chart-by-order');
+    if (cOrder) { if (state.chartByOrder) state.chartByOrder.destroy(); state.chartByOrder = makeBarChart(cOrder, byOrderTop.map(x=>x.order || x.label || ''), byOrderTop.map(x=>x.revenue), 'Revenue'); }
+  } catch {}
+
   // Trends
   if (state.chartOrders) { state.chartOrders.destroy(); state.chartOrders = null; }
   const ordersByDate = aggregateOrdersByDate(base);
@@ -566,6 +579,9 @@ function renderReport() {
     const catTrend = aggregateByCategoryOverTime(base, state.mapping, 'month', 'revenue', 8);
     state.chartCatTrend = makeStackedBarChart(catTrendCanvas, catTrend.labels, catTrend.datasets);
   }
+
+  // Enable click-to-zoom on charts
+  try { enableChartZoom(document); } catch {}
 }
 
 async function loadHistory() {

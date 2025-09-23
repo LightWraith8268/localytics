@@ -178,6 +178,25 @@ export function exportExcelBook(filename, report, extraSheets) {
   window.XLSX.writeFile(wb, filename);
 }
 
+// Enable click-to-zoom for charts: clicking a canvas shows a large image
+export function enableChartZoom(root=document) {
+  try {
+    const modal = document.getElementById('chartZoom');
+    const img = document.getElementById('chartZoomImg');
+    if (!modal || !img) return;
+    const handler = (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLCanvasElement)) return;
+      if (!target.hasAttribute('data-zoom')) return;
+      try {
+        const url = target.toDataURL('image/png');
+        img.src = url; modal.classList.remove('hidden');
+      } catch {}
+    };
+    root.addEventListener('click', handler);
+    modal.addEventListener('click', () => { modal.classList.add('hidden'); img.removeAttribute('src'); });
+  } catch {}
+}
 function formatCurrency(n) {
   const num = Number(n ?? 0);
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: guessCurrency(), minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);

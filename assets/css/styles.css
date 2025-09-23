@@ -95,6 +95,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 table{border-collapse:collapse;width:100%}
 th,td{padding:.5rem;text-align:left}
 thead tr{background-color:var(--card-bg,#fff)}
+.capitalize-headers thead th, thead th{ text-transform:capitalize }
 .border-t{border-top:1px solid #e5e7eb}
 
 /* Forms */
@@ -127,4 +128,3 @@ input[type="file"]::file-selector-button{
 
 /* Print helpers */
 @media print{.hidden-print{display:none!important}}
-
