@@ -1,0 +1,14 @@
+{
+  "name": "QR Reports",
+  "short_name": "Reports",
+  "description": "CSV revenue and quantity reporting with charts and exports",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    { "src": "./assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
+
