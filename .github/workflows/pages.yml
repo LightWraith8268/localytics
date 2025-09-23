@@ -31,16 +31,20 @@ jobs:
 
       # Using prebuilt assets/css/styles.css committed to the repo; no Tailwind build in CI
 
-      - name: Inject Firebase config from secret (fallback to stub)
+      - name: Validate Firebase secret
+        env:
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: |
+          if [ -z "$FIREBASE_CONFIG_JSON" ]; then
+            echo "::error::FIREBASE_CONFIG_JSON secret is missing or empty" && exit 1
+          fi
+
+      - name: Inject Firebase config from secret
         env:
           FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
           mkdir -p assets/js
-          if [ -n "$FIREBASE_CONFIG_JSON" ]; then
-            echo "export const firebaseConfig = $FIREBASE_CONFIG_JSON; export default firebaseConfig;" > assets/js/firebase.js
-          else
-            echo "export const firebaseConfig = {}; export default firebaseConfig;" > assets/js/firebase.js
-          fi
+          node -e "const fs=require('fs'); const s=process.env.FIREBASE_CONFIG_JSON; let cfg=null; try{ cfg=JSON.parse(s);}catch(e){ try{ cfg=Function('return ('+s+')')(); }catch(e2){ console.error('Invalid FIREBASE_CONFIG_JSON. Must be valid JSON.'); process.exit(1);} } if(!cfg||typeof cfg!=='object'||!cfg.apiKey||!cfg.projectId||!cfg.appId){ console.error('FIREBASE_CONFIG_JSON missing required fields'); process.exit(1);} fs.writeFileSync('assets/js/firebase.js', 'export const firebaseConfig = '+JSON.stringify(cfg)+'; export default firebaseConfig;');"
 
       - name: Stamp Service Worker with build id (force update)
         run: |
