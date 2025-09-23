@@ -77,7 +77,8 @@ window.addEventListener('DOMContentLoaded', () => {
   // Auto-load sample data on first visit for default reports
   try {
     const demoKey = 'qr_demo_autoloaded';
-    if (!localStorage.getItem(demoKey)) {
+    const demoDis = 'qr_demo_disabled';
+    if (!localStorage.getItem(demoKey) && !localStorage.getItem(demoDis)) {
       ingestRows(SAMPLE_ROWS);
       const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
       localStorage.setItem(demoKey, '1');
@@ -318,6 +319,22 @@ window.addEventListener('DOMContentLoaded', () => {
       if (typeof enforce === 'boolean') { document.getElementById('enforceAllowed').checked = enforce; window.__enforceAllowed = enforce; }
     } catch {}
   })();
+
+  // Clear local data
+  qs('btnClearLocal')?.addEventListener('click', () => {
+    try {
+      localStorage.removeItem('qr_mapping');
+      localStorage.removeItem('userSettings');
+      localStorage.removeItem('qr_theme');
+      localStorage.removeItem('qr_demo_autoloaded');
+      // disable auto demo on next load
+      localStorage.setItem('qr_demo_disabled', '1');
+    } catch {}
+    // Reset in-memory state and reload
+    try { caches && caches.keys && caches.keys().then(keys => keys.forEach(k => caches.delete(k))); } catch {}
+    location.href = '#/upload';
+    location.reload();
+  });
   // Print: ensure canvases are printable
   window.addEventListener('beforeprint', freezeChartsForPrint);
   window.addEventListener('afterprint', restoreChartsAfterPrint);

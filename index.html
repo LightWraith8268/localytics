@@ -48,6 +48,24 @@
       .accent { color: var(--accent); }
       .nav-link { color: var(--text) !important; opacity: 0.8; }
       .nav-link:hover { opacity: 1; color: var(--text) !important; }
+      /* Themed form controls */
+      input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="email"], input[type="url"], input[type="file"], select, textarea {
+        background-color: var(--card-bg) !important;
+        color: var(--text) !important;
+        border: 1px solid var(--border) !important;
+      }
+      input::placeholder, textarea::placeholder { color: #9aa0a6; opacity: 1; }
+      input:focus, select:focus, textarea:focus { outline: none !important; border-color: var(--accent) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent) !important; }
+      /* File button */
+      input[type="file"]::file-selector-button {
+        background: color-mix(in srgb, var(--accent) 12%, var(--card-bg));
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        margin-right: 12px;
+        cursor: pointer;
+      }
       @media print {
         header, .no-print { display: none !important; }
         body { background: #fff; }
@@ -478,6 +496,11 @@
               <div class="mt-2">
                 <button id="btnSaveAllowed" class="px-3 py-1.5 border rounded-md">Save Allowed Items</button>
               </div>
+            </div>
+            <div class="mt-8">
+              <h3 class="text-base font-medium">Data Reset</h3>
+              <p class="text-xs text-gray-600">Clear local demo and mapping data, then reload. This does not delete any saved reports in Firestore.</p>
+              <button id="btnClearLocal" class="mt-2 px-3 py-1.5 border rounded-md">Clear Local Data</button>
             </div>
           </div>
         </div>
