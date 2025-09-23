@@ -35,6 +35,10 @@ export function detectColumns(headers = []) {
     price: find('price', 'unit price', 'amount'),
     revenue: find('revenue', 'total', 'gross', 'net', 'sales'),
     category: find('category', 'department', 'group', 'type'),
+    order: find('order number','order#','order'),
+    client: find('client','customer'),
+    staff: find('staff','employee','agent'),
+    cost: find('cost')
   };
 }
 

@@ -18,32 +18,35 @@ function toDateKey(v) {
 
 export function computeReport(rows, mapping) {
   const dateCol = mapping.date; const itemCol = mapping.item;
-  const qtyCol = mapping.qty; const priceCol = mapping.price; const revCol = mapping.revenue;
+  const qtyCol = mapping.qty; const priceCol = mapping.price; const revCol = mapping.revenue; const costCol = mapping.cost;
   const byItem = new Map();
   const byDate = new Map();
-  let totalQty = 0; let totalRev = 0; let items = new Set();
+  let totalQty = 0; let totalRev = 0; let totalCost = 0; let items = new Set();
 
   for (const r of rows) {
     const item = (r[itemCol] ?? '').toString().trim();
-    const q = toNumber(r[qtyCol]);
-    const price = revCol ? 0 : toNumber(r[priceCol]);
-    const rev = revCol ? toNumber(r[revCol]) : (price * q);
+    const q = (r.__quantity != null) ? Number(r.__quantity) : toNumber(r[qtyCol]);
+    const price = toNumber(r[priceCol]);
+    const unitCost = toNumber(r[costCol]);
+    const rev = (r.__revenue != null) ? Number(r.__revenue) : (q * price);
+    const cst = (r.__cost != null) ? Number(r.__cost) : (q * unitCost);
     const dateKey = toDateKey(r[dateCol]);
     if (!item && !q && !rev) continue;
 
     // Totals
     totalQty += q;
     totalRev += rev;
+    totalCost += cst;
     if (item) items.add(item);
 
     // Item agg
-    const it = byItem.get(item) || { item, quantity: 0, revenue: 0 };
-    it.quantity += q; it.revenue += rev; byItem.set(item, it);
+    const it = byItem.get(item) || { item, quantity: 0, revenue: 0, cost: 0, profit: 0 };
+    it.quantity += q; it.revenue += rev; it.cost += cst; it.profit = it.revenue - it.cost; byItem.set(item, it);
 
     // Date agg
     if (dateKey) {
-      const dt = byDate.get(dateKey) || { date: dateKey, quantity: 0, revenue: 0 };
-      dt.quantity += q; dt.revenue += rev; byDate.set(dateKey, dt);
+      const dt = byDate.get(dateKey) || { date: dateKey, quantity: 0, revenue: 0, cost: 0, profit: 0 };
+      dt.quantity += q; dt.revenue += rev; dt.cost += cst; dt.profit = dt.revenue - dt.cost; byDate.set(dateKey, dt);
     }
   }
 
@@ -54,10 +57,13 @@ export function computeReport(rows, mapping) {
     totals: {
       totalQuantity: totalQty,
       totalRevenue: Number(totalRev.toFixed(2)),
+      totalCost: Number(totalCost.toFixed(2)),
+      totalProfit: Number((totalRev - totalCost).toFixed(2)),
+      marginPct: totalRev > 0 ? Number((((totalRev - totalCost) / totalRev) * 100).toFixed(2)) : 0,
       distinctItems: items.size,
     },
-    byItem: byItemArr.map(x => ({ item:x.item, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)) })),
-    byDate: byDateArr.map(x => ({ date:x.date, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)) })),
+    byItem: byItemArr.map(x => ({ item:x.item, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)), cost: Number(x.cost.toFixed(2)), profit: Number((x.revenue - x.cost).toFixed(2)), margin: x.revenue>0 ? Number((((x.revenue-x.cost)/x.revenue)*100).toFixed(2)) : 0 })),
+    byDate: byDateArr.map(x => ({ date:x.date, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)), cost: Number(x.cost.toFixed(2)), profit: Number((x.revenue - x.cost).toFixed(2)), margin: x.revenue>0 ? Number((((x.revenue-x.cost)/x.revenue)*100).toFixed(2)) : 0 })),
   };
 }
 

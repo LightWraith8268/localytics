@@ -6,7 +6,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 const state = {
   rows: [],
   headers: [],
-  mapping: { date: '', item: '', qty: '', price: '', revenue: '', category: '' },
+  mapping: { date: '', item: '', qty: '', price: '', cost: '', revenue: '', category: '', order: '', client: '', staff: '' },
   report: null,
   chart: null,
   chartQty: null,
@@ -62,9 +62,9 @@ window.addEventListener('DOMContentLoaded', () => {
     state.headers = headers;
     const detected = detectColumns(headers);
     // Populate selects
-    for (const id of ['col-date','col-item','col-qty','col-price','col-revenue','col-category']) {
+    for (const id of ['col-date','col-item','col-qty','col-price','col-cost','col-revenue','col-category','col-order','col-client','col-staff']) {
       const sel = qs(id); sel.innerHTML = '';
-      const blank = document.createElement('option'); blank.value=''; blank.textContent='—'; sel.appendChild(blank);
+      const blank = document.createElement('option'); blank.value=''; blank.textContent='-'; sel.appendChild(blank);
       for (const h of headers) {
         const opt = document.createElement('option'); opt.value=h; opt.textContent=h; sel.appendChild(opt);
       }
@@ -75,11 +75,15 @@ window.addEventListener('DOMContentLoaded', () => {
     qs('col-price').value = detected.price || '';
     qs('col-revenue').value = detected.revenue || '';
     if (detected.category) qs('col-category').value = detected.category;
+    if (detected.cost) qs('col-cost').value = detected.cost;
+    if (detected.order) qs('col-order').value = detected.order;
+    if (detected.client) qs('col-client').value = detected.client;
+    if (detected.staff) qs('col-staff').value = detected.staff;
     qs('uploadStatus').textContent = headers.length ? `Detected ${headers.length} columns.` : 'No headers found.';
     // Try loading saved mapping and apply
     const saved = await loadLastMapping();
     if (saved) {
-      ['date','item','qty','price','revenue','category'].forEach(k => {
+      ['date','item','qty','price','cost','revenue','category','order','client','staff'].forEach(k => {
         if (saved[k] && headers.includes(saved[k])) {
           qs('col-' + k).value = saved[k];
         }
@@ -99,11 +103,17 @@ window.addEventListener('DOMContentLoaded', () => {
       item: qs('col-item').value,
       qty: qs('col-qty').value,
       price: qs('col-price').value,
+      cost: qs('col-cost').value,
       revenue: qs('col-revenue').value,
       category: qs('col-category').value,
+      order: qs('col-order').value,
+      client: qs('col-client').value,
+      staff: qs('col-staff').value,
     };
     await saveLastMapping(state.mapping);
-    const filtered = applyFilters(rows, state.mapping, state.filters);
+    const normalized = normalizeAndDedupe(rows, state.mapping);
+    state.rows = normalized;
+    const filtered = applyFilters(normalized, state.mapping, state.filters);
     state.report = computeReport(filtered, state.mapping);
     renderReport();
     location.hash = '#/report';
@@ -112,13 +122,13 @@ window.addEventListener('DOMContentLoaded', () => {
 
   qs('btnExportItem').addEventListener('click', () => {
     if (!state.report) return;
-    const cols = ['item','quantity','revenue'];
-    downloadCsv('report_by_item.csv', cols, state.report.byItem.map(x => ({ item:x.item, quantity:x.quantity, revenue:x.revenue })));
+    const cols = ['item','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_item.csv', cols, state.report.byItem.map(x => ({ item:x.item, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
   qs('btnExportDate').addEventListener('click', () => {
     if (!state.report) return;
-    const cols = ['date','quantity','revenue'];
-    downloadCsv('report_by_date.csv', cols, state.report.byDate.map(x => ({ date:x.date, quantity:x.quantity, revenue:x.revenue })));
+    const cols = ['date','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_date.csv', cols, state.report.byDate.map(x => ({ date:x.date, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
 
   qs('btnSaveReport').addEventListener('click', async () => {
@@ -259,19 +269,16 @@ async function loadHistory() {
 window.__appState = state;
 
 function applyFilters(rows, mapping, filters) {
-  const start = filters.start ? new Date(filters.start) : null;
-  const end = filters.end ? new Date(filters.end) : null;
+  const start = filters.start || '';
+  const end = filters.end || '';
   const itemQ = (filters.item || '').toLowerCase();
   return rows.filter(r => {
     let ok = true;
     if (start || end) {
-      const d = new Date(r[mapping.date]);
-      if (Number.isNaN(d.getTime())) return false;
-      if (start && d < start) ok = false;
-      if (end) {
-        const endDay = new Date(end); endDay.setHours(23,59,59,999);
-        if (d > endDay) ok = false;
-      }
+      const iso = r.__dateIso || '';
+      if (!iso) return false;
+      if (start && iso < start) ok = false;
+      if (end && iso > end) ok = false;
     }
     if (itemQ) {
       const it = (r[mapping.item] || '').toString().toLowerCase();
@@ -382,6 +389,45 @@ function preparePrintCover() {
   if (fs.start) fParts.push(`Start: ${fs.start}`); if (fs.end) fParts.push(`End: ${fs.end}`); if (fs.item) fParts.push(`Item contains: ${fs.item}`);
   document.getElementById('printFilters')?.replaceChildren(document.createTextNode(fParts.length? fParts.join(' | ') : 'None'));
   const mParts = [];
-  ['date','item','qty','price','revenue','category'].forEach(k => { if (fm[k]) mParts.push(`${k}: ${fm[k]}`); });
+  ['date','item','qty','price','cost','revenue','category','order','client','staff'].forEach(k => { if (fm[k]) mParts.push(`${k}: ${fm[k]}`); });
   document.getElementById('printMapping')?.replaceChildren(document.createTextNode(mParts.join(', ')));
 }
+function normalizeAndDedupe(rows, mapping) {
+  const orderCol = mapping.order;
+  const dateCol = mapping.date;
+  const itemCol = mapping.item;
+  const qtyCol = mapping.qty;
+  const priceCol = mapping.price;
+  const costCol = mapping.cost;
+  const clientCol = mapping.client;
+  const staffCol = mapping.staff;
+  const map = new Map();
+  for (const r of rows) {
+    const key = orderCol ? String(r[orderCol] ?? '').trim() : JSON.stringify(r);
+    if (!key) continue;
+    const q = num(r[qtyCol]);
+    const p = num(r[priceCol]);
+    const c = num(r[costCol]);
+    const revenue = Number((q * p).toFixed(2));
+    const cost = Number((q * c).toFixed(2));
+    const iso = toIsoDate(r[dateCol]);
+    const pretty = toPrettyDate(r[dateCol]);
+    const obj = { ...r };
+    obj[dateCol] = pretty; // replace display date
+    obj.__dateIso = iso;
+    obj.__quantity = q;
+    obj.__price = p;
+    obj.__unitCost = c;
+    obj.__revenue = revenue;
+    obj.__cost = cost;
+    obj.__profit = Number((revenue - cost).toFixed(2));
+    obj.__order = key;
+    obj.__client = clientCol ? r[clientCol] : '';
+    obj.__staff = staffCol ? r[staffCol] : '';
+    map.set(key, obj); // last occurrence wins
+  }
+  return Array.from(map.values());
+}
+function num(v){ if (v==null) return 0; if (typeof v==='number') return v; const s=String(v).replace(/[$,\s]/g,''); const n=Number(s); return Number.isFinite(n)?n:0; }
+function toIsoDate(v){ if(!v) return ''; try{ const m=String(v).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/); if(m){ const months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; const mm=String(months[m[1]]).padStart(2,'0'); const dd=String(m[2]).padStart(2,'0'); const yyyy=m[3]; return `${yyyy}-${mm}-${dd}`;} const d=new Date(v); if(!Number.isNaN(d.getTime())){ const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } }catch{} return ''; }
+function toPrettyDate(v){ if(!v) return ''; const m=String(v).match(/^([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/); if(m) return m[1]; try { return new Date(v).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'}); } catch { return String(v); } }

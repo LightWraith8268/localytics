@@ -9,6 +9,9 @@ export function renderTotals(container, totals) {
   container.innerHTML = '';
   const cards = [
     { label: 'Total Revenue', value: formatCurrency(totals.totalRevenue) },
+    { label: 'Total Cost', value: formatCurrency(totals.totalCost || 0) },
+    { label: 'Total Profit', value: formatCurrency(totals.totalProfit || 0) },
+    { label: 'Margin', value: formatPercent(totals.marginPct) },
     { label: 'Total Quantity', value: String(totals.totalQuantity) },
     { label: 'Distinct Items', value: String(totals.distinctItems) },
   ];
@@ -145,7 +148,12 @@ function formatCurrency(n) {
   return new Intl.NumberFormat(undefined, { style: 'currency', currency: guessCurrency(), maximumFractionDigits: 2 }).format(Number(n||0));
 }
 function guessCurrency() { try { return (Intl.NumberFormat().resolvedOptions().currency) || 'USD'; } catch { return 'USD'; } }
-function formatCell(col, val) { if (/revenue|price|total/i.test(col)) return formatCurrency(val); return escapeHtml(String(val ?? '')); }
+function formatCell(col, val) {
+  if (/revenue|price|total|cost|profit/i.test(col)) return formatCurrency(val);
+  if (/margin/i.test(col)) return formatPercent(val);
+  return escapeHtml(String(val ?? ''));
+}
+function formatPercent(n) { const v = Number(n||0); return `${v.toFixed(2)}%`; }
 function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 function csvEscape(v) {
   const s = String(v ?? '');
