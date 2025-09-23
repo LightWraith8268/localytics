@@ -3,6 +3,7 @@ import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCate
 import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
+import { ALLOWED_ITEMS } from './allowed-items.js';
 
 const APP_VERSION = '1.1';
 const state = {
@@ -313,8 +314,16 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   (async ()=>{
     try {
-      const list = await loadUserSettings('allowedItemsList');
-      if (list && Array.isArray(list)) { document.getElementById('allowedItems').value = list.join('\n'); window.__allowedItemsList = list; }
+      let list = await loadUserSettings('allowedItemsList');
+      if (!list || !Array.isArray(list) || list.length === 0) {
+        // Prefill with default allowed list (hardcoded) if user has no saved list yet
+        list = ALLOWED_ITEMS;
+        document.getElementById('allowedItems').value = list.join('\n');
+      } else {
+        document.getElementById('allowedItems').value = list.join('\n');
+      }
+      window.__allowedItemsList = list;
+      window.__allowedCanonSet = new Set(list.map(canonicalizeItemName));
       const enforce = await loadUserSettings('enforceAllowed');
       if (typeof enforce === 'boolean') { document.getElementById('enforceAllowed').checked = enforce; window.__enforceAllowed = enforce; }
     } catch {}
@@ -783,6 +792,7 @@ function normalizeAndDedupe(rows, mapping) {
   for (const r of rows) {
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
+    const canonName = canonicalizeItemName(name);
     const key = order ? `${order}|${name}` : JSON.stringify(r);
     if (!key) continue;
     const q = num(r[qtyCol]);
@@ -809,19 +819,52 @@ function normalizeAndDedupe(rows, mapping) {
     obj.__client = clientCol ? r[clientCol] : '';
     obj.__staff = staffCol ? r[staffCol] : '';
     // Category: manual mapping overrides CSV
-    const manualCat = state.categoryMap && name ? (state.categoryMap[name] || '') : '';
+    const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
     const csvCat = mapping.category ? (r[mapping.category] || '') : '';
     obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
-    // Allowed items filter (hard-coded list in settings)
+    // Allowed items filter (hard-coded list in settings, canonical)
     const allowed = window.__allowedItemsList || [];
     const enforce = window.__enforceAllowed || false;
+    const allowedCanon = window.__allowedCanonSet || new Set(allowed.map(canonicalizeItemName));
     if (enforce && allowed.length) {
-      const nm = (obj[mapping.item] || '').toString().trim();
-      if (!allowed.includes(nm)) continue;
+      if (!allowedCanon.has(canonName)) continue;
     }
     map.set(key, obj); // last occurrence wins
   }
   return Array.from(map.values());
+}
+
+// Canonicalize item names to match allowed list despite input variants
+function canonicalizeItemName(raw) {
+  if (!raw) return '';
+  let s = String(raw);
+  // Normalize quotes and dashes
+  s = s.replace(/[\u2018\u2019\u2032]/g, "'").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2013\u2014]/g, '-');
+  // Normalize fractions and decimal inch patterns for .75 and 1.5
+  // Replace ¾ with .75, ½ with .5, ¼ with .25
+  s = s.replace(/¾/g, '.75').replace(/½/g, '.5').replace(/¼/g, '.25');
+  // Convert common fraction text patterns
+  s = s.replace(/\b3\s*\/\s*4\b/g, '.75').replace(/\b1\s*[\-\s]?1\s*\/\s*2\b/g, '1.5');
+  // Normalize decimals with leading zero
+  s = s.replace(/\b0\.75\b/g, '.75');
+  // Ensure inch symbol is a straight quote right after number if inches are implied
+  s = s.replace(/(\.75|1\.5)\s*(?:in(ch)?|”|"|\b)/gi, (m, num) => `${num}" `);
+  // Collapse multiple spaces
+  s = s.replace(/\s+/g, ' ').trim();
+  // Fix known wording variants
+  s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
+       .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
+       .replace(/\bsqueegee\b/gi, 'Squeege')
+       .replace(/^planters mix\b.*$/i, 'Planters Mix');
+  // Title case words except those with quotes/numbers preserved
+  s = s.split(' ').map(w => {
+    if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ');
+  // Tidy quotes spacing
+  s = s.replace(/\"\s+/g, '" ')
+       .replace(/\s+\"/g, ' "');
+  return s.trim();
 }
 function num(v){ if (v==null) return 0; if (typeof v==='number') return v; const s=String(v).replace(/[$,\s]/g,''); const n=Number(s); return Number.isFinite(n)?n:0; }
 function toIsoDate(v){ if(!v) return ''; try{ const m=String(v).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/); if(m){ const months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; const mm=String(months[m[1]]).padStart(2,'0'); const dd=String(m[2]).padStart(2,'0'); const yyyy=m[3]; return `${yyyy}-${mm}-${dd}`;} const d=new Date(v); if(!Number.isNaN(d.getTime())){ const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } }catch{} return ''; }
