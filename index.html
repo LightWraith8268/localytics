@@ -63,6 +63,16 @@
         color: var(--text) !important;
         border: 1px solid var(--border) !important;
       }
+      /* Themed buttons (neutral) */
+      button {
+        background-color: var(--card-bg) !important;
+        color: var(--text) !important;
+        border: 1px solid var(--border) !important;
+      }
+      /* Primary button override */
+      .bg-blue-600 { background-color: var(--accent) !important; border-color: var(--accent) !important; color: #fff !important; }
+      /* Checkbox/Radio accent */
+      input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
       input::placeholder, textarea::placeholder { color: #9aa0a6; opacity: 1; }
       input:focus, select:focus, textarea:focus { outline: none !important; border-color: var(--accent) !important; box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent) !important; }
       /* File button */
