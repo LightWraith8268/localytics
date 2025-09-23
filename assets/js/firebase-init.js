@@ -80,5 +80,6 @@ if (isValidConfig(config)) {
   } else {
     console.warn('[firebase-init] No config present; Firebase disabled.');
   }
+  try { window.__firebaseDisabled = true; } catch {}
 }
 

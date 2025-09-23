@@ -82,7 +82,12 @@ window.addEventListener('DOMContentLoaded', () => {
       btnIn.classList.add('hidden');
       btnOut.classList.remove('hidden');
     } else {
-      status.textContent = 'Not signed in.';
+      if (window.__firebaseDisabled) {
+        status.textContent = 'Sign-in disabled (no Firebase config).';
+        try { btnIn.setAttribute('disabled','disabled'); btnIn.title = 'Configure Firebase to enable sign-in.'; } catch {}
+      } else {
+        status.textContent = 'Not signed in.';
+      }
       btnIn.classList.remove('hidden');
       btnOut.classList.add('hidden');
     }

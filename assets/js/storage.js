@@ -48,7 +48,8 @@ export async function observeAuth(cb) {
 }
 
 export async function signInWithGoogle() {
-  const mod = await ensureAuth(); if (!mod) return;
+  const mod = await ensureAuth();
+  if (!mod) { alert('Sign-in is disabled because Firebase is not configured.\nAdd FIREBASE_CONFIG_JSON secret to the repo and enable Google provider in Firebase Auth.'); return; }
   const { auth, GoogleAuthProvider, signInWithPopup } = mod;
   const provider = new GoogleAuthProvider();
   try { await signInWithPopup(auth, provider); } catch (e) { alert('Sign-in failed: ' + e.message); }
