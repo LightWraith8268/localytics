@@ -61,3 +61,58 @@ export function computeReport(rows, mapping) {
   };
 }
 
+function weekKey(d) {
+  // ISO week number
+  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  const dayNum = date.getUTCDay() || 7; // 1..7, Mon..Sun
+  date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+  const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1)/7);
+  const yyyy = date.getUTCFullYear();
+  return `${yyyy}-W${String(weekNo).padStart(2,'0')}`;
+}
+
+function quarterKey(d) {
+  const q = Math.floor(d.getMonth()/3)+1; return `${d.getFullYear()}-Q${q}`;
+}
+
+export function bucketDateKey(dateStr, granularity) {
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return '';
+  switch ((granularity||'day')) {
+    case 'week': return weekKey(d);
+    case 'month': return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    case 'quarter': return quarterKey(d);
+    case 'year': return String(d.getFullYear());
+    case 'day':
+    default: return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+}
+
+export function aggregateCustom(rows, mapping, opts) {
+  const groupBy = opts.groupBy || 'date';
+  const metric = opts.metric || 'revenue'; // 'revenue' | 'quantity'
+  const gran = opts.granularity || 'month';
+  const topN = Number(opts.topN || 0);
+  const map = new Map();
+  for (const r of rows) {
+    const key = groupBy === 'item' ? String(r[mapping.item] || '').trim() : bucketDateKey(r[mapping.date], gran);
+    if (!key) continue;
+    const q = Number(r[mapping.qty] || 0) || 0;
+    const price = mapping.revenue ? 0 : Number((r[mapping.price] || '').toString().replace(/[$,\s]/g,'')) || 0;
+    const rev = mapping.revenue ? (Number((r[mapping.revenue] || '').toString().replace(/[$,\s]/g,'')) || 0) : (price * q);
+    const cur = map.get(key) || { label: key, quantity: 0, revenue: 0 };
+    cur.quantity += q; cur.revenue += rev; map.set(key, cur);
+  }
+  let arr = Array.from(map.values());
+  if (groupBy === 'date') {
+    arr.sort((a,b) => a.label.localeCompare(b.label));
+  } else {
+    arr.sort((a,b) => (b[metric]-a[metric]));
+  }
+  if (topN && groupBy === 'item') arr = arr.slice(0, topN);
+  // Round revenue
+  arr = arr.map(x => ({ ...x, revenue: Number(x.revenue.toFixed(2)) }));
+  return arr;
+}
+

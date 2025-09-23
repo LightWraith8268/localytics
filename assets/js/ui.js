@@ -73,6 +73,24 @@ export function makeBarChart(canvas, labels, data, label='Series') {
   });
 }
 
+export function makeChartTyped(canvas, type, labels, data, label='Series') {
+  if (!window.Chart) return null;
+  const ctx = canvas.getContext('2d');
+  return new window.Chart(ctx, {
+    type,
+    data: {
+      labels,
+      datasets: [{ label, data, tension: 0.2, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.35)', fill: ['line','radar'].includes(type) }],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: (type === 'pie' || type === 'doughnut') ? undefined : { y: { beginAtZero: true } }
+    }
+  });
+}
+
 export function downloadCsv(filename, columns, rows) {
   const header = columns.join(',');
   const lines = rows.map(r => columns.map(c => csvEscape(r[c])).join(','));

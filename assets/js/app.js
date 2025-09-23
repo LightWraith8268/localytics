@@ -1,6 +1,6 @@
 import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
-import { computeReport } from './reports.js';
-import { renderTotals, renderTable, makeChart, makeBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
+import { computeReport, aggregateCustom } from './reports.js';
+import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser } from './storage.js';
 
 const state = {
@@ -13,6 +13,7 @@ const state = {
   chartTop: null,
   filters: { start: '', end: '', item: '' },
   user: null,
+  customChart: null,
 };
 
 function qs(id) { return document.getElementById(id); }
@@ -153,6 +154,29 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   qs('btnExportExcel').addEventListener('click', () => exportExcel(state.report));
   function exportExcel(report){ if (!report) return; exportExcelBook('report.xlsx', report); }
+
+  // Printing
+  qs('btnPrintReport').addEventListener('click', () => window.print());
+  qs('btnPrintAll').addEventListener('click', () => printAllViews());
+
+  // Custom view
+  const elGroupBy = qs('customGroupBy');
+  const elGranWrap = document.getElementById('granularityWrap');
+  const elGran = qs('customGranularity');
+  const elMetric = qs('customMetric');
+  const elType = qs('customChartType');
+  const elTopN = qs('customTopN');
+  elGroupBy.addEventListener('change', () => {
+    elGranWrap.style.display = (elGroupBy.value === 'date') ? '' : 'none';
+  });
+  elGranWrap.style.display = (elGroupBy.value === 'date') ? '' : 'none';
+  qs('btnBuildChart').addEventListener('click', () => {
+    buildCustomChart({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, type: elType.value, topN: elTopN.value });
+  });
+  qs('btnPrintChart').addEventListener('click', () => window.print());
+  qs('btnBuildTable').addEventListener('click', () => buildCustomTable({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, topN: elTopN.value }));
+  qs('btnExportCustomCsv').addEventListener('click', () => exportCustomCsv());
+  qs('btnPrintTable').addEventListener('click', () => window.print());
 });
 
 function renderReport() {
@@ -247,4 +271,49 @@ async function saveLastMapping(mapping) {
     const m = await import('./storage.js');
     await m.saveUserSettings('mapping', mapping);
   } catch {}
+}
+
+function printAllViews() {
+  const views = Array.from(document.querySelectorAll('.view'));
+  const prev = views.map(v => v.classList.contains('hidden'));
+  views.forEach(v => v.classList.remove('hidden'));
+  const done = () => {
+    window.removeEventListener('afterprint', done);
+    views.forEach((v,i) => { if (prev[i]) v.classList.add('hidden'); });
+  };
+  window.addEventListener('afterprint', done);
+  window.print();
+}
+
+function buildCustomChart(opts) {
+  if (!state.rows.length) { alert('Upload and parse CSVs first.'); return; }
+  const filtered = applyFilters(state.rows, state.mapping, state.filters);
+  const data = aggregateCustom(filtered, state.mapping, opts);
+  const labels = data.map(x => x.label);
+  const series = data.map(x => opts.metric === 'quantity' ? x.quantity : x.revenue);
+  const canvas = document.getElementById('customChart');
+  if (state.customChart) { state.customChart.destroy(); state.customChart = null; }
+  state.customChart = makeChartTyped(canvas, opts.type || 'line', labels, series, `${opts.metric} by ${opts.groupBy}`);
+}
+
+function buildCustomTable(opts) {
+  if (!state.rows.length) { alert('Upload and parse CSVs first.'); return; }
+  const filtered = applyFilters(state.rows, state.mapping, state.filters);
+  const data = aggregateCustom(filtered, state.mapping, opts);
+  const container = document.getElementById('customTable');
+  const columns = (opts.groupBy === 'date') ? ['label','quantity','revenue'] : ['label','quantity','revenue'];
+  renderTable(container, columns.map(c => (c==='label' ? (opts.groupBy==='date'?'date':'item') : c)), data.map(x => ({ ...(opts.groupBy==='date'?{date:x.label}:{item:x.label}), quantity:x.quantity, revenue:x.revenue })));
+}
+
+function exportCustomCsv() {
+  const container = document.getElementById('customTable');
+  if (!container || !container.querySelector('table')) { alert('Build the table first.'); return; }
+  const rows = [];
+  const headers = Array.from(container.querySelectorAll('thead th')).map(th => th.textContent.trim());
+  const bodyRows = Array.from(container.querySelectorAll('tbody tr'));
+  bodyRows.forEach(tr => {
+    const cells = Array.from(tr.querySelectorAll('td')).map(td => td.textContent.trim());
+    const obj = {}; headers.forEach((h,i)=> obj[h.toLowerCase()] = cells[i]); rows.push(obj);
+  });
+  downloadCsv('custom_report.csv', headers, rows);
 }
