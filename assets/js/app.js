@@ -52,6 +52,18 @@ window.addEventListener('hashchange', () => showView(location.hash));
 window.addEventListener('DOMContentLoaded', () => {
   // Router
   showView(location.hash);
+  // Header theme gear opens theme modal
+  try {
+    const headerOpen = document.getElementById('headerOpenTheme');
+    const openTheme = document.getElementById('btnOpenThemeModal');
+    const closeTheme = document.getElementById('btnCloseThemeModal');
+    const modalTheme = document.getElementById('themeModal');
+    const open = () => modalTheme?.classList.remove('hidden');
+    const close = () => modalTheme?.classList.add('hidden');
+    if (headerOpen) headerOpen.addEventListener('click', open);
+    if (openTheme) openTheme.addEventListener('click', open);
+    if (closeTheme) closeTheme.addEventListener('click', close);
+  } catch {}
   // Version badge
   const vEl = document.getElementById('appVersionBadge'); if (vEl) vEl.textContent = `v${APP_VERSION}`;
   // Mobile nav toggle
@@ -95,6 +107,14 @@ window.addEventListener('DOMContentLoaded', () => {
 
   qs('btnSignIn').addEventListener('click', signInWithGoogle);
   qs('btnSignOut').addEventListener('click', signOutUser);
+  // Theme modal open/close
+  try {
+    const openTheme = document.getElementById('btnOpenThemeModal');
+    const closeTheme = document.getElementById('btnCloseThemeModal');
+    const modalTheme = document.getElementById('themeModal');
+    if (openTheme && modalTheme) openTheme.addEventListener('click', () => { modalTheme.classList.remove('hidden'); });
+    if (closeTheme && modalTheme) closeTheme.addEventListener('click', () => { modalTheme.classList.add('hidden'); });
+  } catch {}
   // Load category map
   (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch {} })();
   // Theme load

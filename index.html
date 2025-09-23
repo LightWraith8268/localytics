@@ -275,17 +275,27 @@
         <div class="app-card rounded-lg border app-border shadow-sm p-5">
           <div class="flex items-center justify-between no-print">
             <h2 class="text-base font-medium">Report</h2>
-            <div class="flex gap-2">
-              <button id="btnExportItem" class="px-3 py-1.5 border rounded-md text-sm">Export Items CSV</button>
-              <button id="btnExportDate" class="px-3 py-1.5 border rounded-md text-sm">Export Dates CSV</button>
-              <button id="btnExportExcel" class="px-3 py-1.5 border rounded-md text-sm">Export Excel</button>
+            <div class="flex gap-2 items-center">
+              <div class="relative inline-block">
+                <button id="exportMenuBtn" class="px-3 py-1.5 border rounded-md text-sm">Export ▾</button>
+                <div id="exportMenu" class="hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20">
+                  <button id="btnExportItem" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Items CSV</button>
+                  <button id="btnExportDate" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Dates CSV</button>
+                  <button id="btnExportClient" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Clients CSV</button>
+                  <button id="btnExportStaff" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Staff CSV</button>
+                  <button id="btnExportOrder" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Orders CSV</button>
+                  <button id="btnExportCategory" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Categories CSV</button>
+                  <button id="btnExportExcel" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Excel Workbook</button>
+                </div>
+              </div>
+              <div class="relative inline-block">
+                <button id="printMenuBtn" class="px-3 py-1.5 border rounded-md text-sm">Print ▾</button>
+                <div id="printMenu" class="hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20">
+                  <button id="btnPrintReport" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Print</button>
+                  <button id="btnPrintAll" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Print All</button>
+                </div>
+              </div>
               <button id="btnSaveReport" class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm">Save Report</button>
-              <button id="btnPrintReport" class="px-3 py-1.5 border rounded-md text-sm">Print</button>
-              <button id="btnPrintAll" class="px-3 py-1.5 border rounded-md text-sm">Print All</button>
-              <button id="btnExportClient" class="px-3 py-1.5 border rounded-md text-sm">Export Clients CSV</button>
-              <button id="btnExportStaff" class="px-3 py-1.5 border rounded-md text-sm">Export Staff CSV</button>
-              <button id="btnExportOrder" class="px-3 py-1.5 border rounded-md text-sm">Export Orders CSV</button>
-              <button id="btnExportCategory" class="px-3 py-1.5 border rounded-md text-sm">Export Categories CSV</button>
             </div>
           </div>
           <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 no-print">
@@ -598,6 +608,7 @@
             </div>
             <div class="mt-2">
               <button id="btnSaveBrand" class="px-3 py-1.5 border rounded-md">Save Branding</button>
+              <button id="btnOpenThemeModal" class="ml-2 px-3 py-1.5 border rounded-md">Customize Theme…</button>
             </div>
             <div class="mt-8">
               <h3 class="text-base font-medium">Theme Preview & Custom Theme</h3>
@@ -759,12 +770,9 @@
         wb.register().then((reg) => {
           const checkNow = () => {
             wb.update();
-            if (reg?.waiting) showBanner();
           };
           // Check immediately after registration
           checkNow();
-          // If there's already a waiting SW (e.g., from another tab), show banner immediately
-          if (reg?.waiting) showBanner();
           // Listen for new installing worker and surface banner once installed/waiting
           const listenUpdateFound = (registration) => {
             registration.addEventListener('updatefound', () => {
@@ -814,6 +822,51 @@
         </div>
       </div>
     </div>
+  <!-- Theme Modal -->
+  <div id="themeModal" class="hidden fixed inset-0 z-50" style="background: rgba(0,0,0,0.6);">
+    <div class="absolute inset-0 flex items-center justify-center px-4">
+      <div class="app-card border app-border rounded-lg p-5" style="max-width:800px; width:100%;">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-medium">Theme Preview & Custom Theme</h3>
+          <button id="btnCloseThemeModal" class="px-3 py-1.5 border rounded-md">Close</button>
+        </div>
+        <div class="mt-3 grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Background</label>
+            <input type="color" id="ctBg" class="w-full h-10 border rounded-md" value="#f8fafc" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Card</label>
+            <input type="color" id="ctCard" class="w-full h-10 border rounded-md" value="#ffffff" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Text</label>
+            <input type="color" id="ctText" class="w-full h-10 border rounded-md" value="#0f172a" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Border</label>
+            <input type="color" id="ctBorder" class="w-full h-10 border rounded-md" value="#e5e7eb" />
+          </div>
+          <div>
+            <label class="block text-xs text-gray-500 mb-1">Accent</label>
+            <input type="color" id="ctAccent" class="w-full h-10 border rounded-md" value="#2563eb" />
+          </div>
+        </div>
+        <div class="mt-3 flex gap-2">
+          <button id="btnSaveCustomTheme" class="px-3 py-1.5 border rounded-md">Save Custom Theme</button>
+          <button id="btnResetCustomTheme" class="px-3 py-1.5 border rounded-md">Reset</button>
+        </div>
+        <div class="mt-3">
+          <div id="themePreview" class="app-card border app-border rounded-md p-4">
+            <div class="text-sm font-semibold">Preview Title</div>
+            <div class="text-xs text-gray-600">This text previews your current theme variables.</div>
+            <button class="mt-2 px-3 py-1.5 border rounded-md">Neutral Button</button>
+            <button class="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-md">Accent Button</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   </body>
   <!-- Chart Zoom Modal -->
   <div id="chartZoom" class="hidden fixed top-0 left-0 right-0 bottom-0 z-50" style="background: rgba(0,0,0,0.6);">
