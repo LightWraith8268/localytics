@@ -186,12 +186,14 @@ export function aggregateByField(rows, field) {
     const q = Number(r.__quantity || 0);
     const rev = Number(r.__revenue || 0);
     const cost = Number(r.__cost || 0);
-    const cur = map.get(key) || { label: key, quantity: 0, revenue: 0, cost: 0 };
-    cur.quantity += q; cur.revenue += rev; cur.cost += cost; map.set(key, cur);
+    const order = r.__order || '';
+    const cur = map.get(key) || { label: key, quantity: 0, revenue: 0, cost: 0, orders: new Set() };
+    cur.quantity += q; cur.revenue += rev; cur.cost += cost; if (order) cur.orders.add(order); map.set(key, cur);
   }
   return Array.from(map.values())
     .map(x => ({
       label: x.label,
+      orders: x.orders.size,
       quantity: x.quantity,
       revenue: Number(x.revenue.toFixed(2)),
       cost: Number(x.cost.toFixed(2)),

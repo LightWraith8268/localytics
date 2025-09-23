@@ -227,6 +227,18 @@
               <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
               <div class="h-64"><canvas id="chart-top-clients"></canvas></div>
             </div>
+            <div>
+              <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
+              <div class="h-64"><canvas id="chart-orders"></canvas></div>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
+              <div class="h-64"><canvas id="chart-rev-rolling"></canvas></div>
+            </div>
+            <div>
+              <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
+              <div class="h-64"><canvas id="chart-rev-mom"></canvas></div>
+            </div>
           </div>
         </div>
       </section>
@@ -332,6 +344,16 @@
             </div>
             <div class="mt-2">
               <button id="btnSaveBrand" class="px-3 py-1.5 border rounded-md">Save Branding</button>
+            </div>
+            <div class="mt-8">
+              <h3 class="text-base font-medium">Category Mapping</h3>
+              <p class="text-xs text-gray-600">Assign categories to item names. Manual mappings override CSV categories.</p>
+              <div class="mt-2 flex gap-2">
+                <button id="btnLoadItemsMapping" class="px-3 py-1.5 border rounded-md">Load Items from Data</button>
+                <button id="btnSaveCategoryMap" class="px-3 py-1.5 border rounded-md">Save Mapping</button>
+                <button id="btnClearCategoryMap" class="px-3 py-1.5 border rounded-md">Clear Mapping</button>
+              </div>
+              <div id="categoryMapEditor" class="mt-3 max-h-96 overflow-auto border rounded-md divide-y"></div>
             </div>
           </div>
         </div>

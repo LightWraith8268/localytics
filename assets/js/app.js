@@ -13,9 +13,13 @@ const state = {
   chartTop: null,
   chartTopClients: null,
   chartCatShare: null,
+  chartOrders: null,
+  chartRevRolling: null,
+  chartRevMoM: null,
   filters: { start: '', end: '', item: '' },
   user: null,
   customChart: null,
+  categoryMap: {},
 };
 
 function qs(id) { return document.getElementById(id); }
@@ -52,6 +56,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   qs('btnSignIn').addEventListener('click', signInWithGoogle);
   qs('btnSignOut').addEventListener('click', signOutUser);
+  // Load category map
+  (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch {} })();
 
   // File handling
   const fileInput = qs('fileInput');
@@ -115,7 +121,8 @@ window.addEventListener('DOMContentLoaded', () => {
     await saveLastMapping(state.mapping);
     const normalized = normalizeAndDedupe(rows, state.mapping);
     state.rows = normalized;
-    const filtered = applyFilters(normalized, state.mapping, state.filters);
+  const filtered = applyFilters(normalized, state.mapping, state.filters);
+    state.filtered = filtered;
     state.report = computeReport(filtered, state.mapping);
     renderReport();
     location.hash = '#/report';
@@ -179,6 +186,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (fNoZero) fNoZero.checked = false;
     state.filters = { start:'', end:'', item:'', client:'', staff:'', order:'', category:'', revMin:'', revMax:'', qtyMin:'', qtyMax:'', noZero:false };
     if (!state.rows.length || !state.mapping.date) return;
+    state.filtered = state.rows;
     state.report = computeReport(state.rows, state.mapping);
     renderReport();
   });
@@ -188,7 +196,7 @@ window.addEventListener('DOMContentLoaded', () => {
     // Build extra sheets
     const extras = {};
     try {
-      const rows = state.rows; const mapping = state.mapping;
+      const rows = state.filtered || state.rows; const mapping = state.mapping;
       const week = aggregateByGranularity(rows, mapping, 'week');
       const month = aggregateByGranularity(rows, mapping, 'month');
       extras['By Week'] = week;
@@ -202,6 +210,12 @@ window.addEventListener('DOMContentLoaded', () => {
         });
         extras['By Month by Category'] = flat;
       }
+      // Orders by Date
+      const orders = aggregateOrdersByDate(rows);
+      extras['Orders by Date'] = orders.labels.map((d,i)=> ({ date: d, orders: orders.values[i] }));
+      // Month-over-month change
+      const mom = monthOverMonthChange(month);
+      extras['MoM Change %'] = mom.labels.map((m,i)=> ({ month: m, changePct: mom.values[i] }));
     } catch {}
     exportExcelBook('report.xlsx', report, extras);
   }
@@ -232,25 +246,44 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
-    if (!state.byClient) return; const cols = ['client','quantity','revenue','cost','profit','margin'];
-    downloadCsv('report_by_client.csv', cols, state.byClient.map(x => ({ client:x.label, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
+    if (!state.byClient) return; const cols = ['client','orders','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_client.csv', cols, state.byClient.map(x => ({ client:x.label, orders:x.orders, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
   qs('btnExportStaff')?.addEventListener('click', () => {
-    if (!state.byStaff) return; const cols = ['staff','quantity','revenue','cost','profit','margin'];
-    downloadCsv('report_by_staff.csv', cols, state.byStaff.map(x => ({ staff:x.label, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
+    if (!state.byStaff) return; const cols = ['staff','orders','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_staff.csv', cols, state.byStaff.map(x => ({ staff:x.label, orders:x.orders, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
   qs('btnExportOrder')?.addEventListener('click', () => {
     if (!state.byOrder) return; const cols = ['order','date','client','staff','quantity','revenue','cost','profit','margin'];
     downloadCsv('report_by_order.csv', cols, state.byOrder);
   });
   qs('btnExportCategory')?.addEventListener('click', () => {
-    if (!state.byCategory) return; const cols = ['category','quantity','revenue','cost','profit','margin'];
-    downloadCsv('report_by_category.csv', cols, state.byCategory.map(x => ({ category:x.label, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
+    if (!state.byCategory) return; const cols = ['category','orders','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_category.csv', cols, state.byCategory.map(x => ({ category:x.label, orders:x.orders, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
 
   // Branding load
   loadBranding();
   qs('btnSaveBrand').addEventListener('click', saveBranding);
+  // Category mapping UI
+  qs('btnLoadItemsMapping')?.addEventListener('click', () => buildCategoryMapEditor());
+  qs('btnSaveCategoryMap')?.addEventListener('click', async () => {
+    const editor = document.getElementById('categoryMapEditor'); if (!editor) return;
+    const inputs = editor.querySelectorAll('input[data-item]'); const map = {};
+    inputs.forEach(inp => { const item = inp.getAttribute('data-item'); const val = inp.value.trim(); if (item && val) map[item] = val; });
+    state.categoryMap = map; await saveUserSettings('categoryMap', map);
+    // Re-normalize rows to apply categories
+    if (state.rows.length) {
+      state.rows = normalizeAndDedupe(state.rows, state.mapping);
+      const filtered = applyFilters(state.rows, state.mapping, state.filters); state.filtered = filtered;
+      state.report = computeReport(filtered, state.mapping); renderReport();
+    }
+    alert('Category mapping saved.');
+  });
+  qs('btnClearCategoryMap')?.addEventListener('click', async () => {
+    state.categoryMap = {}; await saveUserSettings('categoryMap', {});
+    document.getElementById('categoryMapEditor')?.replaceChildren();
+  });
 });
 
 function renderReport() {
@@ -271,18 +304,19 @@ function renderReport() {
   const topVals = top.map(r => r.revenue);
   state.chartTop = makeBarChart(document.getElementById('chart-top-items'), topLabels, topVals, 'Top Items by Revenue');
 
-  // Additional aggregates
-  state.byClient = aggregateByField(state.rows, r => r.__client || '');
-  state.byStaff = aggregateByField(state.rows, r => r.__staff || '');
-  if (state.mapping.category) state.byCategory = aggregateByField(state.rows, r => r[state.mapping.category] || ''); else state.byCategory = null;
-  state.byOrder = aggregateByOrder(state.rows);
+  // Additional aggregates (based on filtered rows)
+  const base = state.filtered || state.rows;
+  state.byClient = aggregateByField(base, r => r.__client || '');
+  state.byStaff = aggregateByField(base, r => r.__staff || '');
+  state.byCategory = aggregateByField(base, r => r.__category || '');
+  state.byOrder = aggregateByOrder(base);
 
-  renderTable(qs('table-client'), ['label','quantity','revenue','cost','profit','margin'], state.byClient);
-  renderTable(qs('table-staff'), ['label','quantity','revenue','cost','profit','margin'], state.byStaff);
+  renderTable(qs('table-client'), ['label','orders','quantity','revenue','cost','profit','margin'], state.byClient);
+  renderTable(qs('table-staff'), ['label','orders','quantity','revenue','cost','profit','margin'], state.byStaff);
   const catSection = document.getElementById('section-category');
   if (state.byCategory && state.byCategory.length) {
     catSection?.classList.remove('hidden');
-    renderTable(qs('table-category'), ['label','quantity','revenue','cost','profit','margin'], state.byCategory);
+    renderTable(qs('table-category'), ['label','orders','quantity','revenue','cost','profit','margin'], state.byCategory);
     // Category share chart
     if (state.chartCatShare) { state.chartCatShare.destroy(); state.chartCatShare = null; }
     const labelsCat = state.byCategory.map(x => x.label);
@@ -295,6 +329,18 @@ function renderReport() {
   if (state.chartTopClients) { state.chartTopClients.destroy(); state.chartTopClients = null; }
   const topClients = state.byClient.slice(0, 10);
   state.chartTopClients = makeBarChart(document.getElementById('chart-top-clients'), topClients.map(x=>x.label), topClients.map(x=>x.revenue), 'Top Clients by Revenue');
+
+  // Trends
+  if (state.chartOrders) { state.chartOrders.destroy(); state.chartOrders = null; }
+  const ordersByDate = aggregateOrdersByDate(base);
+  state.chartOrders = makeChart(document.getElementById('chart-orders'), ordersByDate.labels, ordersByDate.values, 'Orders');
+  if (state.chartRevRolling) { state.chartRevRolling.destroy(); state.chartRevRolling = null; }
+  const rolling = rollingAverage(state.report.byDate.map(x=>({label:x.date,value:x.revenue})), 7);
+  state.chartRevRolling = makeChart(document.getElementById('chart-rev-rolling'), rolling.labels, rolling.values, '7d Avg Revenue');
+  if (state.chartRevMoM) { state.chartRevMoM.destroy(); state.chartRevMoM = null; }
+  const month = aggregateByGranularity(base, state.mapping, 'month');
+  const mom = monthOverMonthChange(month);
+  state.chartRevMoM = makeChart(document.getElementById('chart-rev-mom'), mom.labels, mom.values, 'MoM Change %');
 }
 
 async function loadHistory() {
@@ -354,8 +400,9 @@ function applyFilters(rows, mapping, filters) {
     if (filters.order) {
       const v = (r.__order || '').toString().toLowerCase(); if (!v.includes(filters.order.toLowerCase())) ok = false;
     }
-    if (filters.category && mapping.category) {
-      const v = (r[mapping.category] || '').toString().toLowerCase(); if (!v.includes(filters.category.toLowerCase())) ok = false;
+    if (filters.category) {
+      const v = (r.__category || (mapping.category ? r[mapping.category] : '') || '').toString().toLowerCase();
+      if (!v.includes(filters.category.toLowerCase())) ok = false;
     }
     const rev = Number(r.__revenue || 0); const qty = Number(r.__quantity || 0);
     if (filters.revMin && rev < Number(filters.revMin)) ok = false;
@@ -439,6 +486,47 @@ function exportCustomCsv() {
   downloadCsv('custom_report.csv', headers, rows);
 }
 
+function buildCategoryMapEditor(){
+  const editor = document.getElementById('categoryMapEditor'); if (!editor) return;
+  const base = state.filtered?.length ? state.filtered : state.rows;
+  const items = Array.from(new Set(base.map(r => (r[state.mapping.item] || '').toString().trim()).filter(Boolean))).sort();
+  editor.innerHTML = '';
+  if (!items.length) { editor.innerHTML = '<div class="p-3 text-sm text-gray-600">No items found. Upload and parse CSVs first.</div>'; return; }
+  items.forEach(it => {
+    const row = document.createElement('div'); row.className = 'flex items-center justify-between p-2';
+    const label = document.createElement('div'); label.className = 'text-sm text-gray-700'; label.textContent = it;
+    const input = document.createElement('input'); input.type = 'text'; input.className = 'border rounded-md px-2 py-1 text-sm w-60'; input.setAttribute('data-item', it);
+    input.value = state.categoryMap?.[it] || '';
+    row.appendChild(label); row.appendChild(input); editor.appendChild(row);
+  });
+}
+
+function aggregateOrdersByDate(rows){
+  const map = new Map();
+  for(const r of rows){ const d = r.__dateIso; const ord = r.__order; if(!d||!ord) continue; const s = map.get(d) || new Set(); s.add(ord); map.set(d,s); }
+  const labels = Array.from(map.keys()).sort(); const values = labels.map(l => (map.get(l)?.size || 0));
+  return { labels, values };
+}
+
+function rollingAverage(series, n){
+  const labels = series.map(s=>s.label);
+  const values = [];
+  let sum = 0; const q = [];
+  for (let i=0;i<series.length;i++){
+    q.push(series[i].value); sum += series[i].value; if (q.length>n) sum -= q.shift();
+    values.push(Number((sum / q.length).toFixed(2)));
+  }
+  return { labels, values };
+}
+
+function monthOverMonthChange(monthSeries){
+  const labels = monthSeries.map(m=>m.period);
+  const values = monthSeries.map((m,i)=> {
+    if (i===0) return 0; const prev = monthSeries[i-1].revenue||0; const cur = m.revenue||0; return prev ? Number((((cur - prev)/prev)*100).toFixed(2)) : 0;
+  });
+  return { labels, values };
+}
+
 async function loadBranding() {
   const nameInput = document.getElementById('brandName');
   const logoInput = document.getElementById('brandLogo');
@@ -505,6 +593,10 @@ function normalizeAndDedupe(rows, mapping) {
     obj.__order = key;
     obj.__client = clientCol ? r[clientCol] : '';
     obj.__staff = staffCol ? r[staffCol] : '';
+    // Category: manual mapping overrides CSV
+    const manualCat = state.categoryMap && name ? (state.categoryMap[name] || '') : '';
+    const csvCat = mapping.category ? (r[mapping.category] || '') : '';
+    obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
     map.set(key, obj); // last occurrence wins
   }
   return Array.from(map.values());
