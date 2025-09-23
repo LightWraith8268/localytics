@@ -48,6 +48,15 @@
       .accent { color: var(--accent); }
       .nav-link { color: var(--text) !important; opacity: 0.8; }
       .nav-link:hover { opacity: 1; color: var(--text) !important; }
+      /* Mobile nav */
+      #navToggle { display: none; }
+      header .nav-links { display: flex; }
+      @media (max-width: 640px) {
+        #navToggle { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
+        header .nav-links { display: none; position: absolute; right: 1rem; top: 3.25rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; flex-direction: column; gap: 6px; z-index: 40; }
+        header .nav-links.show { display: flex; }
+        .h-64 { height: 220px !important; }
+      }
       /* Themed form controls */
       input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="email"], input[type="url"], input[type="file"], select, textarea {
         background-color: var(--card-bg) !important;
@@ -90,9 +99,13 @@
   </head>
   <body>
     <header class="app-card border app-border sticky top-0 z-10 no-print">
-      <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="container mx-auto px-4 py-3 flex items-center justify-between relative">
         <h1 class="text-lg font-semibold">Localytics</h1>
-        <nav class="flex gap-3 items-center text-sm">
+        <button id="navToggle" aria-expanded="false" aria-controls="navLinks">
+          <span class="sr-only">Menu</span>
+          ☰ Menu
+        </button>
+        <nav id="navLinks" class="nav-links flex gap-3 items-center text-sm">
           <a href="#/upload" class="nav-link text-gray-600 hover:text-gray-900">Upload</a>
           <a href="#/report" class="nav-link text-gray-600 hover:text-gray-900">Report</a>
           <a href="#/history" class="nav-link text-gray-600 hover:text-gray-900">History</a>
@@ -250,27 +263,27 @@
           <div class="mt-6 grid grid-cols-1 gap-4 print-section">
             <details class="app-card border app-border rounded-md p-3" open data-accordion>
               <summary class="cursor-pointer select-none text-sm font-semibold">By Item</summary>
-              <div id="table-item" class="mt-3 overflow-auto border app-border rounded-md"></div>
+              <div id="table-item" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
             </details>
             <details class="app-card border app-border rounded-md p-3" data-accordion>
               <summary class="cursor-pointer select-none text-sm font-semibold">By Date</summary>
-              <div id="table-date" class="mt-3 overflow-auto border app-border rounded-md"></div>
+              <div id="table-date" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
             </details>
             <details class="app-card border app-border rounded-md p-3" data-accordion>
               <summary class="cursor-pointer select-none text-sm font-semibold">By Client</summary>
-              <div id="table-client" class="mt-3 overflow-auto border app-border rounded-md"></div>
+              <div id="table-client" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
             </details>
             <details class="app-card border app-border rounded-md p-3" data-accordion>
               <summary class="cursor-pointer select-none text-sm font-semibold">By Staff</summary>
-              <div id="table-staff" class="mt-3 overflow-auto border app-border rounded-md"></div>
+              <div id="table-staff" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
             </details>
             <details class="app-card border app-border rounded-md p-3" id="section-category" data-accordion>
               <summary class="cursor-pointer select-none text-sm font-semibold">By Category</summary>
-              <div id="table-category" class="mt-3 overflow-auto border app-border rounded-md"></div>
+              <div id="table-category" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
             </details>
             <details class="app-card border app-border rounded-md p-3" data-accordion>
               <summary class="cursor-pointer select-none text-sm font-semibold">By Order</summary>
-              <div id="table-order" class="mt-3 overflow-auto border app-border rounded-md"></div>
+              <div id="table-order" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
             </details>
           </div>
           <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">

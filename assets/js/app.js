@@ -52,6 +52,22 @@ window.addEventListener('DOMContentLoaded', () => {
   showView(location.hash);
   // Version badge
   const vEl = document.getElementById('appVersionBadge'); if (vEl) vEl.textContent = `v${APP_VERSION}`;
+  // Mobile nav toggle
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  if (navToggle && navLinks) {
+    navToggle.addEventListener('click', () => {
+      const isOpen = navLinks.classList.toggle('show');
+      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+    // Hide menu on hash change/navigation
+    window.addEventListener('hashchange', () => { navLinks.classList.remove('show'); navToggle.setAttribute('aria-expanded','false'); });
+    document.addEventListener('click', (e) => {
+      if (!navLinks.contains(e.target) && e.target !== navToggle) {
+        navLinks.classList.remove('show'); navToggle.setAttribute('aria-expanded','false');
+      }
+    });
+  }
 
   // Auth observe
   observeAuth(user => {
