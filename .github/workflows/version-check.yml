@@ -1,0 +1,61 @@
+name: version-check
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'direct/**'
+      - '.github/workflows/version-check.yml'
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Extract versions
+        id: versions
+        run: |
+          APP_FILE=assets/js/app.js
+          SW_FILE=service-worker.js
+          APP_VER=$(sed -n "s/^const APP_VERSION = '\([0-9][0-9\.]*\)';/\1/p" "$APP_FILE")
+          SW_VER=$(sed -n "s/^const VERSION = 'wb-\([0-9][0-9\.]*\)';/\1/p" "$SW_FILE")
+          echo "app=$APP_VER" >> $GITHUB_OUTPUT
+          echo "sw=$SW_VER" >> $GITHUB_OUTPUT
+          echo "APP_VERSION=$APP_VER"
+          echo "SW_VERSION=$SW_VER"
+
+      - name: Ensure UI and SW versions match
+        run: |
+          test "${{ steps.versions.outputs.app }}" = "${{ steps.versions.outputs.sw }}" || (echo "UI APP_VERSION and SW VERSION mismatch" && exit 1)
+
+      - name: Check changed files
+        id: changed
+        run: |
+          HEAD_SHA=$(git rev-parse HEAD)
+          BASE_SHA=$(git rev-parse HEAD^)
+          CHANGED=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          echo "changed<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Enforce version bump when app assets change
+        if: ${{ steps.changed.outputs.changed != '' }}
+        run: |
+          NEED_BUMP=$(echo "${{ steps.changed.outputs.changed }}" | egrep -E '^(index\.html|404\.html|manifest\.webmanifest|service-worker\.js|assets/js/|assets/icons/|assets/css/)' || true)
+          if [ -n "$NEED_BUMP" ]; then
+            PREV_APP=$(git show HEAD^:assets/js/app.js | sed -n "s/^const APP_VERSION = '\([0-9][0-9\.]*\)';/\1/p")
+            CURR_APP="${{ steps.versions.outputs.app }}"
+            echo "Prev: $PREV_APP Curr: $CURR_APP"
+            node -e '
+              const [prev, curr] = process.argv.slice(2);
+              function parse(v){return v.split(".").map(n=>parseInt(n,10));}
+              const [pa,pb,pc]=parse(prev||"0.0.0"), [ca,cb,cc]=parse(curr||"0.0.0");
+              const gt = (ca>pa)|| (ca===pa && cb>pb) || (ca===pa && cb===pb && cc>pc);
+              if(!gt){ console.error("Version must be strictly greater when app assets change"); process.exit(1); }
+            ' "$PREV_APP" "$CURR_APP"
+          fi
