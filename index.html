@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.19">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.20">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -74,6 +74,34 @@
         --text: #ffffff;
         --border: #4b5563;
         --accent: #f59e0b;
+      }
+      .theme-solarized-light {
+        --bg: #fdf6e3;
+        --card-bg: #fffdf5;
+        --text: #073642;
+        --border: #eee8d5;
+        --accent: #268bd2;
+      }
+      .theme-solarized-dark {
+        --bg: #002b36;
+        --card-bg: #073642;
+        --text: #eee8d5;
+        --border: #0f3a44;
+        --accent: #b58900;
+      }
+      .theme-dracula {
+        --bg: #282a36;
+        --card-bg: #343746;
+        --text: #f8f8f2;
+        --border: #44475a;
+        --accent: #bd93f9;
+      }
+      .theme-nord {
+        --bg: #2e3440;
+        --card-bg: #3b4252;
+        --text: #eceff4;
+        --border: #4c566a;
+        --accent: #88c0d0;
       }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
       .container { max-width: 1100px; }
@@ -166,6 +194,11 @@
             <option value="rose">Rose</option>
             <option value="slate">Slate</option>
             <option value="contrast">High Contrast</option>
+            <option value="solarized-light">Solarized Light</option>
+            <option value="solarized-dark">Solarized Dark</option>
+            <option value="dracula">Dracula</option>
+            <option value="nord">Nord</option>
+            <option value="custom">Custom…</option>
           </select>
           <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card">v?</span>
         </nav>
@@ -554,6 +587,15 @@
                 <input type="url" id="brandLogo" placeholder="https://...logo.png" class="w-full border rounded-md px-3 py-2 text-sm">
               </div>
             </div>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Owner Email (restrict features to this user)</label>
+                <input type="email" id="ownerEmail" placeholder="you@example.com" class="w-full border rounded-md px-3 py-2 text-sm" />
+              </div>
+              <div class="flex items-end">
+                <button id="btnSaveOwner" class="px-3 py-1.5 border rounded-md">Save Owner</button>
+              </div>
+            </div>
             <div class="mt-2">
               <button id="btnSaveBrand" class="px-3 py-1.5 border rounded-md">Save Branding</button>
             </div>
@@ -589,6 +631,43 @@
               </div>
             </div>
             <div class="mt-8">
+              <h3 class="text-base font-medium">Theme Preview & Custom Theme</h3>
+              <div class="mt-2 grid grid-cols-1 md:grid-cols-5 gap-3">
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Background</label>
+                  <input type="color" id="ctBg" class="w-full h-10 border rounded-md" value="#f8fafc" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Card</label>
+                  <input type="color" id="ctCard" class="w-full h-10 border rounded-md" value="#ffffff" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Text</label>
+                  <input type="color" id="ctText" class="w-full h-10 border rounded-md" value="#0f172a" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Border</label>
+                  <input type="color" id="ctBorder" class="w-full h-10 border rounded-md" value="#e5e7eb" />
+                </div>
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Accent</label>
+                  <input type="color" id="ctAccent" class="w-full h-10 border rounded-md" value="#2563eb" />
+                </div>
+              </div>
+              <div class="mt-3 flex gap-2">
+                <button id="btnSaveCustomTheme" class="px-3 py-1.5 border rounded-md">Save Custom Theme</button>
+                <button id="btnResetCustomTheme" class="px-3 py-1.5 border rounded-md">Reset</button>
+              </div>
+              <div class="mt-3">
+                <div id="themePreview" class="app-card border app-border rounded-md p-4">
+                  <div class="text-sm font-semibold">Preview Title</div>
+                  <div class="text-xs text-gray-600">This text previews your current theme variables.</div>
+                  <button class="mt-2 px-3 py-1.5 border rounded-md">Neutral Button</button>
+                  <button class="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-md">Accent Button</button>
+                </div>
+              </div>
+            </div>
+            <div class="mt-8">
               <h3 class="text-base font-medium">Data Reset</h3>
               <p class="text-xs text-gray-600">Clear local demo and mapping data, then reload. This does not delete any saved reports in Firestore.</p>
               <button id="btnClearLocal" class="mt-2 px-3 py-1.5 border rounded-md">Clear Local Data</button>
@@ -607,7 +686,7 @@
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.19"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.20"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">

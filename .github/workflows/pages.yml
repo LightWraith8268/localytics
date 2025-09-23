@@ -44,7 +44,7 @@ jobs:
           FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
         run: |
           mkdir -p assets/js
-          node -e "const fs=require('fs'); const s=process.env.FIREBASE_CONFIG_JSON; let cfg=null; try{ cfg=JSON.parse(s);}catch(e){ try{ cfg=Function('return ('+s+')')(); }catch(e2){ console.error('Invalid FIREBASE_CONFIG_JSON. Must be valid JSON.'); process.exit(1);} } if(!cfg||typeof cfg!=='object'||!cfg.apiKey||!cfg.projectId||!cfg.appId){ console.error('FIREBASE_CONFIG_JSON missing required fields'); process.exit(1);} fs.writeFileSync('assets/js/firebase.js', 'export const firebaseConfig = '+JSON.stringify(cfg)+'; export default firebaseConfig;');"
+          node -e "const fs=require('fs'); let raw=process.env.FIREBASE_CONFIG_JSON||''; let cfg=null; function tryJSON(x){try{return JSON.parse(x)}catch(e){return null}} cfg=tryJSON(raw); if(!cfg){ const i=raw.indexOf('{'); const j=raw.lastIndexOf('}'); if(i>=0 && j>i){ const obj=raw.slice(i,j+1); try{ cfg=Function('return ('+obj+')')(); }catch(e){ const cleaned=obj.replace(/,\s*([}\]])/g,'$1'); cfg=tryJSON(cleaned); } } } if(!cfg||typeof cfg!=='object'){ console.error('Invalid FIREBASE_CONFIG_JSON. Provide a JSON object or snippet containing {...}.'); process.exit(1);} for (const k of ['apiKey','projectId','appId']){ if(!cfg[k]){ console.error('FIREBASE_CONFIG_JSON missing required field: '+k); process.exit(1);} } fs.writeFileSync('assets/js/firebase.js', 'export const firebaseConfig = '+JSON.stringify(cfg)+'; export default firebaseConfig;'); console.log('firebase.js written');"
 
       - name: Stamp Service Worker with build id (force update)
         run: |
