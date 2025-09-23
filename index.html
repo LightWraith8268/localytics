@@ -28,6 +28,17 @@
         .container { max-width: none; }
         .print-section { page-break-after: always; }
         #print-cover { display: block !important; }
+        /* Improve table readability in print */
+        table { border-collapse: collapse; width: 100% !important; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        th, td { border: 1px solid #e5e7eb; padding: 6px 8px; }
+        /* Avoid breaking boxes */
+        .border { break-inside: avoid; }
+        /* Chart sizing for print */
+        .h-64 { height: 320px !important; }
+        canvas { max-width: 100% !important; height: auto !important; }
+        img.print-canvas-img { max-width: 100% !important; height: auto !important; page-break-inside: avoid; }
       }
     </style>
     <link rel="icon" href="data:,">

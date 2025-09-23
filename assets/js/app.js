@@ -265,6 +265,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // Branding load
   loadBranding();
   qs('btnSaveBrand').addEventListener('click', saveBranding);
+  // Print: ensure canvases are printable
+  window.addEventListener('beforeprint', freezeChartsForPrint);
+  window.addEventListener('afterprint', restoreChartsAfterPrint);
   // Category mapping UI
   qs('btnLoadItemsMapping')?.addEventListener('click', () => buildCategoryMapEditor());
   qs('btnSaveCategoryMap')?.addEventListener('click', async () => {
@@ -311,12 +314,15 @@ function renderReport() {
   state.byCategory = aggregateByField(base, r => r.__category || '');
   state.byOrder = aggregateByOrder(base);
 
-  renderTable(qs('table-client'), ['label','orders','quantity','revenue','cost','profit','margin'], state.byClient);
-  renderTable(qs('table-staff'), ['label','orders','quantity','revenue','cost','profit','margin'], state.byStaff);
+  const clientRows = state.byClient.map(x => ({ client: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
+  const staffRows = state.byStaff.map(x => ({ staff: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
+  renderTable(qs('table-client'), ['client','orders','quantity','revenue','cost','profit','margin'], clientRows);
+  renderTable(qs('table-staff'), ['staff','orders','quantity','revenue','cost','profit','margin'], staffRows);
   const catSection = document.getElementById('section-category');
   if (state.byCategory && state.byCategory.length) {
     catSection?.classList.remove('hidden');
-    renderTable(qs('table-category'), ['label','orders','quantity','revenue','cost','profit','margin'], state.byCategory);
+    const catRows = state.byCategory.map(x => ({ category: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
+    renderTable(qs('table-category'), ['category','orders','quantity','revenue','cost','profit','margin'], catRows);
     // Category share chart
     if (state.chartCatShare) { state.chartCatShare.destroy(); state.chartCatShare = null; }
     const labelsCat = state.byCategory.map(x => x.label);
@@ -484,6 +490,29 @@ function exportCustomCsv() {
     const obj = {}; headers.forEach((h,i)=> obj[h.toLowerCase()] = cells[i]); rows.push(obj);
   });
   downloadCsv('custom_report.csv', headers, rows);
+}
+
+function freezeChartsForPrint(){
+  try {
+    document.querySelectorAll('canvas').forEach((c) => {
+      if (c.dataset.printReplaced === '1') return;
+      try {
+        const url = c.toDataURL('image/png');
+        const img = document.createElement('img');
+        img.src = url; img.className = 'print-canvas-img';
+        c.dataset.printReplaced = '1';
+        c.style.display = 'none';
+        c.parentNode?.insertBefore(img, c.nextSibling);
+      } catch {}
+    });
+  } catch {}
+}
+
+function restoreChartsAfterPrint(){
+  try {
+    document.querySelectorAll('img.print-canvas-img').forEach(img => img.remove());
+    document.querySelectorAll('canvas[data-print-replaced="1"]').forEach(c => { c.style.display = ''; c.removeAttribute('data-print-replaced'); });
+  } catch {}
 }
 
 function buildCategoryMapEditor(){
