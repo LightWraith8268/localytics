@@ -1,0 +1,54 @@
+name: Deploy to gh-pages (fallback)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate Firebase secret (optional)
+        env:
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: |
+          if [ -n "$FIREBASE_CONFIG_JSON" ]; then echo "Secret present"; else echo "No Firebase secret present (ok)"; fi
+
+      - name: Inject Firebase config (if present)
+        env:
+          FIREBASE_CONFIG_JSON: ${{ secrets.FIREBASE_CONFIG_JSON }}
+        run: |
+          mkdir -p assets/js
+          if [ -n "$FIREBASE_CONFIG_JSON" ]; then
+            node -e "const fs=require('fs'); let raw=process.env.FIREBASE_CONFIG_JSON||''; let cfg=null; function tryJSON(x){try{return JSON.parse(x)}catch(e){return null}} cfg=tryJSON(raw); if(!cfg){ const i=raw.indexOf('{'); const j=raw.lastIndexOf('}'); if(i>=0 && j>i){ const obj=raw.slice(i,j+1); try{ cfg=Function('return ('+obj+')')(); }catch(e){ const cleaned=obj.replace(/,\s*([}\]])/g,'$1'); cfg=tryJSON(cleaned); } } } if(!cfg||typeof cfg!=='object'){ console.error('Invalid FIREBASE_CONFIG_JSON'); process.exit(1);} fs.writeFileSync('assets/js/firebase.js', 'export const firebaseConfig = '+JSON.stringify(cfg)+'; export default firebaseConfig;'); console.log('firebase.js written')"
+          else
+            echo "export const firebaseConfig = {}; export default firebaseConfig;" > assets/js/firebase.js
+          fi
+
+      - name: Stamp SW with build id
+        run: |
+          echo "/* build: ${GITHUB_SHA} $(date -u +'%Y-%m-%dT%H:%M:%SZ') */" >> service-worker.js
+
+      - name: Prepare dist
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          cp -r index.html 404.html manifest.webmanifest service-worker.js assets dist/
+          [ -f .nojekyll ] && cp .nojekyll dist/.nojekyll || true
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: dist
+          force_orphan: true
+          commit_message: "Deploy: ${GITHUB_SHA}"
+
