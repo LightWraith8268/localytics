@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.18">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.19">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -38,6 +38,42 @@
         --text: #3e2723;
         --border: #e0d6c8;
         --accent: #b08968;
+      }
+      /* Additional themes */
+      .theme-ocean {
+        --bg: #0b132b;
+        --card-bg: #1c2541;
+        --text: #e5e7eb;
+        --border: #3a506b;
+        --accent: #5bc0be;
+      }
+      .theme-forest {
+        --bg: #0b1f12;
+        --card-bg: #123524;
+        --text: #e8f5e9;
+        --border: #1f6f43;
+        --accent: #66bb6a;
+      }
+      .theme-rose {
+        --bg: #fff1f2;
+        --card-bg: #ffe4e6;
+        --text: #4a0010;
+        --border: #fecdd3;
+        --accent: #e11d48;
+      }
+      .theme-slate {
+        --bg: #0f172a;
+        --card-bg: #111827;
+        --text: #e2e8f0;
+        --border: #334155;
+        --accent: #64748b;
+      }
+      .theme-contrast {
+        --bg: #000000;
+        --card-bg: #0a0a0a;
+        --text: #ffffff;
+        --border: #4b5563;
+        --accent: #f59e0b;
       }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
       .container { max-width: 1100px; }
@@ -125,6 +161,11 @@
             <option value="light">Light</option>
             <option value="dark">Dark</option>
             <option value="sepia">Sepia</option>
+            <option value="ocean">Ocean</option>
+            <option value="forest">Forest</option>
+            <option value="rose">Rose</option>
+            <option value="slate">Slate</option>
+            <option value="contrast">High Contrast</option>
           </select>
           <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card">v?</span>
         </nav>
@@ -566,7 +607,7 @@
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.18"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.19"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">

@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.18';
+const APP_VERSION = '1.2.19';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -775,9 +775,13 @@ function initTheme(){
   sel?.addEventListener('change', () => { applyTheme(sel.value); localStorage.setItem('qr_theme', sel.value); });
 }
 function applyTheme(name){
-  document.documentElement.classList.remove('theme-dark','theme-sepia');
-  if (name === 'dark') document.documentElement.classList.add('theme-dark');
-  else if (name === 'sepia') document.documentElement.classList.add('theme-sepia');
+  const el = document.documentElement;
+  const classes = ['theme-dark','theme-sepia','theme-ocean','theme-forest','theme-rose','theme-slate','theme-contrast'];
+  el.classList.remove(...classes);
+  if (name && name !== 'light') {
+    const cls = 'theme-' + name;
+    if (classes.includes(cls)) el.classList.add(cls);
+  }
 }
 
 function ingestRows(rows){
