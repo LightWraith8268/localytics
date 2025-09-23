@@ -1,0 +1,130 @@
+/* Prebuilt utility CSS for Localytics (Tailwind-like subset)
+   This file vendors the minimal utilities used by the app so deploys
+   don't depend on building Tailwind in CI. */
+
+/* Reset + base */
+*,*::before,*::after{box-sizing:border-box}
+html{line-height:1.5;-webkit-text-size-adjust:100%;tab-size:4}
+body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+img,svg,video,canvas{display:inline-block;vertical-align:middle}
+button,input,select,textarea{font:inherit;color:inherit}
+
+/* Layout utilities */
+.container{width:100%;max-width:1100px}
+.mx-auto{margin-left:auto;margin-right:auto}
+.block{display:block}
+.hidden{display:none}
+.flex{display:flex}
+.grid{display:grid}
+.inline-flex{display:inline-flex}
+.items-center{align-items:center}
+.justify-between{justify-content:space-between}
+.justify-center{justify-content:center}
+.gap-2{gap:.5rem}
+.gap-3{gap:.75rem}
+.gap-4{gap:1rem}
+.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}
+.w-full{width:100%}
+.w-56{width:14rem}
+.h-2{height:.5rem}
+.h-64{height:16rem}
+.fixed{position:fixed}
+.relative{position:relative}
+.sticky{position:sticky}
+.top-0{top:0}
+.top-4{top:1rem}
+.right-4{right:1rem}
+.z-10{z-index:10}
+.z-40{z-index:40}
+.z-50{z-index:50}
+
+/* Spacing */
+.p-2{padding:.5rem}
+.p-3{padding:.75rem}
+.p-4{padding:1rem}
+.p-5{padding:1.25rem}
+.px-2{padding-left:.5rem;padding-right:.5rem}
+.px-3{padding-left:.75rem;padding-right:.75rem}
+.px-4{padding-left:1rem;padding-right:1rem}
+.px-6{padding-left:1.5rem;padding-right:1.5rem}
+.py-1{padding-top:.25rem;padding-bottom:.25rem}
+.py-1\.5{padding-top:.375rem;padding-bottom:.375rem}
+.py-2{padding-top:.5rem;padding-bottom:.5rem}
+.py-3{padding-top:.75rem;padding-bottom:.75rem}
+.py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+.mt-1{margin-top:.25rem}
+.mt-2{margin-top:.5rem}
+.mt-3{margin-top:.75rem}
+.mt-4{margin-top:1rem}
+.mt-5{margin-top:1.25rem}
+.mt-6{margin-top:1.5rem}
+.mt-8{margin-top:2rem}
+.mb-4{margin-bottom:1rem}
+.ml-3{margin-left:.75rem}
+
+/* Borders, radius, shadow */
+.border{border-width:1px;border-style:solid;border-color:#e5e7eb}
+.app-border{border-color:var(--border,#e5e7eb)!important}
+.rounded-md{border-radius:.375rem}
+.rounded-lg{border-radius:.5rem}
+.shadow-sm{box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05)}
+
+/* Colors and backgrounds */
+.text-white{color:#fff}
+.text-blue-600{color:#2563eb}
+.bg-blue-600{background-color:#2563eb}
+.bg-gray-100{background-color:#f3f4f6}
+.bg-gray-200{background-color:#e5e7eb}
+.text-gray-500{color:#6b7280}
+.text-gray-600{color:#4b5563}
+.text-gray-700{color:#374151}
+
+/* Typography */
+.text-xs{font-size:.75rem;line-height:1rem}
+.text-sm{font-size:.875rem;line-height:1.25rem}
+.text-base{font-size:1rem;line-height:1.5rem}
+.text-lg{font-size:1.125rem;line-height:1.75rem}
+.font-medium{font-weight:500}
+.font-semibold{font-weight:600}
+
+/* Buttons and links */
+.hover\:bg-blue-700:hover{background-color:#1d4ed8}
+.rounded-md{border-radius:.375rem}
+
+/* Tables */
+table{border-collapse:collapse;width:100%}
+th,td{padding:.5rem;text-align:left}
+thead tr{background-color:var(--card-bg,#fff)}
+.border-t{border-top:1px solid #e5e7eb}
+
+/* Forms */
+input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],input[type="url"],input[type="file"],select,textarea{
+  background-color:var(--card-bg,#fff);color:var(--text,#0f172a);border:1px solid var(--border,#e5e7eb);border-radius:.375rem;padding:.5rem .75rem
+}
+input::placeholder,textarea::placeholder{color:#9aa0a6}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent,#2563eb);box-shadow:0 0 0 2px color-mix(in srgb, var(--accent,#2563eb) 25%, transparent)}
+input[type="file"]::file-selector-button{
+  background: color-mix(in srgb, var(--accent,#2563eb) 12%, var(--card-bg,#fff));
+  color:var(--text,#0f172a);border:1px solid var(--border,#e5e7eb);border-radius:.375rem;padding:.375rem .625rem;margin-right:.75rem;cursor:pointer
+}
+
+/* Cards */
+.app-card{background-color:var(--card-bg,#fff)!important;border-color:var(--border,#e5e7eb)!important}
+
+/* Utilities */
+.no-print{ }
+.monospace{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+.hover\:text-gray-900:hover{color:#111827}
+.text-gray-900{color:#111827}
+
+/* Nav */
+.nav-link{color:var(--text,#0f172a);opacity:.8}
+.nav-link:hover{opacity:1;color:var(--text,#0f172a)}
+
+/* Media queries */
+@media (min-width:768px){.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:640px){.h-64{height:220px!important}}
+
+/* Print helpers */
+@media print{.hidden-print{display:none!important}}
+
