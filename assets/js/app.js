@@ -856,6 +856,10 @@ function canonicalizeItemName(raw) {
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
        .replace(/^planters mix\b.*$/i, 'Planters Mix');
+  // Handle rebrand: "Northern" is equivalent to "Tri Color" for River Rock and Cobble
+  s = s.replace(/\bNorthern\s+River\s+Rock\b/gi, 'Tri Color River Rock')
+       .replace(/\bNorthern\s+Cobble\b/gi, 'Tri Color Cobble')
+       .replace(/\bNorthern\b/gi, 'Tri Color');
   // Title case words except those with quotes/numbers preserved
   s = s.split(' ').map(w => {
     if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
