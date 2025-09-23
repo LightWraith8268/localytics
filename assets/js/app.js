@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.16';
+const APP_VERSION = '1.2.17';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -893,13 +893,11 @@ function normalizeAndDedupe(rows, mapping) {
   const costCol = mapping.cost;
   const clientCol = mapping.client;
   const staffCol = mapping.staff;
-  const map = new Map();
+  const out = [];
   for (const r of rows) {
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
     const canonName = canonicalizeItemName(name);
-    const key = order ? `${order}|${name}` : JSON.stringify(r);
-    if (!key) continue;
     const q = num(r[qtyCol]);
     const p = num(r[priceCol]);
     const c = num(r[costCol]);
@@ -910,19 +908,19 @@ function normalizeAndDedupe(rows, mapping) {
     const pretty = toPrettyDate(originalDateVal);
     const dFull = parseFullDate(originalDateVal);
     const obj = { ...r };
-    obj[dateCol] = pretty; // replace display date
-    obj.__dateIso = iso;
+    if (dateCol) obj[dateCol] = pretty; // replace display date
+    obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
     obj.__hour = (dFull ? dFull.getHours() : null);
-    obj.__quantity = q;
-    obj.__price = p;
-    obj.__unitCost = c;
-    obj.__revenue = revenue;
-    obj.__cost = cost;
-    obj.__profit = Number((revenue - cost).toFixed(2));
-    obj.__order = key;
-    obj.__client = clientCol ? r[clientCol] : '';
-    obj.__staff = staffCol ? r[staffCol] : '';
+    obj.__quantity = q || 0;
+    obj.__price = p || 0;
+    obj.__unitCost = c || 0;
+    obj.__revenue = revenue || 0;
+    obj.__cost = cost || 0;
+    obj.__profit = Number(((revenue || 0) - (cost || 0)).toFixed(2));
+    obj.__order = order || 'undefined';
+    obj.__client = clientCol ? (r[clientCol] || 'undefined') : 'undefined';
+    obj.__staff = staffCol ? (r[staffCol] || 'undefined') : 'undefined';
     // Category: manual mapping overrides CSV
     const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
     const csvCat = mapping.category ? (r[mapping.category] || '') : '';
@@ -934,9 +932,9 @@ function normalizeAndDedupe(rows, mapping) {
     if (enforce && allowed.length) {
       if (!allowedCanon.has(canonName)) continue;
     }
-    map.set(key, obj); // last occurrence wins
+    out.push(obj);
   }
-  return Array.from(map.values());
+  return out;
 }
 
 // Async version with chunked progress updates (UI-friendly for large datasets)
@@ -951,46 +949,43 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   const staffCol = mapping.staff;
   const total = rows.length || 0;
   const chunk = Math.max(500, Math.floor(total / 20) || 500);
-  const map = new Map();
+  const out = [];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
     const canonName = canonicalizeItemName(name);
-    const key = order ? `${order}|${name}` : JSON.stringify(r);
-    if (key) {
-      const q = num(r[qtyCol]);
-      const p = num(r[priceCol]);
-      const c = num(r[costCol]);
-      const revenue = Number((q * p).toFixed(2));
-      const cost = Number((q * c).toFixed(2));
-      const originalDateVal = r[dateCol];
-      const iso = toIsoDate(originalDateVal);
-      const pretty = toPrettyDate(originalDateVal);
-      const dFull = parseFullDate(originalDateVal);
-      const obj = { ...r };
-      obj[dateCol] = pretty;
-      obj.__dateIso = iso;
-      obj.__dow = (dFull ? dFull.getDay() : null);
-      obj.__hour = (dFull ? dFull.getHours() : null);
-      obj.__quantity = q;
-      obj.__price = p;
-      obj.__unitCost = c;
-      obj.__revenue = revenue;
-      obj.__cost = cost;
-      obj.__profit = Number((revenue - cost).toFixed(2));
-      obj.__order = key;
-      obj.__client = clientCol ? r[clientCol] : '';
-      obj.__staff = staffCol ? r[staffCol] : '';
-      const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
-      const csvCat = mapping.category ? (r[mapping.category] || '') : '';
-      obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
-      const allowed = window.__allowedItemsList || [];
-      const enforce = window.__enforceAllowed || false;
-      const allowedCanon = window.__allowedCanonSet || new Set(allowed.map(canonicalizeItemName));
-      if (!(enforce && allowed.length && !allowedCanon.has(canonName))) {
-        map.set(key, obj);
-      }
+    const q = num(r[qtyCol]);
+    const p = num(r[priceCol]);
+    const c = num(r[costCol]);
+    const revenue = Number((q * p).toFixed(2));
+    const cost = Number((q * c).toFixed(2));
+    const originalDateVal = r[dateCol];
+    const iso = toIsoDate(originalDateVal);
+    const pretty = toPrettyDate(originalDateVal);
+    const dFull = parseFullDate(originalDateVal);
+    const obj = { ...r };
+    if (dateCol) obj[dateCol] = pretty;
+    obj.__dateIso = iso || '';
+    obj.__dow = (dFull ? dFull.getDay() : null);
+    obj.__hour = (dFull ? dFull.getHours() : null);
+    obj.__quantity = q || 0;
+    obj.__price = p || 0;
+    obj.__unitCost = c || 0;
+    obj.__revenue = revenue || 0;
+    obj.__cost = cost || 0;
+    obj.__profit = Number(((revenue || 0) - (cost || 0)).toFixed(2));
+    obj.__order = order || 'undefined';
+    obj.__client = clientCol ? (r[clientCol] || 'undefined') : 'undefined';
+    obj.__staff = staffCol ? (r[staffCol] || 'undefined') : 'undefined';
+    const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
+    const csvCat = mapping.category ? (r[mapping.category] || '') : '';
+    obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
+    const allowed = window.__allowedItemsList || [];
+    const enforce = window.__enforceAllowed || false;
+    const allowedCanon = window.__allowedCanonSet || new Set(allowed.map(canonicalizeItemName));
+    if (!(enforce && allowed.length && !allowedCanon.has(canonName))) {
+      out.push(obj);
     }
     if (onProgress && (i % chunk === 0 || i === rows.length - 1)) {
       const pct = total > 0 ? Math.floor(((i + 1) / total) * 100) : 100;
@@ -998,7 +993,7 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
       await new Promise(requestAnimationFrame);
     }
   }
-  return Array.from(map.values());
+  return out;
 }
 
 // Canonicalize item names to match allowed list despite input variants
