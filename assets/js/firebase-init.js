@@ -5,6 +5,7 @@ const VERSION = '10.12.2';
 const APP_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-app.js`;
 const FIRESTORE_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-firestore.js`;
 const ANALYTICS_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-analytics.js`;
+const APPCHECK_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-app-check.js`;
 
 let config;
 try {
@@ -21,6 +22,16 @@ if (config) {
     const { getFirestore, collection, addDoc, serverTimestamp } = await import(FIRESTORE_URL);
 
     const app = initializeApp(config);
+
+    // Optional: App Check via reCAPTCHA v3/Enterprise
+    try {
+      const siteKey = window.FB_APPCHECK_SITE_KEY || document.querySelector('meta[name="appcheck-site-key"]')?.content;
+      if (siteKey) {
+        const { initializeAppCheck, ReCaptchaV3Provider } = await import(APPCHECK_URL);
+        initializeAppCheck(app, { provider: new ReCaptchaV3Provider(siteKey), isTokenAutoRefreshEnabled: true });
+        console.log('[firebase-init] App Check initialized');
+      }
+    } catch (e) { console.warn('[firebase-init] App Check init skipped:', e?.message || e); }
     const db = getFirestore(app);
 
     // Optional: Analytics, only if measurementId present and supported
