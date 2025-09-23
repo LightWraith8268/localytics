@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.1';
+const APP_VERSION = '1.2';
 const state = {
   rows: [],
   headers: [],
@@ -33,6 +33,7 @@ const state = {
   user: null,
   customChart: null,
   categoryMap: {},
+  itemSynonyms: [],
 };
 
 function qs(id) { return document.getElementById(id); }
@@ -326,6 +327,16 @@ window.addEventListener('DOMContentLoaded', () => {
       window.__allowedCanonSet = new Set(list.map(canonicalizeItemName));
       const enforce = await loadUserSettings('enforceAllowed');
       if (typeof enforce === 'boolean') { document.getElementById('enforceAllowed').checked = enforce; window.__enforceAllowed = enforce; }
+      // Load synonyms
+      const syn = await loadUserSettings('itemSynonyms');
+      if (Array.isArray(syn)) {
+        state.itemSynonyms = syn;
+        const ta = document.getElementById('itemSynonyms'); if (ta) ta.value = syn.map(p => `${p.from} => ${p.to}`).join('\n');
+      } else {
+        // Default include Tri Color => Northern
+        const ta = document.getElementById('itemSynonyms');
+        if (ta && !ta.value.trim()) ta.value = 'Tri Color => Northern\nTri-Color => Northern';
+      }
     } catch {}
   })();
 
@@ -343,6 +354,24 @@ window.addEventListener('DOMContentLoaded', () => {
     try { caches && caches.keys && caches.keys().then(keys => keys.forEach(k => caches.delete(k))); } catch {}
     location.href = '#/upload';
     location.reload();
+  });
+
+  // Synonyms save/clear
+  qs('btnSaveSynonyms')?.addEventListener('click', async () => {
+    const raw = document.getElementById('itemSynonyms')?.value || '';
+    const map = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => {
+      const m = l.split(/=>/);
+      if (m.length >= 2) return { from: m[0].trim(), to: m.slice(1).join('=>').trim() };
+      return null;
+    }).filter(Boolean);
+    state.itemSynonyms = map;
+    await saveUserSettings('itemSynonyms', map);
+    alert('Synonyms saved. They will apply to new ingested data.');
+  });
+  qs('btnClearSynonyms')?.addEventListener('click', async () => {
+    state.itemSynonyms = [];
+    const ta = document.getElementById('itemSynonyms'); if (ta) ta.value = '';
+    await saveUserSettings('itemSynonyms', []);
   });
   // Print: ensure canvases are printable
   window.addEventListener('beforeprint', freezeChartsForPrint);
@@ -838,6 +867,16 @@ function normalizeAndDedupe(rows, mapping) {
 function canonicalizeItemName(raw) {
   if (!raw) return '';
   let s = String(raw);
+  // Apply synonyms first (user-defined)
+  try {
+    if (Array.isArray(state.itemSynonyms)) {
+      state.itemSynonyms.forEach(({from, to}) => {
+        if (!from) return;
+        const re = new RegExp(`\\b${escapeRegExp(from)}\\b`, 'gi');
+        s = s.replace(re, to);
+      });
+    }
+  } catch {}
   // Normalize quotes and dashes
   s = s.replace(/[\u2018\u2019\u2032]/g, "'").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2013\u2014]/g, '-');
   // Normalize fractions and decimal inch patterns for .75 and 1.5
@@ -856,10 +895,10 @@ function canonicalizeItemName(raw) {
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
        .replace(/^planters mix\b.*$/i, 'Planters Mix');
-  // Handle rebrand: "Northern" is equivalent to "Tri Color" for River Rock and Cobble
-  s = s.replace(/\bNorthern\s+River\s+Rock\b/gi, 'Tri Color River Rock')
-       .replace(/\bNorthern\s+Cobble\b/gi, 'Tri Color Cobble')
-       .replace(/\bNorthern\b/gi, 'Tri Color');
+  // Handle rebrand: display as Northern (Tri Color -> Northern)
+  s = s.replace(/\bTri[\-\s]?Color\s+River\s+Rock\b/gi, 'Northern River Rock')
+       .replace(/\bTri[\-\s]?Color\s+Cobble\b/gi, 'Northern Cobble')
+       .replace(/\bTri[\-\s]?Color\b/gi, 'Northern');
   // Title case words except those with quotes/numbers preserved
   s = s.split(' ').map(w => {
     if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
@@ -870,6 +909,8 @@ function canonicalizeItemName(raw) {
        .replace(/\s+\"/g, ' "');
   return s.trim();
 }
+
+function escapeRegExp(str){ return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
 function num(v){ if (v==null) return 0; if (typeof v==='number') return v; const s=String(v).replace(/[$,\s]/g,''); const n=Number(s); return Number.isFinite(n)?n:0; }
 function toIsoDate(v){ if(!v) return ''; try{ const m=String(v).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/); if(m){ const months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; const mm=String(months[m[1]]).padStart(2,'0'); const dd=String(m[2]).padStart(2,'0'); const yyyy=m[3]; return `${yyyy}-${mm}-${dd}`;} const d=new Date(v); if(!Number.isNaN(d.getTime())){ const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } }catch{} return ''; }
 function toPrettyDate(v){ if(!v) return ''; const m=String(v).match(/^([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/); if(m) return m[1]; try { return new Date(v).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'}); } catch { return String(v); } }

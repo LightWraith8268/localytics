@@ -498,6 +498,15 @@
               </div>
             </div>
             <div class="mt-8">
+              <h3 class="text-base font-medium">Item Synonyms</h3>
+              <p class="text-xs text-gray-600">Define mappings to normalize names. One mapping per line using "from =&gt; to". Example: <span class="monospace">Tri Color =&gt; Northern</span></p>
+              <textarea id="itemSynonyms" rows="6" class="w-full border rounded-md px-3 py-2 text-sm monospace" placeholder="Tri Color => Northern\nTri-Color => Northern"></textarea>
+              <div class="mt-2 flex gap-2">
+                <button id="btnSaveSynonyms" class="px-3 py-1.5 border rounded-md">Save Synonyms</button>
+                <button id="btnClearSynonyms" class="px-3 py-1.5 border rounded-md">Clear Synonyms</button>
+              </div>
+            </div>
+            <div class="mt-8">
               <h3 class="text-base font-medium">Data Reset</h3>
               <p class="text-xs text-gray-600">Clear local demo and mapping data, then reload. This does not delete any saved reports in Firestore.</p>
               <button id="btnClearLocal" class="mt-2 px-3 py-1.5 border rounded-md">Clear Local Data</button>

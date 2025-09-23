@@ -4,18 +4,18 @@ export const ALLOWED_ITEMS = [
   ".75\" Colorado Rose",
   ".75\" Local River Rock",
   ".75\" Mountain Granite",
-  ".75\" Tri Color River Rock",
+  ".75\" Northern River Rock",
   "1.5\" Black Granite",
   "1.5\" Clear Creek",
   "1.5\" Colorado Rose",
   "1.5\" Glacier River Rock",
   "1.5\" Local River Rock",
   "1.5\" Mountain Granite",
-  "1.5\" Tri Color River Rock",
+  "1.5\" Northern River Rock",
   "1.5\" Western River Rock",
   "2-4\" Glacier River Rock",
-  "2-4\" Tri Color River Rock",
-  "5-12\" Tri Color Cobble",
+  "2-4\" Northern River Rock",
+  "5-12\" Northern Cobble",
   "Cascade Cedar Mulch",
   "Class 1 Compost",
   "Clear Creek 3\"-15\"",
@@ -42,4 +42,3 @@ export const ALLOWED_ITEMS = [
 ];
 
 export default ALLOWED_ITEMS;
-

@@ -17,7 +17,7 @@ export function renderTotals(container, totals) {
   ];
   cards.forEach(c => {
     const d = document.createElement('div');
-    d.className = 'p-4 border rounded-md bg-gray-50';
+    d.className = 'p-4 border app-border rounded-md app-card';
     d.innerHTML = `<div class="text-xs text-gray-500">${c.label}</div><div class="mt-1 text-lg font-semibold">${c.value}</div>`;
     container.appendChild(d);
   });
@@ -28,7 +28,7 @@ export function renderTable(container, columns, rows) {
   const table = document.createElement('table');
   table.className = 'w-full text-sm';
   const thead = document.createElement('thead');
-  thead.innerHTML = `<tr class="bg-gray-50">${columns.map(c=>`<th class="text-left px-3 py-2 font-medium text-gray-600">${escapeHtml(c)}</th>`).join('')}</tr>`;
+  thead.innerHTML = `<tr class="app-card">${columns.map(c=>`<th class="text-left px-3 py-2 font-medium">${escapeHtml(c)}</th>`).join('')}</tr>`;
   const tbody = document.createElement('tbody');
   rows.forEach(r => {
     const tr = document.createElement('tr');
