@@ -1,6 +1,9 @@
-/* Simple PWA Service Worker for QR Reports */
-const VERSION = 'pwa-v1.0.0';
-const CORE = [
+/* Workbox-based Service Worker with update flow */
+/* global workbox */
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
+
+const VERSION = 'wb-1.0.0';
+const PRECACHE = [
   './',
   './index.html',
   './404.html',
@@ -14,74 +17,47 @@ const CORE = [
   './assets/js/firebase-init.js',
   './assets/js/firebase.js',
   './assets/js/sample-data.js'
-];
+].map(url => ({ url, revision: VERSION }));
 
-self.addEventListener('install', (event) => {
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(VERSION).then(cache => cache.addAll(CORE.map(url => new Request(url, { cache: 'reload' }))))
-  );
-});
+// Precache core assets
+workbox.precaching.precacheAndRoute(PRECACHE);
 
-self.addEventListener('activate', (event) => {
-  event.waitUntil((async () => {
-    const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k)));
-    await self.clients.claim();
-  })());
-});
+// Runtime caching for same-origin scripts/styles/images
+workbox.routing.registerRoute(
+  ({request, url}) => url.origin === self.location.origin && ['script','style','image','font'].includes(request.destination),
+  new workbox.strategies.StaleWhileRevalidate({ cacheName: 'assets' })
+);
 
-// Network strategies:
-// - HTML navigation: cache-first fallback to index (SPA offline)
-// - Same-origin assets: stale-while-revalidate
-// - Cross-origin (CDNs): network-first with cache fallback
-self.addEventListener('fetch', (event) => {
-  const req = event.request;
-  const url = new URL(req.url);
+// Runtime caching for cross-origin (CDNs): network-first with fallback
+workbox.routing.registerRoute(
+  ({url}) => url.origin !== self.location.origin,
+  new workbox.strategies.NetworkFirst({
+    cacheName: 'cdn',
+    networkTimeoutSeconds: 3,
+    plugins: [ new workbox.expiration.ExpirationPlugin({ maxEntries: 100, purgeOnQuotaError: true }) ]
+  })
+);
 
-  // Only handle GET
-  if (req.method !== 'GET') return;
-
-  // Navigation requests → serve cached index for offline
-  if (req.mode === 'navigate') {
-    event.respondWith((async () => {
-      try {
-        const net = await fetch(req);
-        return net;
-      } catch {
-        const cache = await caches.open(VERSION);
-        const cached = await cache.match('./index.html');
-        return cached || Response.error();
-      }
-    })());
-    return;
-  }
-
-  // Same-origin assets
-  if (url.origin === location.origin) {
-    event.respondWith((async () => {
-      const cache = await caches.open(VERSION);
-      const cached = await cache.match(req);
-      const fetchAndCache = fetch(req).then((res) => {
-        if (res && res.ok) cache.put(req, res.clone());
-        return res;
-      }).catch(() => cached);
-      return cached || fetchAndCache;
-    })());
-    return;
-  }
-
-  // Cross-origin (CDNs)
-  event.respondWith((async () => {
+// Navigation requests: try network first, fall back to cached index
+workbox.routing.registerRoute(
+  ({request}) => request.mode === 'navigate',
+  async ({event}) => {
     try {
-      const net = await fetch(req);
-      const cache = await caches.open(VERSION);
-      if (net && net.ok) cache.put(req, net.clone());
-      return net;
-    } catch {
-      const cache = await caches.open(VERSION);
-      const cached = await cache.match(req);
-      return cached || Response.error();
+      return await workbox.strategies.networkFirst({ cacheName: 'pages' }).handle({event});
+    } catch (e) {
+      return await caches.match('./index.html');
     }
-  })());
+  }
+);
+
+// Allow the page to trigger skipWaiting (used by update button)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});
+
+// Take control as soon as activated
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
 });

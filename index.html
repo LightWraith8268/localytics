@@ -491,11 +491,28 @@
 
     <!-- App scripts -->
     <script type="module" src="./assets/js/app.js"></script>
-    <script>
+    <!-- Workbox update flow -->
+    <div id="sw-update" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 app-card border app-border rounded-md shadow-lg px-4 py-3 z-50">
+      <div class="flex items-center gap-3">
+        <span class="text-sm">A new version is available.</span>
+        <button id="btnSwUpdate" class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-md">Update</button>
+      </div>
+    </div>
+    <script type="module">
+      import { Workbox } from 'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-window.prod.mjs';
       if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./service-worker.js').catch(console.warn);
-        });
+        const wb = new Workbox('./service-worker.js');
+        const banner = document.getElementById('sw-update');
+        const btn = document.getElementById('btnSwUpdate');
+        wb.addEventListener('waiting', () => { if (banner) banner.classList.remove('hidden'); });
+        btn?.addEventListener('click', () => { wb.messageSkipWaiting(); });
+        wb.addEventListener('controlling', () => { window.location.reload(); });
+        wb.register();
+      }
+    </script>
+    <script nomodule>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./service-worker.js');
       }
     </script>
     
