@@ -100,3 +100,36 @@ export async function deleteReport(id) {
   try { await m.deleteDoc(m.doc(db, 'reports', id)); return true; } catch (e) { console.warn('[storage] deleteReport failed', e); return false; }
 }
 
+export async function loadUserSettings(key) {
+  // Try Firestore if signed in; else localStorage fallback
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const m = await import(FIRESTORE_URL);
+      const snap = await m.getDoc(m.doc(await ensureDb(), 'userSettings', uid));
+      const data = snap.exists() ? snap.data() : {};
+      return data?.[key] || null;
+    }
+  } catch {}
+  try { const local = localStorage.getItem('userSettings'); return local ? (JSON.parse(local)[key] ?? null) : null; } catch {}
+  return null;
+}
+
+export async function saveUserSettings(key, value) {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const m = await import(FIRESTORE_URL);
+      await m.setDoc(m.doc(await ensureDb(), 'userSettings', uid), { [key]: value }, { merge: true });
+      return true;
+    }
+  } catch (e) { console.warn('[storage] saveUserSettings Firestore failed', e); }
+  try {
+    const all = JSON.parse(localStorage.getItem('userSettings') || '{}');
+    all[key] = value; localStorage.setItem('userSettings', JSON.stringify(all));
+    return true;
+  } catch {}
+  return false;
+}

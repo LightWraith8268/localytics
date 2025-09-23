@@ -37,3 +37,14 @@ export function detectColumns(headers = []) {
   };
 }
 
+export async function parseCsvFiles(fileList, options = {}) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return { rows: [], headers: [] };
+  let allRows = []; let headerSet = new Set();
+  for (const f of files) {
+    const { rows, headers } = await parseCsv(f, options);
+    rows.forEach(r => allRows.push(r));
+    headers.forEach(h => headerSet.add(h));
+  }
+  return { rows: allRows, headers: Array.from(headerSet) };
+}

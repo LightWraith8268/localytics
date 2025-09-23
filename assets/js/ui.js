@@ -55,6 +55,24 @@ export function makeChart(canvas, labels, data, label='Series') {
   });
 }
 
+export function makeBarChart(canvas, labels, data, label='Series') {
+  if (!window.Chart) return null;
+  const ctx = canvas.getContext('2d');
+  return new window.Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{ label, data, backgroundColor: '#60a5fa' }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: { y: { beginAtZero: true } }
+    }
+  });
+}
+
 export function downloadCsv(filename, columns, rows) {
   const header = columns.join(',');
   const lines = rows.map(r => columns.map(c => csvEscape(r[c])).join(','));
@@ -63,6 +81,23 @@ export function downloadCsv(filename, columns, rows) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = filename; a.click();
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
+}
+
+export function exportExcelBook(filename, report) {
+  if (!window.XLSX || !report) return;
+  const wb = window.XLSX.utils.book_new();
+  const totalsRows = [
+    { metric: 'Total Revenue', value: report.totals.totalRevenue },
+    { metric: 'Total Quantity', value: report.totals.totalQuantity },
+    { metric: 'Distinct Items', value: report.totals.distinctItems },
+  ];
+  const wsTotals = window.XLSX.utils.json_to_sheet(totalsRows);
+  const wsItem = window.XLSX.utils.json_to_sheet(report.byItem);
+  const wsDate = window.XLSX.utils.json_to_sheet(report.byDate);
+  window.XLSX.utils.book_append_sheet(wb, wsTotals, 'Totals');
+  window.XLSX.utils.book_append_sheet(wb, wsItem, 'By Item');
+  window.XLSX.utils.book_append_sheet(wb, wsDate, 'By Date');
+  window.XLSX.writeFile(wb, filename);
 }
 
 function formatCurrency(n) {
@@ -76,4 +111,3 @@ function csvEscape(v) {
   if (/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
   return s;
 }
-

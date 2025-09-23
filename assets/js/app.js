@@ -1,6 +1,6 @@
-import { parseCsv, detectColumns } from './csv.js';
+import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
 import { computeReport } from './reports.js';
-import { renderTotals, renderTable, makeChart, downloadCsv, setActiveNav } from './ui.js';
+import { renderTotals, renderTable, makeChart, makeBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser } from './storage.js';
 
 const state = {
@@ -9,6 +9,9 @@ const state = {
   mapping: { date: '', item: '', qty: '', price: '', revenue: '' },
   report: null,
   chart: null,
+  chartQty: null,
+  chartTop: null,
+  filters: { start: '', end: '', item: '' },
   user: null,
 };
 
@@ -50,10 +53,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // File handling
   const fileInput = qs('fileInput');
   fileInput.addEventListener('change', async () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
-    qs('uploadStatus').textContent = 'Reading sample to detect columns…';
-    const { rows, headers } = await parseCsv(file, { preview: 100 });
+    const files = fileInput.files;
+    if (!files || !files.length) return;
+    qs('uploadStatus').textContent = files.length > 1 ? `Reading ${files.length} files…` : 'Reading sample to detect columns…';
+    const { rows, headers } = await parseCsvFiles(files, { preview: 100 });
     state.rows = rows;
     state.headers = headers;
     const detected = detectColumns(headers);
@@ -71,14 +74,23 @@ window.addEventListener('DOMContentLoaded', () => {
     qs('col-price').value = detected.price || '';
     qs('col-revenue').value = detected.revenue || '';
     qs('uploadStatus').textContent = headers.length ? `Detected ${headers.length} columns.` : 'No headers found.';
+    // Try loading saved mapping and apply
+    const saved = await loadLastMapping();
+    if (saved) {
+      ['date','item','qty','price','revenue'].forEach(k => {
+        if (saved[k] && headers.includes(saved[k])) {
+          qs('col-' + k).value = saved[k];
+        }
+      });
+    }
   });
 
   qs('btnParse').addEventListener('click', async () => {
-    const file = fileInput.files?.[0];
-    if (!file) { alert('Choose a CSV first.'); return; }
-    // Read full file
+    const files = fileInput.files;
+    if (!files || !files.length) { alert('Choose at least one CSV.'); return; }
+    // Read full files
     qs('uploadStatus').textContent = 'Parsing CSV…';
-    const { rows, headers } = await parseCsv(file);
+    const { rows, headers } = await parseCsvFiles(files);
     state.rows = rows; state.headers = headers;
     state.mapping = {
       date: qs('col-date').value,
@@ -87,7 +99,9 @@ window.addEventListener('DOMContentLoaded', () => {
       price: qs('col-price').value,
       revenue: qs('col-revenue').value,
     };
-    state.report = computeReport(rows, state.mapping);
+    await saveLastMapping(state.mapping);
+    const filtered = applyFilters(rows, state.mapping, state.filters);
+    state.report = computeReport(filtered, state.mapping);
     renderReport();
     location.hash = '#/report';
     qs('uploadStatus').textContent = `Parsed ${rows.length} rows.`;
@@ -120,6 +134,25 @@ window.addEventListener('DOMContentLoaded', () => {
 
   qs('btnRefreshHistory').addEventListener('click', loadHistory);
   loadHistory();
+
+  // Filters
+  const st = qs('filterStart'); const en = qs('filterEnd'); const it = qs('filterItem');
+  qs('btnApplyFilters').addEventListener('click', () => {
+    state.filters = { start: st.value, end: en.value, item: it.value };
+    if (!state.rows.length || !state.mapping.date) return;
+    const filtered = applyFilters(state.rows, state.mapping, state.filters);
+    state.report = computeReport(filtered, state.mapping);
+    renderReport();
+  });
+  qs('btnClearFilters').addEventListener('click', () => {
+    st.value = en.value = it.value = '';
+    state.filters = { start:'', end:'', item:'' };
+    if (!state.rows.length || !state.mapping.date) return;
+    state.report = computeReport(state.rows, state.mapping);
+    renderReport();
+  });
+  qs('btnExportExcel').addEventListener('click', () => exportExcel(state.report));
+  function exportExcel(report){ if (!report) return; exportExcelBook('report.xlsx', report); }
 });
 
 function renderReport() {
@@ -131,6 +164,14 @@ function renderReport() {
   const labels = state.report.byDate.map(r => r.date);
   const data = state.report.byDate.map(r => r.revenue);
   state.chart = makeChart(document.getElementById('chart-revenue'), labels, data, 'Revenue');
+  if (state.chartQty) { state.chartQty.destroy(); state.chartQty = null; }
+  const qtyData = state.report.byDate.map(r => r.quantity);
+  state.chartQty = makeChart(document.getElementById('chart-qty'), labels, qtyData, 'Quantity');
+  if (state.chartTop) { state.chartTop.destroy(); state.chartTop = null; }
+  const top = state.report.byItem.slice(0, 10);
+  const topLabels = top.map(r => r.item);
+  const topVals = top.map(r => r.revenue);
+  state.chartTop = makeBarChart(document.getElementById('chart-top-items'), topLabels, topVals, 'Top Items by Revenue');
 }
 
 async function loadHistory() {
@@ -165,3 +206,45 @@ async function loadHistory() {
 // Expose for debugging
 window.__appState = state;
 
+function applyFilters(rows, mapping, filters) {
+  const start = filters.start ? new Date(filters.start) : null;
+  const end = filters.end ? new Date(filters.end) : null;
+  const itemQ = (filters.item || '').toLowerCase();
+  return rows.filter(r => {
+    let ok = true;
+    if (start || end) {
+      const d = new Date(r[mapping.date]);
+      if (Number.isNaN(d.getTime())) return false;
+      if (start && d < start) ok = false;
+      if (end) {
+        const endDay = new Date(end); endDay.setHours(23,59,59,999);
+        if (d > endDay) ok = false;
+      }
+    }
+    if (itemQ) {
+      const it = (r[mapping.item] || '').toString().toLowerCase();
+      if (!it.includes(itemQ)) ok = false;
+    }
+    return ok;
+  });
+}
+
+async function loadLastMapping() {
+  try {
+    const local = localStorage.getItem('qr_mapping');
+    return local ? JSON.parse(local) : null;
+  } catch {}
+  try {
+    const m = await import('./storage.js');
+    return await m.loadUserSettings('mapping');
+  } catch {}
+  return null;
+}
+
+async function saveLastMapping(mapping) {
+  try { localStorage.setItem('qr_mapping', JSON.stringify(mapping)); } catch {}
+  try {
+    const m = await import('./storage.js');
+    await m.saveUserSettings('mapping', mapping);
+  } catch {}
+}
