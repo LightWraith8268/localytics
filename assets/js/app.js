@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.4';
+const APP_VERSION = '1.2.5';
 const state = {
   rows: [],
   headers: [],
@@ -358,16 +358,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Clear local data
   qs('btnClearLocal')?.addEventListener('click', () => {
+    // Only clear CSV/sample in-memory data and demo autoload flag
     try {
-      localStorage.removeItem('qr_mapping');
-      localStorage.removeItem('userSettings');
-      localStorage.removeItem('qr_theme');
       localStorage.removeItem('qr_demo_autoloaded');
-      // disable auto demo on next load
+      // Prevent auto-demo from loading immediately after clearing
       localStorage.setItem('qr_demo_disabled', '1');
     } catch {}
-    // Reset in-memory state and reload
-    try { caches && caches.keys && caches.keys().then(keys => keys.forEach(k => caches.delete(k))); } catch {}
+    // Reset in-memory dataset (do not touch theme or user settings)
+    try {
+      state.rows = [];
+      state.filtered = [];
+      state.report = null;
+    } catch {}
+    // Navigate to Upload and reload UI
     location.href = '#/upload';
     location.reload();
   });
