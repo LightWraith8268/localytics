@@ -63,11 +63,14 @@ export async function signOutUser() {
 
 export async function saveReport(doc) {
   const db = await ensureDb(); if (!db) return null;
+  const mod = await ensureAuth();
+  if (!mod || !mod.auth.currentUser) { alert('Sign in to save reports.'); return null; }
+  const user = mod.auth.currentUser;
   const { addDoc, collection, serverTimestamp } = await import(FIRESTORE_URL).then(m => ({
     addDoc: m.addDoc, collection: m.collection, serverTimestamp: m.serverTimestamp
   }));
   try {
-    const payload = { ...doc, ts: serverTimestamp() };
+    const payload = { ...doc, ts: serverTimestamp(), ownerUid: user.uid, ownerEmail: user.email || '', ownerName: user.displayName || '' };
     const ref = await addDoc(collection(db, 'reports'), payload);
     return { id: ref.id };
   } catch (e) {
@@ -79,7 +82,20 @@ export async function saveReport(doc) {
 export async function listReports(limitCount = 20) {
   const db = await ensureDb(); if (!db) return [];
   const m = await import(FIRESTORE_URL);
-  const q = m.query(m.collection(db, 'reports'), m.orderBy('ts','desc'), m.limit(limitCount));
+  let q;
+  try {
+    const { auth } = await ensureAuth();
+    const uid = auth?.currentUser?.uid || '';
+    if (!uid) return [];
+    q = m.query(
+      m.collection(db, 'reports'),
+      m.where('ownerUid','==', uid),
+      m.orderBy('ts','desc'),
+      m.limit(limitCount)
+    );
+  } catch {
+    return [];
+  }
   try {
     const snap = await m.getDocs(q);
     return snap.docs.map(d => ({ id: d.id, ...d.data() }));
