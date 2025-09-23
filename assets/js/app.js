@@ -4,6 +4,7 @@ import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, mak
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
 
+const APP_VERSION = '1.1';
 const state = {
   rows: [],
   headers: [],
@@ -47,6 +48,8 @@ window.addEventListener('hashchange', () => showView(location.hash));
 window.addEventListener('DOMContentLoaded', () => {
   // Router
   showView(location.hash);
+  // Version badge
+  const vEl = document.getElementById('appVersionBadge'); if (vEl) vEl.textContent = `v${APP_VERSION}`;
 
   // Auth observe
   observeAuth(user => {
