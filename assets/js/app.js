@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.20';
+const APP_VERSION = '1.2.21';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -771,17 +771,66 @@ window.addEventListener('beforeprint', () => { document.querySelectorAll('detail
 function initTheme(){
   const sel = document.getElementById('themeSelect');
   const saved = localStorage.getItem('qr_theme') || 'light';
-  applyTheme(saved); if (sel) sel.value = saved;
-  sel?.addEventListener('change', () => { applyTheme(sel.value); localStorage.setItem('qr_theme', sel.value); });
+  applyTheme(saved);
+  if (sel) sel.value = saved;
+  sel?.addEventListener('change', () => {
+    const val = sel.value;
+    applyTheme(val); localStorage.setItem('qr_theme', val);
+    if (val === 'custom') applyCustomThemeFromInputs();
+  });
+  if (saved === 'custom') {
+    try { const vars = JSON.parse(localStorage.getItem('customThemeVars')||'{}'); applyCustomTheme(vars); fillCustomThemeInputs(vars); } catch {}
+  }
+  ['ctBg','ctCard','ctText','ctBorder','ctAccent'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => { if (document.getElementById('themeSelect')?.value === 'custom') applyCustomThemeFromInputs(true); updateThemePreview(); });
+  });
+  const b1 = document.getElementById('btnSaveCustomTheme'); if (b1) b1.addEventListener('click', () => { applyCustomThemeFromInputs(true); alert('Custom theme saved. Choose "Custom…" to use it.'); });
+  const b2 = document.getElementById('btnResetCustomTheme'); if (b2) b2.addEventListener('click', () => { localStorage.removeItem('customThemeVars'); fillCustomThemeInputs({}); updateThemePreview(); });
+  updateThemePreview();
 }
 function applyTheme(name){
   const el = document.documentElement;
-  const classes = ['theme-dark','theme-sepia','theme-ocean','theme-forest','theme-rose','theme-slate','theme-contrast'];
+  const classes = ['theme-dark','theme-sepia','theme-ocean','theme-forest','theme-rose','theme-slate','theme-contrast','theme-solarized-light','theme-solarized-dark','theme-dracula','theme-nord'];
   el.classList.remove(...classes);
   if (name && name !== 'light') {
     const cls = 'theme-' + name;
     if (classes.includes(cls)) el.classList.add(cls);
   }
+}
+
+function applyCustomThemeFromInputs(save){
+  const vars = {
+    bg: document.getElementById('ctBg')?.value || '#f8fafc',
+    card: document.getElementById('ctCard')?.value || '#ffffff',
+    text: document.getElementById('ctText')?.value || '#0f172a',
+    border: document.getElementById('ctBorder')?.value || '#e5e7eb',
+    accent: document.getElementById('ctAccent')?.value || '#2563eb'
+  };
+  applyCustomTheme(vars);
+  if (save) try { localStorage.setItem('customThemeVars', JSON.stringify(vars)); } catch {}
+}
+function applyCustomTheme(vars){
+  const el = document.documentElement;
+  el.style.setProperty('--bg', vars.bg || '#f8fafc');
+  el.style.setProperty('--card-bg', vars.card || '#ffffff');
+  el.style.setProperty('--text', vars.text || '#0f172a');
+  el.style.setProperty('--border', vars.border || '#e5e7eb');
+  el.style.setProperty('--accent', vars.accent || '#2563eb');
+}
+function fillCustomThemeInputs(vars){
+  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val; };
+  set('ctBg', vars.bg || '#f8fafc');
+  set('ctCard', vars.card || '#ffffff');
+  set('ctText', vars.text || '#0f172a');
+  set('ctBorder', vars.border || '#e5e7eb');
+  set('ctAccent', vars.accent || '#2563eb');
+}
+function updateThemePreview(){
+  const prev = document.getElementById('themePreview'); if (!prev) return;
+  prev.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--card-bg');
+  prev.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
+  prev.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border');
 }
 
 function ingestRows(rows){
