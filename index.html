@@ -561,10 +561,18 @@
         wb.addEventListener('controlling', () => { hideBanner(); window.location.reload(); });
 
         wb.register().then(() => {
+          const checkNow = () => {
+            wb.update();
+            navigator.serviceWorker.getRegistration().then(reg => { if (reg?.waiting) showBanner(); });
+          };
           // If there's already a waiting SW (e.g., from another tab), show banner immediately
           navigator.serviceWorker.getRegistration().then(reg => { if (reg?.waiting) showBanner(); });
           // Proactively check for updates on an interval (no manual refresh needed)
-          setInterval(() => { wb.update(); }, 60_000);
+          setInterval(checkNow, 60_000);
+          // Also check on page focus/visibility (tab switch brings it to front)
+          window.addEventListener('focus', checkNow);
+          document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNow(); });
+          window.addEventListener('pageshow', checkNow);
         });
       }
     </script>
