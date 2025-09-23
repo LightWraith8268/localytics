@@ -34,6 +34,7 @@ export function detectColumns(headers = []) {
     qty: find('qty', 'quantity', 'units'),
     price: find('price', 'unit price', 'amount'),
     revenue: find('revenue', 'total', 'gross', 'net', 'sales'),
+    category: find('category', 'department', 'group', 'type'),
   };
 }
 

@@ -116,3 +116,59 @@ export function aggregateCustom(rows, mapping, opts) {
   return arr;
 }
 
+export function aggregateByGranularity(rows, mapping, granularity = 'month') {
+  const map = new Map();
+  for (const r of rows) {
+    const key = bucketDateKey(r[mapping.date], granularity);
+    if (!key) continue;
+    const q = Number(r[mapping.qty] || 0) || 0;
+    const price = mapping.revenue ? 0 : Number((r[mapping.price] || '').toString().replace(/[$,\s]/g,'')) || 0;
+    const rev = mapping.revenue ? (Number((r[mapping.revenue] || '').toString().replace(/[$,\s]/g,'')) || 0) : (price * q);
+    const cur = map.get(key) || { period: key, quantity: 0, revenue: 0 };
+    cur.quantity += q; cur.revenue += rev; map.set(key, cur);
+  }
+  return Array.from(map.values()).sort((a,b)=> a.period.localeCompare(b.period)).map(x => ({ ...x, revenue: Number(x.revenue.toFixed(2)) }));
+}
+
+export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month', metric = 'revenue', topN = 0) {
+  const cats = new Map(); // cat -> Map(period -> value)
+  const totals = new Map(); // cat -> total metric
+  for (const r of rows) {
+    const period = bucketDateKey(r[mapping.date], granularity);
+    if (!period) continue;
+    const cat = (r[mapping.category] || 'Uncategorized').toString().trim() || 'Uncategorized';
+    const q = Number(r[mapping.qty] || 0) || 0;
+    const price = mapping.revenue ? 0 : Number((r[mapping.price] || '').toString().replace(/[$,\s]/g,'')) || 0;
+    const rev = mapping.revenue ? (Number((r[mapping.revenue] || '').toString().replace(/[$,\s]/g,'')) || 0) : (price * q);
+    const val = (metric === 'quantity') ? q : rev;
+    const m = cats.get(cat) || new Map();
+    m.set(period, (m.get(period) || 0) + val);
+    cats.set(cat, m);
+    totals.set(cat, (totals.get(cat) || 0) + val);
+  }
+  // Determine labels
+  const labelSet = new Set();
+  for (const m of cats.values()) for (const p of m.keys()) labelSet.add(p);
+  const labels = Array.from(labelSet).sort();
+  // Optionally limit to top N categories
+  let entries = Array.from(cats.entries());
+  if (topN && topN > 0) {
+    entries.sort((a,b)=> (totals.get(b[0]) - totals.get(a[0])));
+    entries = entries.slice(0, topN);
+  }
+  // Build datasets
+  const colors = palette(entries.length);
+  const datasets = entries.map(([cat, m], i) => ({
+    label: cat,
+    data: labels.map(p => Number(((m.get(p) || 0)).toFixed ? (m.get(p) || 0).toFixed(2) : (m.get(p) || 0))),
+    backgroundColor: colors[i % colors.length]
+  }));
+  return { labels, datasets };
+}
+
+function palette(n) {
+  const base = ['#1f77b4','#ff7f0e','#2ca02c','#d62728','#9467bd','#8c564b','#e377c2','#7f7f7f','#bcbd22','#17becf'];
+  const out = [];
+  for (let i=0;i<n;i++) out.push(base[i%base.length]);
+  return out;
+}

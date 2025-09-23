@@ -91,6 +91,21 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
   });
 }
 
+export function makeStackedBarChart(canvas, labels, datasets) {
+  if (!window.Chart) return null;
+  const ctx = canvas.getContext('2d');
+  return new window.Chart(ctx, {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+    }
+  });
+}
+
 export function downloadCsv(filename, columns, rows) {
   const header = columns.join(',');
   const lines = rows.map(r => columns.map(c => csvEscape(r[c])).join(','));
@@ -101,7 +116,7 @@ export function downloadCsv(filename, columns, rows) {
   setTimeout(()=>URL.revokeObjectURL(url), 1000);
 }
 
-export function exportExcelBook(filename, report) {
+export function exportExcelBook(filename, report, extraSheets) {
   if (!window.XLSX || !report) return;
   const wb = window.XLSX.utils.book_new();
   const totalsRows = [
@@ -115,6 +130,14 @@ export function exportExcelBook(filename, report) {
   window.XLSX.utils.book_append_sheet(wb, wsTotals, 'Totals');
   window.XLSX.utils.book_append_sheet(wb, wsItem, 'By Item');
   window.XLSX.utils.book_append_sheet(wb, wsDate, 'By Date');
+  if (extraSheets && typeof extraSheets === 'object') {
+    for (const [name, rows] of Object.entries(extraSheets)) {
+      try {
+        const ws = window.XLSX.utils.json_to_sheet(rows || []);
+        window.XLSX.utils.book_append_sheet(wb, ws, name.substring(0,31));
+      } catch {}
+    }
+  }
   window.XLSX.writeFile(wb, filename);
 }
 

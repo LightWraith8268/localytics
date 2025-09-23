@@ -22,6 +22,7 @@
         body { background: #fff; }
         .container { max-width: none; }
         .print-section { page-break-after: always; }
+        #print-cover { display: block !important; }
       }
     </style>
     <link rel="icon" href="data:,">
@@ -66,6 +67,10 @@
             <div>
               <label class="block text-sm text-gray-600 mb-1">Revenue column (optional)</label>
               <select id="col-revenue" class="w-full border rounded-md px-3 py-2 text-sm"></select>
+            </div>
+            <div>
+              <label class="block text-sm text-gray-600 mb-1">Category column (optional)</label>
+              <select id="col-category" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
           </div>
           <div class="mt-4 flex items-center gap-3">
@@ -154,6 +159,7 @@
               <select id="customGroupBy" class="w-full border rounded-md px-3 py-2 text-sm">
                 <option value="date">Date</option>
                 <option value="item">Item</option>
+                <option value="category">Category</option>
               </select>
             </div>
             <div id="granularityWrap">
@@ -190,6 +196,12 @@
           <div class="mt-4 print-section">
             <div class="h-96"><canvas id="customChart"></canvas></div>
           </div>
+          <div class="mt-3 no-print">
+            <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+              <input type="checkbox" id="customStackCat" class="h-4 w-4">
+              <span>Stack by Category (date charts)</span>
+            </label>
+          </div>
           <div class="mt-6">
             <div id="customTable" class="overflow-auto border rounded-md"></div>
           </div>
@@ -217,6 +229,19 @@
               <button id="btnSignIn" class="px-3 py-1.5 border rounded-md">Sign in with Google</button>
               <button id="btnSignOut" class="px-3 py-1.5 border rounded-md hidden">Sign out</button>
             </div>
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Brand Name</label>
+                <input type="text" id="brandName" placeholder="Your company" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Logo URL</label>
+                <input type="url" id="brandLogo" placeholder="https://...logo.png" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-2">
+              <button id="btnSaveBrand" class="px-3 py-1.5 border rounded-md">Save Branding</button>
+            </div>
           </div>
         </div>
       </section>
@@ -232,5 +257,28 @@
 
     <!-- App scripts -->
     <script type="module" src="./assets/js/app.js"></script>
+    
+    <!-- Print cover (hidden on screen) -->
+    <div id="print-cover" class="hidden">
+      <div class="container mx-auto px-4 py-10">
+        <div class="flex items-center gap-4">
+          <img id="printLogo" alt="Logo" style="max-height:60px; display:none;" />
+          <div>
+            <h1 id="printBrand" class="text-2xl font-semibold">Reports</h1>
+            <div class="text-sm text-gray-600" id="printSubtitle">Generated on <span id="printDate"></span></div>
+          </div>
+        </div>
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <div class="text-xs text-gray-500">Filters</div>
+            <div class="mt-1 text-sm" id="printFilters">None</div>
+          </div>
+          <div>
+            <div class="text-xs text-gray-500">Column Mapping</div>
+            <div class="mt-1 text-sm" id="printMapping">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </body>
   </html>
