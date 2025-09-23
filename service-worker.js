@@ -2,9 +2,8 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.23';
+const VERSION = 'wb-1.2.24';
 const PRECACHE = [
-  './',
   './index.html',
   './404.html',
   './manifest.webmanifest',
@@ -56,9 +55,24 @@ workbox.routing.registerRoute(
 );
 
 // Allow the page to trigger skipWaiting (used by update button)
+// and query the SW version to gate update UI
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  try {
+    const data = event.data || {};
+    if (data.type === 'SKIP_WAITING') {
+      self.skipWaiting();
+      return;
+    }
+    if (data.type === 'GET_VERSION') {
+      // Reply via MessageChannel, if provided
+      const port = event.ports && event.ports[0];
+      if (port) {
+        port.postMessage({ type: 'VERSION', version: VERSION });
+      }
+      return;
+    }
+  } catch (e) {
+    // no-op
   }
 });
 

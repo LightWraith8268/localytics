@@ -13,11 +13,12 @@ Highlights
 - Optional Firebase for report storage (via repo secret)
 
 Versioning Policy (Important)
-- Every change that ships MUST bump both:
+- CI auto-bumps the app version on every deploy. The deploy workflow writes a unique build version (UTC date + run number) to:
   - `APP_VERSION` in `assets/js/app.js`
-  - `VERSION` in `service-worker.js` (format `wb-X.Y.Z`)
-- Also bump query strings in `index.html` for `app.js` and `styles.css`.
-- CI stamps `service-worker.js` with build id to force SW updates every deploy.
+  - `VERSION` in `service-worker.js` (format `wb-...`)
+  - `index.html` query strings for `app.js` and `styles.css`
+- You can bump versions manually while developing; CI will override them for the deployed artifact.
+- CI also stamps `service-worker.js` with the build id to force SW updates each deploy.
 
 Firebase (optional)
 - Add a secret `FIREBASE_CONFIG_JSON` (a full Firebase config JSON) to inject `assets/js/firebase.js` on deploy.
@@ -29,4 +30,3 @@ Development
 - Prebuilt CSS lives in `assets/css/styles.css`; do not depend on building Tailwind in CI.
 - CSV parser drops the trailing totals row.
 - Ingest replaces previous data; no deduplication is applied.
-

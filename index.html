@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.23">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.24">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -734,7 +734,7 @@
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.23"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.24"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">
@@ -745,16 +745,6 @@
     <script type="module">
       import { Workbox } from 'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-window.prod.mjs';
       if ('serviceWorker' in navigator) {
-        // Proactively unregister any legacy SW path if present
-        try {
-          navigator.serviceWorker.getRegistrations().then(list => {
-            list.forEach(reg => {
-              if (reg.active && reg.active.scriptURL && reg.active.scriptURL.endsWith('/service-worker.js')) {
-                reg.unregister().catch(()=>{});
-              }
-            });
-          });
-        } catch {}
         const swUrl = './service-worker.js' + (window.APP_VERSION ? ('?v=' + window.APP_VERSION) : '');
         const wb = new Workbox(swUrl, { updateViaCache: 'none' });
         const banner = document.getElementById('sw-update');
@@ -762,15 +752,39 @@
         const showBanner = () => { if (banner) banner.classList.remove('hidden'); };
         const hideBanner = () => { if (banner) banner.classList.add('hidden'); };
 
-        wb.addEventListener('waiting', showBanner);
-        wb.addEventListener('externalwaiting', showBanner);
+        // Query the waiting SW for its version; only surface banner if it differs from the page APP_VERSION
+        async function maybeShowBanner() {
+          try {
+            const reg = await navigator.serviceWorker.getRegistration();
+            const waiting = reg?.waiting;
+            if (!waiting) return;
+            const swVersion = await new Promise((resolve) => {
+              const channel = new MessageChannel();
+              const timeout = setTimeout(() => resolve(null), 1500);
+              channel.port1.onmessage = (event) => { clearTimeout(timeout); resolve(event?.data?.version || null); };
+              try { waiting.postMessage({ type: 'GET_VERSION' }, [channel.port2]); } catch { clearTimeout(timeout); resolve(null); }
+            });
+            if (!swVersion) return; // Unknown -> avoid false positives
+            const swVer = String(swVersion).replace(/^wb-/, '');
+            const appVer = String(window.APP_VERSION || '');
+            if (swVer && appVer && swVer !== appVer) {
+              showBanner();
+            } else {
+              hideBanner();
+            }
+          } catch {
+            // If anything fails, be conservative: don't show
+            hideBanner();
+          }
+        }
+
+        wb.addEventListener('waiting', () => { maybeShowBanner(); });
+        wb.addEventListener('externalwaiting', () => { maybeShowBanner(); });
         btn?.addEventListener('click', () => { wb.messageSkipWaiting(); });
         wb.addEventListener('controlling', () => { hideBanner(); window.location.reload(); });
 
         wb.register().then((reg) => {
-          const checkNow = () => {
-            wb.update();
-          };
+          const checkNow = () => { wb.update(); };
           // Check immediately after registration
           checkNow();
           // Listen for new installing worker and surface banner once installed/waiting
@@ -779,7 +793,7 @@
               const sw = registration.installing;
               if (!sw) return;
               sw.addEventListener('statechange', () => {
-                if (sw.state === 'installed' && registration.waiting) showBanner();
+                if (sw.state === 'installed' && registration.waiting) { maybeShowBanner(); }
               });
             });
           };

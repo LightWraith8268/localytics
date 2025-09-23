@@ -32,6 +32,15 @@ jobs:
             echo "export const firebaseConfig = {}; export default firebaseConfig;" > assets/js/firebase.js
           fi
 
+      - name: Auto-bump app and SW versions (per deploy)
+        run: |
+          set -euxo pipefail
+          BUILD_VERSION="$(date -u +'%Y.%m.%d').${GITHUB_RUN_NUMBER}"
+          sed -i -E "s/^const APP_VERSION = '.+';/const APP_VERSION = '${BUILD_VERSION}';/" assets/js/app.js
+          sed -i -E "s/^const VERSION = 'wb-.+';/const VERSION = 'wb-${BUILD_VERSION}';/" service-worker.js
+          sed -i -E "s|(\./)?assets/css/styles\.css\?v=[0-9\.]+|./assets/css/styles.css?v=${BUILD_VERSION}|" index.html
+          sed -i -E "s|(\./)?assets/js/app\.js\?v=[0-9\.]+|./assets/js/app.js?v=${BUILD_VERSION}|" index.html
+
       - name: Stamp SW with build id
         run: |
           echo "/* build: ${GITHUB_SHA} $(date -u +'%Y-%m-%dT%H:%M:%SZ') */" >> service-worker.js
@@ -51,4 +60,3 @@ jobs:
           publish_dir: dist
           force_orphan: true
           commit_message: "Deploy: ${GITHUB_SHA}"
-
