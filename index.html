@@ -560,15 +560,26 @@
         btn?.addEventListener('click', () => { wb.messageSkipWaiting(); });
         wb.addEventListener('controlling', () => { hideBanner(); window.location.reload(); });
 
-        wb.register().then(() => {
+        wb.register().then((reg) => {
           const checkNow = () => {
             wb.update();
-            navigator.serviceWorker.getRegistration().then(reg => { if (reg?.waiting) showBanner(); });
+            if (reg?.waiting) showBanner();
           };
           // If there's already a waiting SW (e.g., from another tab), show banner immediately
-          navigator.serviceWorker.getRegistration().then(reg => { if (reg?.waiting) showBanner(); });
+          if (reg?.waiting) showBanner();
+          // Listen for new installing worker and surface banner once installed/waiting
+          const listenUpdateFound = (registration) => {
+            registration.addEventListener('updatefound', () => {
+              const sw = registration.installing;
+              if (!sw) return;
+              sw.addEventListener('statechange', () => {
+                if (sw.state === 'installed' && registration.waiting) showBanner();
+              });
+            });
+          };
+          listenUpdateFound(reg);
           // Proactively check for updates on an interval (no manual refresh needed)
-          setInterval(checkNow, 60_000);
+          setInterval(checkNow, 45_000);
           // Also check on page focus/visibility (tab switch brings it to front)
           window.addEventListener('focus', checkNow);
           document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNow(); });
