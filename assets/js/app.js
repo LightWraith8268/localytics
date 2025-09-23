@@ -740,7 +740,7 @@ async function saveBranding() {
 
 function preparePrintCover() {
   const elDate = document.getElementById('printDate'); if (elDate) elDate.textContent = new Date().toLocaleString();
-  const brand = document.getElementById('brandName')?.value || 'Reports';
+  const brand = document.getElementById('brandName')?.value || 'Localytics';
   const logo = document.getElementById('brandLogo')?.value || '';
   const elBrand = document.getElementById('printBrand'); if (elBrand) elBrand.textContent = brand;
   const elLogo = document.getElementById('printLogo'); if (elLogo) { if (logo) { elLogo.src = logo; elLogo.style.display = 'block'; } else { elLogo.style.display = 'none'; } }

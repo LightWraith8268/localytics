@@ -1,7 +1,7 @@
 {
-  "name": "QR Reports",
-  "short_name": "Reports",
-  "description": "CSV revenue and quantity reporting with charts and exports",
+  "name": "Localytics",
+  "short_name": "Localytics",
+  "description": "Localytics — CSV analytics: revenue, quantity, profit, trends",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -11,4 +11,3 @@
     { "src": "./assets/icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
 }
-
