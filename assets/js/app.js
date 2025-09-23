@@ -11,6 +11,8 @@ const state = {
   chart: null,
   chartQty: null,
   chartTop: null,
+  chartTopClients: null,
+  chartCatShare: null,
   filters: { start: '', end: '', item: '' },
   user: null,
   customChart: null,
@@ -150,8 +152,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Filters
   const st = qs('filterStart'); const en = qs('filterEnd'); const it = qs('filterItem');
+  const fClient = qs('filterClient'); const fStaff = qs('filterStaff'); const fOrder = qs('filterOrder'); const fCat = qs('filterCategory');
+  const fRevMin = qs('filterRevMin'); const fRevMax = qs('filterRevMax'); const fQtyMin = qs('filterQtyMin'); const fQtyMax = qs('filterQtyMax'); const fNoZero = qs('filterNoZero');
   qs('btnApplyFilters').addEventListener('click', () => {
-    state.filters = { start: st.value, end: en.value, item: it.value };
+    state.filters = {
+      start: st.value, end: en.value, item: it.value,
+      client: fClient?.value || '', staff: fStaff?.value || '', order: fOrder?.value || '', category: fCat?.value || '',
+      revMin: fRevMin?.value || '', revMax: fRevMax?.value || '', qtyMin: fQtyMin?.value || '', qtyMax: fQtyMax?.value || '',
+      noZero: !!(fNoZero && fNoZero.checked)
+    };
     if (!state.rows.length || !state.mapping.date) return;
     const filtered = applyFilters(state.rows, state.mapping, state.filters);
     state.report = computeReport(filtered, state.mapping);
@@ -159,7 +168,16 @@ window.addEventListener('DOMContentLoaded', () => {
   });
   qs('btnClearFilters').addEventListener('click', () => {
     st.value = en.value = it.value = '';
-    state.filters = { start:'', end:'', item:'' };
+    if (fClient) fClient.value = '';
+    if (fStaff) fStaff.value = '';
+    if (fOrder) fOrder.value = '';
+    if (fCat) fCat.value = '';
+    if (fRevMin) fRevMin.value = '';
+    if (fRevMax) fRevMax.value = '';
+    if (fQtyMin) fQtyMin.value = '';
+    if (fQtyMax) fQtyMax.value = '';
+    if (fNoZero) fNoZero.checked = false;
+    state.filters = { start:'', end:'', item:'', client:'', staff:'', order:'', category:'', revMin:'', revMax:'', qtyMin:'', qtyMax:'', noZero:false };
     if (!state.rows.length || !state.mapping.date) return;
     state.report = computeReport(state.rows, state.mapping);
     renderReport();
@@ -212,6 +230,24 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnExportCustomCsv').addEventListener('click', () => exportCustomCsv());
   qs('btnPrintTable').addEventListener('click', () => window.print());
 
+  // Additional exports
+  qs('btnExportClient')?.addEventListener('click', () => {
+    if (!state.byClient) return; const cols = ['client','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_client.csv', cols, state.byClient.map(x => ({ client:x.label, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
+  });
+  qs('btnExportStaff')?.addEventListener('click', () => {
+    if (!state.byStaff) return; const cols = ['staff','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_staff.csv', cols, state.byStaff.map(x => ({ staff:x.label, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
+  });
+  qs('btnExportOrder')?.addEventListener('click', () => {
+    if (!state.byOrder) return; const cols = ['order','date','client','staff','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_order.csv', cols, state.byOrder);
+  });
+  qs('btnExportCategory')?.addEventListener('click', () => {
+    if (!state.byCategory) return; const cols = ['category','quantity','revenue','cost','profit','margin'];
+    downloadCsv('report_by_category.csv', cols, state.byCategory.map(x => ({ category:x.label, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
+  });
+
   // Branding load
   loadBranding();
   qs('btnSaveBrand').addEventListener('click', saveBranding);
@@ -234,6 +270,31 @@ function renderReport() {
   const topLabels = top.map(r => r.item);
   const topVals = top.map(r => r.revenue);
   state.chartTop = makeBarChart(document.getElementById('chart-top-items'), topLabels, topVals, 'Top Items by Revenue');
+
+  // Additional aggregates
+  state.byClient = aggregateByField(state.rows, r => r.__client || '');
+  state.byStaff = aggregateByField(state.rows, r => r.__staff || '');
+  if (state.mapping.category) state.byCategory = aggregateByField(state.rows, r => r[state.mapping.category] || ''); else state.byCategory = null;
+  state.byOrder = aggregateByOrder(state.rows);
+
+  renderTable(qs('table-client'), ['label','quantity','revenue','cost','profit','margin'], state.byClient);
+  renderTable(qs('table-staff'), ['label','quantity','revenue','cost','profit','margin'], state.byStaff);
+  const catSection = document.getElementById('section-category');
+  if (state.byCategory && state.byCategory.length) {
+    catSection?.classList.remove('hidden');
+    renderTable(qs('table-category'), ['label','quantity','revenue','cost','profit','margin'], state.byCategory);
+    // Category share chart
+    if (state.chartCatShare) { state.chartCatShare.destroy(); state.chartCatShare = null; }
+    const labelsCat = state.byCategory.map(x => x.label);
+    const valsCat = state.byCategory.map(x => x.revenue);
+    state.chartCatShare = makeChartTyped(document.getElementById('chart-category-share'), 'doughnut', labelsCat, valsCat, 'Category Share');
+  } else {
+    catSection?.classList.add('hidden');
+  }
+  renderTable(qs('table-order'), ['order','date','client','staff','quantity','revenue','cost','profit','margin'], state.byOrder);
+  if (state.chartTopClients) { state.chartTopClients.destroy(); state.chartTopClients = null; }
+  const topClients = state.byClient.slice(0, 10);
+  state.chartTopClients = makeBarChart(document.getElementById('chart-top-clients'), topClients.map(x=>x.label), topClients.map(x=>x.revenue), 'Top Clients by Revenue');
 }
 
 async function loadHistory() {
@@ -284,6 +345,24 @@ function applyFilters(rows, mapping, filters) {
       const it = (r[mapping.item] || '').toString().toLowerCase();
       if (!it.includes(itemQ)) ok = false;
     }
+    if (filters.client) {
+      const v = (r.__client || '').toString().toLowerCase(); if (!v.includes(filters.client.toLowerCase())) ok = false;
+    }
+    if (filters.staff) {
+      const v = (r.__staff || '').toString().toLowerCase(); if (!v.includes(filters.staff.toLowerCase())) ok = false;
+    }
+    if (filters.order) {
+      const v = (r.__order || '').toString().toLowerCase(); if (!v.includes(filters.order.toLowerCase())) ok = false;
+    }
+    if (filters.category && mapping.category) {
+      const v = (r[mapping.category] || '').toString().toLowerCase(); if (!v.includes(filters.category.toLowerCase())) ok = false;
+    }
+    const rev = Number(r.__revenue || 0); const qty = Number(r.__quantity || 0);
+    if (filters.revMin && rev < Number(filters.revMin)) ok = false;
+    if (filters.revMax && rev > Number(filters.revMax)) ok = false;
+    if (filters.qtyMin && qty < Number(filters.qtyMin)) ok = false;
+    if (filters.qtyMax && qty > Number(filters.qtyMax)) ok = false;
+    if (filters.noZero && (rev === 0 || qty === 0)) ok = false;
     return ok;
   });
 }
@@ -403,7 +482,9 @@ function normalizeAndDedupe(rows, mapping) {
   const staffCol = mapping.staff;
   const map = new Map();
   for (const r of rows) {
-    const key = orderCol ? String(r[orderCol] ?? '').trim() : JSON.stringify(r);
+    const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
+    const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
+    const key = order ? `${order}|${name}` : JSON.stringify(r);
     if (!key) continue;
     const q = num(r[qtyCol]);
     const p = num(r[priceCol]);

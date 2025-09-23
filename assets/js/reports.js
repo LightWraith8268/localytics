@@ -178,3 +178,55 @@ function palette(n) {
   for (let i=0;i<n;i++) out.push(base[i%base.length]);
   return out;
 }
+
+export function aggregateByField(rows, field) {
+  const map = new Map();
+  for (const r of rows) {
+    const key = String(field(r) ?? '').trim() || '—';
+    const q = Number(r.__quantity || 0);
+    const rev = Number(r.__revenue || 0);
+    const cost = Number(r.__cost || 0);
+    const cur = map.get(key) || { label: key, quantity: 0, revenue: 0, cost: 0 };
+    cur.quantity += q; cur.revenue += rev; cur.cost += cost; map.set(key, cur);
+  }
+  return Array.from(map.values())
+    .map(x => ({
+      label: x.label,
+      quantity: x.quantity,
+      revenue: Number(x.revenue.toFixed(2)),
+      cost: Number(x.cost.toFixed(2)),
+      profit: Number((x.revenue - x.cost).toFixed(2)),
+      margin: x.revenue > 0 ? Number((((x.revenue - x.cost)/x.revenue)*100).toFixed(2)) : 0
+    }))
+    .sort((a,b)=> b.revenue - a.revenue);
+}
+
+export function aggregateByOrder(rows) {
+  const map = new Map();
+  for (const r of rows) {
+    const order = r.__order || String(r.order || '').trim() || '—';
+    const q = Number(r.__quantity || 0);
+    const rev = Number(r.__revenue || 0);
+    const cost = Number(r.__cost || 0);
+    const date = r.__dateIso || '';
+    const client = r.__client || r.client || '';
+    const staff = r.__staff || r.staff || '';
+    const cur = map.get(order) || { order, date, client, staff, quantity: 0, revenue: 0, cost: 0 };
+    cur.quantity += q; cur.revenue += rev; cur.cost += cost;
+    if (!cur.date || (date && date < cur.date)) cur.date = date; // earliest
+    if (!cur.client && client) cur.client = client;
+    if (!cur.staff && staff) cur.staff = staff;
+    map.set(order, cur);
+  }
+  return Array.from(map.values()).map(x => ({
+    order: x.order,
+    date: x.date,
+    client: x.client,
+    staff: x.staff,
+    quantity: x.quantity,
+    revenue: Number(x.revenue.toFixed(2)),
+    cost: Number(x.cost.toFixed(2)),
+    profit: Number((x.revenue - x.cost).toFixed(2)),
+    margin: x.revenue > 0 ? Number((((x.revenue - x.cost)/x.revenue)*100).toFixed(2)) : 0
+  })).sort((a,b)=> b.revenue - a.revenue);
+}
