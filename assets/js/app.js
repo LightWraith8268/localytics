@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.1';
+const APP_VERSION = '1.2.2';
 const state = {
   rows: [],
   headers: [],
