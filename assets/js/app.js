@@ -16,6 +16,16 @@ const state = {
   chartOrders: null,
   chartRevRolling: null,
   chartRevMoM: null,
+  chartProfit: null,
+  chartMargin: null,
+  chartAov: null,
+  chartIpo: null,
+  chartQtyRolling: null,
+  chartRevRolling30: null,
+  chartDowRevenue: null,
+  chartHourRevenue: null,
+  chartRevYoy: null,
+  chartCatTrend: null,
   filters: { start: '', end: '', item: '' },
   user: null,
   customChart: null,
@@ -351,21 +361,27 @@ function renderReport() {
   // Profit / Margin
   const profitSeries = state.report.byDate.map(x => x.profit);
   const marginSeries = state.report.byDate.map(x => x.margin);
-  const chartProfit = document.getElementById('chart-profit'); if (chartProfit) makeChart(chartProfit, labels, profitSeries, 'Profit');
-  const chartMargin = document.getElementById('chart-margin'); if (chartMargin) makeChart(chartMargin, labels, marginSeries, 'Margin %');
+  if (state.chartProfit) { state.chartProfit.destroy(); state.chartProfit = null; }
+  const chartProfit = document.getElementById('chart-profit'); if (chartProfit) state.chartProfit = makeChart(chartProfit, labels, profitSeries, 'Profit');
+  if (state.chartMargin) { state.chartMargin.destroy(); state.chartMargin = null; }
+  const chartMargin = document.getElementById('chart-margin'); if (chartMargin) state.chartMargin = makeChart(chartMargin, labels, marginSeries, 'Margin %');
 
   // AOV & Items per Order
   const byDateMap = new Map(state.report.byDate.map(x => [x.date, x]));
   const aovVals = ordersByDate.labels.map(d => { const ord = ordersByDate.values[ordersByDate.labels.indexOf(d)] || 0; const rev = byDateMap.get(d)?.revenue || 0; return ord ? Number((rev/ord).toFixed(2)) : 0; });
   const ipoVals = ordersByDate.labels.map(d => { const ord = ordersByDate.values[ordersByDate.labels.indexOf(d)] || 0; const qty = byDateMap.get(d)?.quantity || 0; return ord ? Number((qty/ord).toFixed(2)) : 0; });
-  const chartAov = document.getElementById('chart-aov'); if (chartAov) makeChart(chartAov, ordersByDate.labels, aovVals, 'AOV');
-  const chartIpo = document.getElementById('chart-ipo'); if (chartIpo) makeChart(chartIpo, ordersByDate.labels, ipoVals, 'Items/Order');
+  if (state.chartAov) { state.chartAov.destroy(); state.chartAov = null; }
+  const chartAov = document.getElementById('chart-aov'); if (chartAov) state.chartAov = makeChart(chartAov, ordersByDate.labels, aovVals, 'AOV');
+  if (state.chartIpo) { state.chartIpo.destroy(); state.chartIpo = null; }
+  const chartIpo = document.getElementById('chart-ipo'); if (chartIpo) state.chartIpo = makeChart(chartIpo, ordersByDate.labels, ipoVals, 'Items/Order');
 
   // Rolling quantity and 30-day rolling revenue
   const rollQty = rollingAverage(state.report.byDate.map(x=>({label:x.date,value:x.quantity})), 7);
-  const chartQtyRoll = document.getElementById('chart-qty-rolling'); if (chartQtyRoll) makeChart(chartQtyRoll, rollQty.labels, rollQty.values, '7d Avg Qty');
+  if (state.chartQtyRolling) { state.chartQtyRolling.destroy(); state.chartQtyRolling = null; }
+  const chartQtyRoll = document.getElementById('chart-qty-rolling'); if (chartQtyRoll) state.chartQtyRolling = makeChart(chartQtyRoll, rollQty.labels, rollQty.values, '7d Avg Qty');
   const rollRev30 = rollingAverage(state.report.byDate.map(x=>({label:x.date,value:x.revenue})), 30);
-  const chartRev30 = document.getElementById('chart-rev-rolling-30'); if (chartRev30) makeChart(chartRev30, rollRev30.labels, rollRev30.values, '30d Avg Revenue');
+  if (state.chartRevRolling30) { state.chartRevRolling30.destroy(); state.chartRevRolling30 = null; }
+  const chartRev30 = document.getElementById('chart-rev-rolling-30'); if (chartRev30) state.chartRevRolling30 = makeChart(chartRev30, rollRev30.labels, rollRev30.values, '30d Avg Revenue');
 
   // Day-of-week average revenue
   const dowAgg = new Array(7).fill(0).map(()=>({sum:0,count:0}));
@@ -375,23 +391,27 @@ function renderReport() {
   }
   const dowLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   const dowValues = dowAgg.map(x => x.count ? Number((x.sum/x.count).toFixed(2)) : 0);
-  const chartDow = document.getElementById('chart-dow-revenue'); if (chartDow) makeBarChart(chartDow, dowLabels, dowValues, 'Avg Revenue');
+  if (state.chartDowRevenue) { state.chartDowRevenue.destroy(); state.chartDowRevenue = null; }
+  const chartDow = document.getElementById('chart-dow-revenue'); if (chartDow) state.chartDowRevenue = makeBarChart(chartDow, dowLabels, dowValues, 'Avg Revenue');
 
   // Hour-of-day revenue (sum)
   const hourAgg = new Array(24).fill(0);
   for (const r of base) { const h = (r.__hour ?? -1); if (h>=0) hourAgg[h] += Number(r.__revenue||0); }
   const hourLabels = Array.from({length:24},(_,i)=> i.toString().padStart(2,'0'));
-  const chartHour = document.getElementById('chart-hour-revenue'); if (chartHour) makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
+  if (state.chartHourRevenue) { state.chartHourRevenue.destroy(); state.chartHourRevenue = null; }
+  const chartHour = document.getElementById('chart-hour-revenue'); if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
 
   // YoY change (monthly)
   const yoy = monthYearOverYearChange(month);
-  const chartYoy = document.getElementById('chart-rev-yoy'); if (chartYoy) makeChart(chartYoy, yoy.labels, yoy.values, 'YoY Change %');
+  if (state.chartRevYoy) { state.chartRevYoy.destroy(); state.chartRevYoy = null; }
+  const chartYoy = document.getElementById('chart-rev-yoy'); if (chartYoy) state.chartRevYoy = makeChart(chartYoy, yoy.labels, yoy.values, 'YoY Change %');
 
   // Category trend by month (stacked)
   const catTrendCanvas = document.getElementById('chart-cat-trend');
   if (catTrendCanvas && state.byCategory && state.byCategory.length) {
+    if (state.chartCatTrend) { state.chartCatTrend.destroy(); state.chartCatTrend = null; }
     const catTrend = aggregateByCategoryOverTime(base, state.mapping, 'month', 'revenue', 8);
-    makeStackedBarChart(catTrendCanvas, catTrend.labels, catTrend.datasets);
+    state.chartCatTrend = makeStackedBarChart(catTrendCanvas, catTrend.labels, catTrend.datasets);
   }
 }
 
