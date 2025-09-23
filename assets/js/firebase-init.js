@@ -4,6 +4,7 @@
 const VERSION = '10.12.2';
 const APP_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-app.js`;
 const FIRESTORE_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-firestore.js`;
+const ANALYTICS_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-analytics.js`;
 
 let config;
 try {
@@ -21,6 +22,19 @@ if (config) {
 
     const app = initializeApp(config);
     const db = getFirestore(app);
+
+    // Optional: Analytics, only if measurementId present and supported
+    if (config.measurementId) {
+      try {
+        const { getAnalytics, isSupported } = await import(ANALYTICS_URL);
+        if (await isSupported()) {
+          getAnalytics(app);
+          console.log('[firebase-init] Analytics initialized');
+        }
+      } catch (err) {
+        console.warn('[firebase-init] Analytics not initialized:', err);
+      }
+    }
 
     // Minimal example: log a pageview
     try {
@@ -40,4 +54,3 @@ if (config) {
     console.warn('[firebase-init] Error initializing Firebase:', err);
   }
 }
-
