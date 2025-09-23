@@ -347,6 +347,52 @@ function renderReport() {
   const month = aggregateByGranularity(base, state.mapping, 'month');
   const mom = monthOverMonthChange(month);
   state.chartRevMoM = makeChart(document.getElementById('chart-rev-mom'), mom.labels, mom.values, 'MoM Change %');
+
+  // Profit / Margin
+  const profitSeries = state.report.byDate.map(x => x.profit);
+  const marginSeries = state.report.byDate.map(x => x.margin);
+  const chartProfit = document.getElementById('chart-profit'); if (chartProfit) makeChart(chartProfit, labels, profitSeries, 'Profit');
+  const chartMargin = document.getElementById('chart-margin'); if (chartMargin) makeChart(chartMargin, labels, marginSeries, 'Margin %');
+
+  // AOV & Items per Order
+  const byDateMap = new Map(state.report.byDate.map(x => [x.date, x]));
+  const aovVals = ordersByDate.labels.map(d => { const ord = ordersByDate.values[ordersByDate.labels.indexOf(d)] || 0; const rev = byDateMap.get(d)?.revenue || 0; return ord ? Number((rev/ord).toFixed(2)) : 0; });
+  const ipoVals = ordersByDate.labels.map(d => { const ord = ordersByDate.values[ordersByDate.labels.indexOf(d)] || 0; const qty = byDateMap.get(d)?.quantity || 0; return ord ? Number((qty/ord).toFixed(2)) : 0; });
+  const chartAov = document.getElementById('chart-aov'); if (chartAov) makeChart(chartAov, ordersByDate.labels, aovVals, 'AOV');
+  const chartIpo = document.getElementById('chart-ipo'); if (chartIpo) makeChart(chartIpo, ordersByDate.labels, ipoVals, 'Items/Order');
+
+  // Rolling quantity and 30-day rolling revenue
+  const rollQty = rollingAverage(state.report.byDate.map(x=>({label:x.date,value:x.quantity})), 7);
+  const chartQtyRoll = document.getElementById('chart-qty-rolling'); if (chartQtyRoll) makeChart(chartQtyRoll, rollQty.labels, rollQty.values, '7d Avg Qty');
+  const rollRev30 = rollingAverage(state.report.byDate.map(x=>({label:x.date,value:x.revenue})), 30);
+  const chartRev30 = document.getElementById('chart-rev-rolling-30'); if (chartRev30) makeChart(chartRev30, rollRev30.labels, rollRev30.values, '30d Avg Revenue');
+
+  // Day-of-week average revenue
+  const dowAgg = new Array(7).fill(0).map(()=>({sum:0,count:0}));
+  for (const d of state.report.byDate) {
+    const dow = new Date(d.date).getDay();
+    dowAgg[dow].sum += d.revenue; dowAgg[dow].count += 1;
+  }
+  const dowLabels = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const dowValues = dowAgg.map(x => x.count ? Number((x.sum/x.count).toFixed(2)) : 0);
+  const chartDow = document.getElementById('chart-dow-revenue'); if (chartDow) makeBarChart(chartDow, dowLabels, dowValues, 'Avg Revenue');
+
+  // Hour-of-day revenue (sum)
+  const hourAgg = new Array(24).fill(0);
+  for (const r of base) { const h = (r.__hour ?? -1); if (h>=0) hourAgg[h] += Number(r.__revenue||0); }
+  const hourLabels = Array.from({length:24},(_,i)=> i.toString().padStart(2,'0'));
+  const chartHour = document.getElementById('chart-hour-revenue'); if (chartHour) makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
+
+  // YoY change (monthly)
+  const yoy = monthYearOverYearChange(month);
+  const chartYoy = document.getElementById('chart-rev-yoy'); if (chartYoy) makeChart(chartYoy, yoy.labels, yoy.values, 'YoY Change %');
+
+  // Category trend by month (stacked)
+  const catTrendCanvas = document.getElementById('chart-cat-trend');
+  if (catTrendCanvas && state.byCategory && state.byCategory.length) {
+    const catTrend = aggregateByCategoryOverTime(base, state.mapping, 'month', 'revenue', 8);
+    makeStackedBarChart(catTrendCanvas, catTrend.labels, catTrend.datasets);
+  }
 }
 
 async function loadHistory() {
@@ -556,6 +602,18 @@ function monthOverMonthChange(monthSeries){
   return { labels, values };
 }
 
+function monthYearOverYearChange(monthSeries){
+  // monthSeries: [{ period: 'YYYY-MM', revenue, ... }]
+  const map = new Map(monthSeries.map(m => [m.period, m]));
+  const labels = monthSeries.map(m => m.period);
+  const values = labels.map((p) => {
+    const [y, m] = p.split('-'); const prev = `${(+y)-1}-${m}`;
+    const curRev = map.get(p)?.revenue || 0; const prevRev = map.get(prev)?.revenue || 0;
+    return prevRev ? Number((((curRev - prevRev)/prevRev)*100).toFixed(2)) : 0;
+  });
+  return { labels, values };
+}
+
 async function loadBranding() {
   const nameInput = document.getElementById('brandName');
   const logoInput = document.getElementById('brandLogo');
@@ -608,11 +666,15 @@ function normalizeAndDedupe(rows, mapping) {
     const c = num(r[costCol]);
     const revenue = Number((q * p).toFixed(2));
     const cost = Number((q * c).toFixed(2));
-    const iso = toIsoDate(r[dateCol]);
-    const pretty = toPrettyDate(r[dateCol]);
+    const originalDateVal = r[dateCol];
+    const iso = toIsoDate(originalDateVal);
+    const pretty = toPrettyDate(originalDateVal);
+    const dFull = parseFullDate(originalDateVal);
     const obj = { ...r };
     obj[dateCol] = pretty; // replace display date
     obj.__dateIso = iso;
+    obj.__dow = (dFull ? dFull.getDay() : null);
+    obj.__hour = (dFull ? dFull.getHours() : null);
     obj.__quantity = q;
     obj.__price = p;
     obj.__unitCost = c;
@@ -633,3 +695,4 @@ function normalizeAndDedupe(rows, mapping) {
 function num(v){ if (v==null) return 0; if (typeof v==='number') return v; const s=String(v).replace(/[$,\s]/g,''); const n=Number(s); return Number.isFinite(n)?n:0; }
 function toIsoDate(v){ if(!v) return ''; try{ const m=String(v).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/); if(m){ const months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; const mm=String(months[m[1]]).padStart(2,'0'); const dd=String(m[2]).padStart(2,'0'); const yyyy=m[3]; return `${yyyy}-${mm}-${dd}`;} const d=new Date(v); if(!Number.isNaN(d.getTime())){ const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } }catch{} return ''; }
 function toPrettyDate(v){ if(!v) return ''; const m=String(v).match(/^([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/); if(m) return m[1]; try { return new Date(v).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'}); } catch { return String(v); } }
+function parseFullDate(v){ try { const d = new Date(v); return Number.isNaN(d.getTime()) ? null : d; } catch { return null; } }
