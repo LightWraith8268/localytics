@@ -549,16 +549,23 @@
     <script type="module">
       import { Workbox } from 'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-window.prod.mjs';
       if ('serviceWorker' in navigator) {
-        const wb = new Workbox('./service-worker.js');
+        const wb = new Workbox('./service-worker.js', { updateViaCache: 'none' });
         const banner = document.getElementById('sw-update');
         const btn = document.getElementById('btnSwUpdate');
-        wb.addEventListener('waiting', () => { if (banner) banner.classList.remove('hidden'); });
+        const showBanner = () => { if (banner) banner.classList.remove('hidden'); };
+        const hideBanner = () => { if (banner) banner.classList.add('hidden'); };
+
+        wb.addEventListener('waiting', showBanner);
+        wb.addEventListener('externalwaiting', showBanner);
         btn?.addEventListener('click', () => { wb.messageSkipWaiting(); });
-        wb.addEventListener('controlling', () => {
-          if (banner) banner.classList.add('hidden');
-          window.location.reload();
+        wb.addEventListener('controlling', () => { hideBanner(); window.location.reload(); });
+
+        wb.register().then(() => {
+          // If there's already a waiting SW (e.g., from another tab), show banner immediately
+          navigator.serviceWorker.getRegistration().then(reg => { if (reg?.waiting) showBanner(); });
+          // Proactively check for updates on an interval (no manual refresh needed)
+          setInterval(() => { wb.update(); }, 60_000);
         });
-        wb.register();
       }
     </script>
     <script nomodule>
