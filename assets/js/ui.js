@@ -52,8 +52,16 @@ export function makeChart(canvas, labels, data, label='Series') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: true } },
-      scales: { y: { beginAtZero: true } }
+      plugins: {
+        legend: { display: true },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: (v) => formatNumberTwo(v) }
+        }
+      }
     }
   });
 }
@@ -70,8 +78,16 @@ export function makeBarChart(canvas, labels, data, label='Series') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: true } },
-      scales: { y: { beginAtZero: true } }
+      plugins: {
+        legend: { display: true },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` } }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { callback: (v) => formatNumberTwo(v) }
+        }
+      }
     }
   });
 }
@@ -88,8 +104,20 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: true } },
-      scales: (type === 'pie' || type === 'doughnut') ? undefined : { y: { beginAtZero: true } }
+      plugins: {
+        legend: { display: true },
+        tooltip: {
+          callbacks: {
+            label: (ctx) => {
+              const val = (type === 'pie' || type === 'doughnut') ? ctx.parsed : ctx.parsed.y;
+              return `${ctx.dataset.label ?? ''}: ${formatNumberTwo(val)}`;
+            }
+          }
+        }
+      },
+      scales: (type === 'pie' || type === 'doughnut') ? undefined : {
+        y: { beginAtZero: true, ticks: { callback: (v) => formatNumberTwo(v) } }
+      }
     }
   });
 }
@@ -103,15 +131,21 @@ export function makeStackedBarChart(canvas, labels, datasets) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: true } },
-      scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } }
+      plugins: {
+        legend: { display: true },
+        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` } }
+      },
+      scales: {
+        x: { stacked: true },
+        y: { stacked: true, beginAtZero: true, ticks: { callback: (v) => formatNumberTwo(v) } }
+      }
     }
   });
 }
 
 export function downloadCsv(filename, columns, rows) {
   const header = columns.join(',');
-  const lines = rows.map(r => columns.map(c => csvEscape(r[c])).join(','));
+  const lines = rows.map(r => columns.map(c => csvEscape(formatCsvValue(r[c]))).join(','));
   const csv = [header, ...lines].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -145,12 +179,15 @@ export function exportExcelBook(filename, report, extraSheets) {
 }
 
 function formatCurrency(n) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: guessCurrency(), maximumFractionDigits: 2 }).format(Number(n||0));
+  const num = Number(n ?? 0);
+  return new Intl.NumberFormat(undefined, { style: 'currency', currency: guessCurrency(), minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num);
 }
 function guessCurrency() { try { return (Intl.NumberFormat().resolvedOptions().currency) || 'USD'; } catch { return 'USD'; } }
 function formatCell(col, val) {
   if (/revenue|price|total|cost|profit/i.test(col)) return formatCurrency(val);
   if (/margin/i.test(col)) return formatPercent(val);
+  // For any other numeric values, show exactly two decimals
+  if (isNumeric(val)) return escapeHtml(formatNumberTwo(val));
   return escapeHtml(String(val ?? ''));
 }
 function formatPercent(n) { const v = Number(n||0); return `${v.toFixed(2)}%`; }
@@ -160,4 +197,7 @@ function csvEscape(v) {
   if (/[",\n]/.test(s)) return '"' + s.replace(/"/g,'""') + '"';
   return s;
 }
+function isNumeric(v){ return v !== null && v !== '' && !Array.isArray(v) && !isNaN(v); }
+function formatNumberTwo(v){ const num = Number(v||0); return (Number.isFinite(num)? num : 0).toFixed(2); }
+function formatCsvValue(v){ if (isNumeric(v)) return formatNumberTwo(v); const s=String(v??''); return s; }
 
