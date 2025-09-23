@@ -12,7 +12,8 @@ const CORE = [
   './assets/js/ui.js',
   './assets/js/storage.js',
   './assets/js/firebase-init.js',
-  './assets/js/firebase.js'
+  './assets/js/firebase.js',
+  './assets/js/sample-data.js'
 ];
 
 self.addEventListener('install', (event) => {
@@ -84,4 +85,3 @@ self.addEventListener('fetch', (event) => {
     }
   })());
 });
-

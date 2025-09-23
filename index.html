@@ -18,10 +18,34 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./assets/icons/icon.svg">
     <style>
-      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; }
+      :root {
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --text: #0f172a;
+        --border: #e5e7eb;
+        --accent: #2563eb;
+      }
+      .theme-dark {
+        --bg: #0b1220;
+        --card-bg: #111827;
+        --text: #e5e7eb;
+        --border: #374151;
+        --accent: #60a5fa;
+      }
+      .theme-sepia {
+        --bg: #f7f1e3;
+        --card-bg: #fbfaf5;
+        --text: #3e2723;
+        --border: #e0d6c8;
+        --accent: #b08968;
+      }
+      body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
       .container { max-width: 1100px; }
       .hidden { display: none; }
       .monospace { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+      .app-card { background-color: var(--card-bg) !important; border-color: var(--border) !important; }
+      .app-border { border-color: var(--border) !important; }
+      .accent { color: var(--accent); }
       @media print {
         header, .no-print { display: none !important; }
         body { background: #fff; }
@@ -39,12 +63,13 @@
         .h-64 { height: 320px !important; }
         canvas { max-width: 100% !important; height: auto !important; }
         img.print-canvas-img { max-width: 100% !important; height: auto !important; page-break-inside: avoid; }
+        details { break-inside: avoid; }
       }
     </style>
     <link rel="icon" href="data:,">
   </head>
   <body class="bg-gray-50 text-gray-900">
-    <header class="bg-white border-b border-gray-200 sticky top-0 z-10 no-print">
+    <header class="app-card border app-border sticky top-0 z-10 no-print">
       <div class="container mx-auto px-4 py-3 flex items-center justify-between">
         <h1 class="text-lg font-semibold">Reports Dashboard</h1>
         <nav class="flex gap-4 text-sm">
@@ -53,6 +78,11 @@
           <a href="#/history" class="nav-link text-gray-600 hover:text-gray-900">History</a>
           <a href="#/settings" class="nav-link text-gray-600 hover:text-gray-900">Settings</a>
           <a href="#/custom" class="nav-link text-gray-600 hover:text-gray-900">Custom</a>
+          <select id="themeSelect" class="border app-border rounded-md px-2 py-1 text-sm">
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+            <option value="sepia">Sepia</option>
+          </select>
         </nav>
       </div>
     </header>
@@ -60,9 +90,13 @@
     <main class="container mx-auto px-4 py-6">
       <!-- Upload View -->
       <section id="view-upload" class="view">
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+        <div class="app-card rounded-lg border app-border shadow-sm p-5">
           <h2 class="text-base font-medium mb-4">Upload CSV</h2>
           <input id="fileInput" type="file" accept=".csv,text/csv" multiple class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
+          <div class="mt-3">
+            <button id="btnLoadSample" class="px-3 py-1.5 border app-border rounded-md text-sm">Load Sample Data</button>
+            <span id="demoBanner" class="ml-3 text-xs text-gray-600"></span>
+          </div>
           <div id="parseOptions" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm text-gray-600 mb-1">Date column</label>
@@ -114,7 +148,7 @@
 
       <!-- Report View -->
       <section id="view-report" class="view hidden">
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+        <div class="app-card rounded-lg border app-border shadow-sm p-5">
           <div class="flex items-center justify-between no-print">
             <h2 class="text-base font-medium">Report</h2>
             <div class="flex gap-2">
@@ -192,15 +226,31 @@
             <button id="btnClearFilters" class="px-3 py-1.5 border rounded-md text-sm">Clear</button>
           </div>
           <div id="totals" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 print-section"></div>
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">
-            <div>
-              <h3 class="text-sm font-semibold mb-2">By Item</h3>
-              <div id="table-item" class="overflow-auto border rounded-md"></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">By Date</h3>
-              <div id="table-date" class="overflow-auto border rounded-md"></div>
-            </div>
+          <div class="mt-6 grid grid-cols-1 gap-4 print-section">
+            <details class="app-card border app-border rounded-md p-3" open data-accordion>
+              <summary class="cursor-pointer select-none text-sm font-semibold">By Item</summary>
+              <div id="table-item" class="mt-3 overflow-auto border app-border rounded-md"></div>
+            </details>
+            <details class="app-card border app-border rounded-md p-3" data-accordion>
+              <summary class="cursor-pointer select-none text-sm font-semibold">By Date</summary>
+              <div id="table-date" class="mt-3 overflow-auto border app-border rounded-md"></div>
+            </details>
+            <details class="app-card border app-border rounded-md p-3" data-accordion>
+              <summary class="cursor-pointer select-none text-sm font-semibold">By Client</summary>
+              <div id="table-client" class="mt-3 overflow-auto border app-border rounded-md"></div>
+            </details>
+            <details class="app-card border app-border rounded-md p-3" data-accordion>
+              <summary class="cursor-pointer select-none text-sm font-semibold">By Staff</summary>
+              <div id="table-staff" class="mt-3 overflow-auto border app-border rounded-md"></div>
+            </details>
+            <details class="app-card border app-border rounded-md p-3" id="section-category" data-accordion>
+              <summary class="cursor-pointer select-none text-sm font-semibold">By Category</summary>
+              <div id="table-category" class="mt-3 overflow-auto border app-border rounded-md"></div>
+            </details>
+            <details class="app-card border app-border rounded-md p-3" data-accordion>
+              <summary class="cursor-pointer select-none text-sm font-semibold">By Order</summary>
+              <div id="table-order" class="mt-3 overflow-auto border app-border rounded-md"></div>
+            </details>
           </div>
           <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">
             <div>
@@ -226,76 +276,79 @@
             <h3 class="text-sm font-semibold mb-2">By Order</h3>
             <div id="table-order" class="overflow-auto border rounded-md"></div>
           </div>
-          <div class="mt-6">
-            <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
-            <div class="h-64"><canvas id="chart-revenue"></canvas></div>
-          </div>
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
-              <div class="h-64"><canvas id="chart-qty"></canvas></div>
+          <details class="app-card border app-border rounded-md p-3 mt-6" data-accordion open>
+            <summary class="cursor-pointer select-none text-sm font-semibold">Trends & Charts</summary>
+            <div class="mt-3">
+              <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
+              <div class="h-64"><canvas id="chart-revenue"></canvas></div>
             </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
-              <div class="h-64"><canvas id="chart-top-items"></canvas></div>
+            <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
+                <div class="h-64"><canvas id="chart-qty"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
+                <div class="h-64"><canvas id="chart-top-items"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
+                <div class="h-64"><canvas id="chart-top-clients"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
+                <div class="h-64"><canvas id="chart-orders"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
+                <div class="h-64"><canvas id="chart-profit"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
+                <div class="h-64"><canvas id="chart-margin"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
+                <div class="h-64"><canvas id="chart-aov"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
+                <div class="h-64"><canvas id="chart-ipo"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
+                <div class="h-64"><canvas id="chart-rev-rolling"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
+                <div class="h-64"><canvas id="chart-qty-rolling"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
+                <div class="h-64"><canvas id="chart-rev-rolling-30"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
+                <div class="h-64"><canvas id="chart-rev-mom"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
+                <div class="h-64"><canvas id="chart-rev-yoy"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
+                <div class="h-64"><canvas id="chart-dow-revenue"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
+                <div class="h-64"><canvas id="chart-hour-revenue"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
+                <div class="h-64"><canvas id="chart-cat-trend"></canvas></div>
+              </div>
             </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
-              <div class="h-64"><canvas id="chart-top-clients"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
-              <div class="h-64"><canvas id="chart-orders"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
-              <div class="h-64"><canvas id="chart-profit"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
-              <div class="h-64"><canvas id="chart-margin"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
-              <div class="h-64"><canvas id="chart-aov"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
-              <div class="h-64"><canvas id="chart-ipo"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
-              <div class="h-64"><canvas id="chart-rev-rolling"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
-              <div class="h-64"><canvas id="chart-qty-rolling"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
-              <div class="h-64"><canvas id="chart-rev-rolling-30"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
-              <div class="h-64"><canvas id="chart-rev-mom"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
-              <div class="h-64"><canvas id="chart-rev-yoy"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
-              <div class="h-64"><canvas id="chart-dow-revenue"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
-              <div class="h-64"><canvas id="chart-hour-revenue"></canvas></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
-              <div class="h-64"><canvas id="chart-cat-trend"></canvas></div>
-            </div>
-          </div>
+          </details>
         </div>
       </section>
 
@@ -369,7 +422,7 @@
 
       <!-- History View -->
       <section id="view-history" class="view hidden">
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+        <div class="app-card rounded-lg border app-border shadow-sm p-5">
           <div class="flex items-center justify-between">
             <h2 class="text-base font-medium">History</h2>
             <button id="btnRefreshHistory" class="px-3 py-1.5 border rounded-md text-sm">Refresh</button>
@@ -380,7 +433,7 @@
 
       <!-- Settings View -->
       <section id="view-settings" class="view hidden">
-        <div class="bg-white rounded-lg border border-gray-200 shadow-sm p-5">
+        <div class="app-card rounded-lg border app-border shadow-sm p-5">
           <h2 class="text-base font-medium">Settings</h2>
           <div class="mt-4 text-sm">
             <p id="authStatus">Not signed in.</p>
@@ -410,6 +463,18 @@
                 <button id="btnClearCategoryMap" class="px-3 py-1.5 border rounded-md">Clear Mapping</button>
               </div>
               <div id="categoryMapEditor" class="mt-3 max-h-96 overflow-auto border rounded-md divide-y"></div>
+            </div>
+            <div class="mt-8">
+              <h3 class="text-base font-medium">Allowed Items Filter</h3>
+              <p class="text-xs text-gray-600">Hard-code a list of item names (one per line) to include. If enabled, only rows whose item matches will be used.</p>
+              <textarea id="allowedItems" rows="6" class="w-full border rounded-md px-3 py-2 text-sm monospace" placeholder="Widget A\nWidget B"></textarea>
+              <div class="mt-2 flex items-center gap-2">
+                <input type="checkbox" id="enforceAllowed" class="h-4 w-4">
+                <label for="enforceAllowed" class="text-sm">Enforce allowed items only</label>
+              </div>
+              <div class="mt-2">
+                <button id="btnSaveAllowed" class="px-3 py-1.5 border rounded-md">Save Allowed Items</button>
+              </div>
             </div>
           </div>
         </div>

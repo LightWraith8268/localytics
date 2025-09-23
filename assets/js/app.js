@@ -2,6 +2,7 @@ import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
 import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime } from './reports.js';
 import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings } from './storage.js';
+import { SAMPLE_ROWS } from './sample-data.js';
 
 const state = {
   rows: [],
@@ -68,9 +69,31 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnSignOut').addEventListener('click', signOutUser);
   // Load category map
   (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch {} })();
+  // Theme load
+  initTheme();
+  // Auto-load sample data on first visit for default reports
+  try {
+    const demoKey = 'qr_demo_autoloaded';
+    if (!localStorage.getItem(demoKey)) {
+      ingestRows(SAMPLE_ROWS);
+      const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
+      localStorage.setItem(demoKey, '1');
+    }
+  } catch {}
 
   // File handling
   const fileInput = qs('fileInput');
+  const btnLoadSample = qs('btnLoadSample');
+  if (btnLoadSample) btnLoadSample.addEventListener('click', () => {
+    if (!state.mapping.date) {
+      const headers = Object.keys(SAMPLE_ROWS[0]);
+      state.headers = headers;
+      const fill = (id, value) => { const el = qs(id); if (!el) return; el.innerHTML = headers.map(h=>`<option value="${h}">${h}</option>`).join(''); el.value = value; };
+      fill('col-date','Date'); fill('col-item','Name'); fill('col-qty','Quantity'); fill('col-price','Price'); fill('col-cost','Cost'); fill('col-order','Order Number'); fill('col-client','Client'); fill('col-staff','Staff');
+    }
+    ingestRows(SAMPLE_ROWS);
+    const banner = qs('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
+  });
   fileInput.addEventListener('change', async () => {
     const files = fileInput.files;
     if (!files || !files.length) return;
@@ -275,6 +298,23 @@ window.addEventListener('DOMContentLoaded', () => {
   // Branding load
   loadBranding();
   qs('btnSaveBrand').addEventListener('click', saveBranding);
+  // Allowed items persist
+  qs('btnSaveAllowed')?.addEventListener('click', async () => {
+    const list = (document.getElementById('allowedItems')?.value || '').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+    const enforce = !!document.getElementById('enforceAllowed')?.checked;
+    window.__allowedItemsList = list; window.__enforceAllowed = enforce;
+    await saveUserSettings('allowedItemsList', list);
+    await saveUserSettings('enforceAllowed', enforce);
+    alert('Allowed items saved.');
+  });
+  (async ()=>{
+    try {
+      const list = await loadUserSettings('allowedItemsList');
+      if (list && Array.isArray(list)) { document.getElementById('allowedItems').value = list.join('\n'); window.__allowedItemsList = list; }
+      const enforce = await loadUserSettings('enforceAllowed');
+      if (typeof enforce === 'boolean') { document.getElementById('enforceAllowed').checked = enforce; window.__enforceAllowed = enforce; }
+    } catch {}
+  })();
   // Print: ensure canvases are printable
   window.addEventListener('beforeprint', freezeChartsForPrint);
   window.addEventListener('afterprint', restoreChartsAfterPrint);
@@ -581,6 +621,50 @@ function restoreChartsAfterPrint(){
   } catch {}
 }
 
+// Accordion behavior and theme utilities
+document.addEventListener('click', (e) => {
+  const t = e.target; if (!(t instanceof Element)) return;
+  if (t.tagName.toLowerCase() === 'summary') {
+    const parent = t.closest('details[data-accordion]');
+    if (!parent) return;
+    setTimeout(() => {
+      if (parent.open) document.querySelectorAll('details[data-accordion]').forEach(d => { if (d !== parent) d.open = false; });
+    }, 0);
+  }
+});
+window.addEventListener('beforeprint', () => { document.querySelectorAll('details[data-accordion]').forEach(d => d.open = true); });
+
+function initTheme(){
+  const sel = document.getElementById('themeSelect');
+  const saved = localStorage.getItem('qr_theme') || 'light';
+  applyTheme(saved); if (sel) sel.value = saved;
+  sel?.addEventListener('change', () => { applyTheme(sel.value); localStorage.setItem('qr_theme', sel.value); });
+}
+function applyTheme(name){
+  document.documentElement.classList.remove('theme-dark','theme-sepia');
+  if (name === 'dark') document.documentElement.classList.add('theme-dark');
+  else if (name === 'sepia') document.documentElement.classList.add('theme-sepia');
+}
+
+function ingestRows(rows){
+  state.mapping = {
+    date: state.mapping.date || 'Date',
+    item: state.mapping.item || 'Name',
+    qty: state.mapping.qty || 'Quantity',
+    price: state.mapping.price || 'Price',
+    cost: state.mapping.cost || 'Cost',
+    revenue: state.mapping.revenue || '',
+    category: state.mapping.category || '',
+    order: state.mapping.order || 'Order Number',
+    client: state.mapping.client || 'Client',
+    staff: state.mapping.staff || 'Staff',
+  };
+  const normalized = normalizeAndDedupe(rows, state.mapping);
+  state.rows = normalized; state.filtered = normalized;
+  state.report = computeReport(normalized, state.mapping);
+  renderReport(); location.hash = '#/report';
+}
+
 function buildCategoryMapEditor(){
   const editor = document.getElementById('categoryMapEditor'); if (!editor) return;
   const base = state.filtered?.length ? state.filtered : state.rows;
@@ -708,6 +792,13 @@ function normalizeAndDedupe(rows, mapping) {
     const manualCat = state.categoryMap && name ? (state.categoryMap[name] || '') : '';
     const csvCat = mapping.category ? (r[mapping.category] || '') : '';
     obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
+    // Allowed items filter (hard-coded list in settings)
+    const allowed = window.__allowedItemsList || [];
+    const enforce = window.__enforceAllowed || false;
+    if (enforce && allowed.length) {
+      const nm = (obj[mapping.item] || '').toString().trim();
+      if (!allowed.includes(nm)) continue;
+    }
     map.set(key, obj); // last occurrence wins
   }
   return Array.from(map.values());
