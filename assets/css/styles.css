@@ -27,6 +27,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .w-full{width:100%}
 .w-56{width:14rem}
 .h-2{height:.5rem}
+.h-4{height:1rem}
 .h-64{height:16rem}
 .fixed{position:fixed}
 .relative{position:relative}
@@ -65,9 +66,26 @@ button,input,select,textarea{font:inherit;color:inherit}
 /* Borders, radius, shadow */
 .border{border-width:1px;border-style:solid;border-color:#e5e7eb}
 .app-border{border-color:var(--border,#e5e7eb)!important}
+.rounded-none{border-radius:0}
 .rounded-md{border-radius:.375rem}
 .rounded-lg{border-radius:.5rem}
+.rounded-full{border-radius:9999px}
 .shadow-sm{box-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05)}
+.shadow{box-shadow:0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px 0 rgb(0 0 0 / 0.06)}
+
+/* Size utilities */
+.min-w-24{min-width:6rem}
+.min-w-32{min-width:8rem}
+.min-w-48{min-width:12rem}
+.max-w-full{max-width:100%}
+
+/* Interactive states */
+.hover\:bg-gray-50:hover{background-color:#f9fafb}
+.hover\:bg-blue-700:hover{background-color:#1d4ed8}
+.disabled\:opacity-50:disabled{opacity:0.5}
+
+/* Screen reader utilities */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Colors and backgrounds */
 .text-white{color:#fff}
@@ -98,6 +116,26 @@ thead tr{background-color:var(--card-bg,#fff)}
 .capitalize-headers thead th, thead th{ text-transform:capitalize }
 .border-t{border-top:1px solid #e5e7eb}
 
+/* Responsive table improvements */
+.table-responsive{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.table-responsive table{min-width:100%}
+@media (max-width:640px){
+  .table-responsive th,.table-responsive td{padding:.375rem .25rem;font-size:.875rem}
+  .table-responsive th:first-child,.table-responsive td:first-child{padding-left:.5rem}
+  .table-responsive th:last-child,.table-responsive td:last-child{padding-right:.5rem}
+}
+
+/* Cursor utilities */
+.cursor-pointer{cursor:pointer}
+.select-none{user-select:none}
+
+/* Hover utilities */
+.hover\:bg-gray-50:hover{background-color:#f9fafb}
+
+/* Flexbox utilities */
+.justify-center{justify-content:center}
+.items-stretch{align-items:stretch}
+
 /* Forms */
 input[type="text"],input[type="number"],input[type="date"],input[type="time"],input[type="email"],input[type="url"],input[type="file"],select,textarea{
   background-color:var(--card-bg,#fff);color:var(--text,#0f172a);border:1px solid var(--border,#e5e7eb);border-radius:.375rem;padding:.5rem .75rem
@@ -122,9 +160,91 @@ input[type="file"]::file-selector-button{
 .nav-link{color:var(--text,#0f172a);opacity:.8}
 .nav-link:hover{opacity:1;color:var(--text,#0f172a)}
 
-/* Media queries */
-@media (min-width:768px){.md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:640px){.h-64{height:220px!important}}
+/* Responsive Design - Mobile First */
+
+/* Small screens (sm) - 640px and up */
+@media (min-width:640px){
+  .sm\:block{display:block}
+  .sm\:flex{display:flex}
+  .sm\:grid{display:grid}
+  .sm\:hidden{display:none}
+  .sm\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sm\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .sm\:flex-row{flex-direction:row}
+  .sm\:items-center{align-items:center}
+  .sm\:justify-between{justify-content:space-between}
+  .sm\:gap-4{gap:1rem}
+  .sm\:gap-6{gap:1.5rem}
+  .sm\:px-6{padding-left:1.5rem;padding-right:1.5rem}
+  .sm\:py-4{padding-top:1rem;padding-bottom:1rem}
+  .sm\:text-sm{font-size:.875rem;line-height:1.25rem}
+  .sm\:text-base{font-size:1rem;line-height:1.5rem}
+}
+
+/* Medium screens (md) - 768px and up */
+@media (min-width:768px){
+  .md\:block{display:block}
+  .md\:flex{display:flex}
+  .md\:grid{display:grid}
+  .md\:hidden{display:none}
+  .md\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .md\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .md\:grid-cols-5{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .md\:flex-row{flex-direction:row}
+  .md\:items-center{align-items:center}
+  .md\:justify-between{justify-content:space-between}
+  .md\:gap-4{gap:1rem}
+  .md\:gap-6{gap:1.5rem}
+  .md\:px-6{padding-left:1.5rem;padding-right:1.5rem}
+  .md\:py-4{padding-top:1rem;padding-bottom:1rem}
+  .md\:text-base{font-size:1rem;line-height:1.5rem}
+  .md\:text-lg{font-size:1.125rem;line-height:1.75rem}
+}
+
+/* Large screens (lg) - 1024px and up */
+@media (min-width:1024px){
+  .lg\:block{display:block}
+  .lg\:flex{display:flex}
+  .lg\:grid{display:grid}
+  .lg\:hidden{display:none}
+  .lg\:grid-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lg\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lg\:grid-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .lg\:flex-row{flex-direction:row}
+  .lg\:items-center{align-items:center}
+  .lg\:justify-between{justify-content:space-between}
+  .lg\:gap-6{gap:1.5rem}
+  .lg\:gap-8{gap:2rem}
+  .lg\:px-8{padding-left:2rem;padding-right:2rem}
+  .lg\:py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+  .lg\:text-lg{font-size:1.125rem;line-height:1.75rem}
+  .lg\:text-xl{font-size:1.25rem;line-height:1.75rem}
+}
+
+/* Mobile-specific optimizations */
+@media (max-width:640px){
+  .container{padding-left:.75rem;padding-right:.75rem}
+  .h-64{height:220px!important}
+
+  /* Touch-friendly button sizing */
+  button, .btn{min-height:44px;min-width:44px;}
+  input[type="submit"], input[type="button"]{min-height:44px;}
+
+  /* Better mobile form elements */
+  input, select, textarea{font-size:16px;padding:.75rem;}
+
+  /* Mobile-optimized dropdowns */
+  .dropdown-menu{position:fixed;left:1rem;right:1rem;top:auto;margin-top:0;}
+
+  /* Hide complex elements on very small screens */
+  .mobile-hide{display:none!important}
+
+  /* Stack elements vertically on mobile */
+  .mobile-stack{flex-direction:column!important;align-items:stretch!important;}
+  .mobile-stack > *{margin-bottom:.5rem;}
+  .mobile-stack > *:last-child{margin-bottom:0;}
+}
 
 /* Print helpers */
-@media print{.hidden-print{display:none!important}}
+@media print{.hidden-print,.no-print{display:none!important};.print-section{page-break-inside:avoid}}

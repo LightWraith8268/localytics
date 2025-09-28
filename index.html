@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.24">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.25">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -112,14 +112,37 @@
       .accent { color: var(--accent); }
       .nav-link { color: var(--text) !important; opacity: 0.8; }
       .nav-link:hover { opacity: 1; color: var(--text) !important; }
-      /* Mobile nav */
-      #navToggle { display: none; }
-      header .nav-links { display: flex; }
-      @media (max-width: 640px) {
-        #navToggle { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; }
-        header .nav-links { display: none; position: absolute; right: 1rem; top: 3.25rem; background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px; flex-direction: column; gap: 6px; z-index: 40; }
+      /* Mobile navigation */
+      @media (max-width: 767px) {
+        header .nav-links {
+          display: none;
+          position: absolute;
+          right: 1rem;
+          top: 4rem;
+          left: 1rem;
+          background: var(--card-bg);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 1rem;
+          flex-direction: column;
+          gap: 0;
+          z-index: 40;
+          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
         header .nav-links.show { display: flex; }
-        .h-64 { height: 220px !important; }
+
+        /* Improve mobile dropdown appearance */
+        header .nav-links a {
+          padding: 0.75rem;
+          border-radius: 6px;
+          border-bottom: 1px solid var(--border);
+        }
+        header .nav-links a:last-of-type {
+          border-bottom: none;
+        }
+        header .nav-links a:hover {
+          background-color: color-mix(in srgb, var(--accent) 10%, var(--card-bg));
+        }
       }
       /* Themed form controls */
       input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="email"], input[type="url"], input[type="file"], select, textarea {
@@ -173,49 +196,53 @@
   </head>
   <body>
     <header class="app-card border app-border sticky top-0 z-10 no-print">
-      <div class="container mx-auto px-4 py-3 flex items-center justify-between relative">
-        <h1 class="text-lg font-semibold">Localytics</h1>
-        <button id="navToggle" aria-expanded="false" aria-controls="navLinks">
+      <div class="container mx-auto py-3 flex items-center justify-between relative">
+        <h1 class="text-lg md:text-xl font-semibold">Localytics</h1>
+        <button id="navToggle" class="md:hidden px-3 py-2 border app-border rounded-md text-sm mobile-stack" aria-expanded="false" aria-controls="navLinks">
           <span class="sr-only">Menu</span>
           ☰ Menu
         </button>
-        <nav id="navLinks" class="nav-links flex gap-3 items-center text-sm">
-          <a href="#/upload" class="nav-link text-gray-600 hover:text-gray-900">Upload</a>
-          <a href="#/report" class="nav-link text-gray-600 hover:text-gray-900">Report</a>
-          <a href="#/history" class="nav-link text-gray-600 hover:text-gray-900">History</a>
-          <a href="#/settings" class="nav-link text-gray-600 hover:text-gray-900">Settings</a>
-          <a href="#/custom" class="nav-link text-gray-600 hover:text-gray-900">Custom</a>
-          <select id="themeSelect" class="border app-border rounded-md px-2 py-1 text-sm">
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="sepia">Sepia</option>
-            <option value="ocean">Ocean</option>
-            <option value="forest">Forest</option>
-            <option value="rose">Rose</option>
-            <option value="slate">Slate</option>
-            <option value="contrast">High Contrast</option>
-            <option value="solarized-light">Solarized Light</option>
-            <option value="solarized-dark">Solarized Dark</option>
-            <option value="dracula">Dracula</option>
-            <option value="nord">Nord</option>
-            <option value="custom">Custom…</option>
-          </select>
-          <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card">v?</span>
+        <nav id="navLinks" class="nav-links flex flex-col md:flex-row gap-2 md:gap-3 items-stretch md:items-center text-sm">
+          <div class="flex flex-col md:flex-row gap-2 md:gap-3">
+            <a href="#/upload" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Upload</a>
+            <a href="#/report" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Report</a>
+            <a href="#/history" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">History</a>
+            <a href="#/settings" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Settings</a>
+            <a href="#/custom" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Custom</a>
+          </div>
+          <div class="flex flex-col md:flex-row gap-2 md:gap-3 mt-2 md:mt-0">
+            <select id="themeSelect" class="border app-border rounded-md px-3 py-2 text-sm w-full md:w-auto">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+              <option value="sepia">Sepia</option>
+              <option value="ocean">Ocean</option>
+              <option value="forest">Forest</option>
+              <option value="rose">Rose</option>
+              <option value="slate">Slate</option>
+              <option value="contrast">High Contrast</option>
+              <option value="solarized-light">Solarized Light</option>
+              <option value="solarized-dark">Solarized Dark</option>
+              <option value="dracula">Dracula</option>
+              <option value="nord">Nord</option>
+              <option value="custom">Custom…</option>
+            </select>
+            <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card text-center md:text-left">v?</span>
+          </div>
         </nav>
       </div>
     </header>
 
-    <main class="container mx-auto px-4 py-6">
+    <main class="container mx-auto py-4 md:py-6">
       <!-- Upload View -->
       <section id="view-upload" class="view">
-        <div class="app-card rounded-lg border app-border shadow-sm p-5">
-          <h2 class="text-base font-medium mb-4">Upload CSV</h2>
-          <input id="fileInput" type="file" accept=".csv,text/csv" multiple class="block w-full text-sm text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200">
-          <div class="mt-3">
-            <button id="btnLoadSample" class="px-3 py-1.5 border app-border rounded-md text-sm">Load Sample Data</button>
-            <span id="demoBanner" class="ml-3 text-xs text-gray-600"></span>
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <h2 class="text-lg md:text-xl font-medium mb-4 md:mb-6">Upload CSV</h2>
+          <input id="fileInput" type="file" accept=".csv,text/csv" multiple class="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-gray-100 hover:file:bg-gray-200 mb-3">
+          <div class="flex flex-col sm:flex-row sm:items-center gap-2 mb-4">
+            <button id="btnLoadSample" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Load Sample Data</button>
+            <span id="demoBanner" class="text-xs text-gray-600"></span>
           </div>
-          <div id="parseOptions" class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div id="parseOptions" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             <div>
               <label class="block text-sm text-gray-600 mb-1">Date column</label>
               <select id="col-date" class="w-full border rounded-md px-3 py-2 text-sm"></select>
@@ -257,45 +284,45 @@
               <select id="col-cost" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
           </div>
-          <div class="mt-4 flex items-center gap-3">
-            <button id="btnParse" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm rounded-md hover:bg-blue-700 disabled:opacity-50">Parse & Generate</button>
-            <span id="uploadStatus" class="text-sm text-gray-600"></span>
+          <div class="mt-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <button id="btnParse" class="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 w-full sm:w-auto">Parse & Generate</button>
+            <span id="uploadStatus" class="text-sm text-gray-600 text-center sm:text-left"></span>
           </div>
-          <div id="parseProgressWrap" class="mt-3 hidden items-center gap-3">
-            <div class="w-56 h-2 bg-gray-200 rounded overflow-hidden app-border border" aria-hidden="true">
+          <div id="parseProgressWrap" class="mt-4 hidden flex-col sm:flex-row sm:items-center gap-3">
+            <div class="w-full sm:w-56 h-2 bg-gray-200 rounded overflow-hidden app-border border" aria-hidden="true">
               <div id="parseProgressBar" class="h-2 bg-blue-600" style="width:0%"></div>
             </div>
-            <span id="parseProgressText" class="text-xs text-gray-600">0%</span>
+            <span id="parseProgressText" class="text-xs text-gray-600 text-center sm:text-left">0%</span>
           </div>
         </div>
       </section>
 
       <!-- Report View -->
       <section id="view-report" class="view hidden">
-        <div class="app-card rounded-lg border app-border shadow-sm p-5">
-          <div class="flex items-center justify-between no-print">
-            <h2 class="text-base font-medium">Report</h2>
-            <div class="flex gap-2 items-center">
-              <div class="relative inline-block">
-                <button id="exportMenuBtn" class="px-3 py-1.5 border rounded-md text-sm">Export ▾</button>
-                <div id="exportMenu" class="hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20">
-                  <button id="btnExportItem" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Items CSV</button>
-                  <button id="btnExportDate" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Dates CSV</button>
-                  <button id="btnExportClient" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Clients CSV</button>
-                  <button id="btnExportStaff" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Staff CSV</button>
-                  <button id="btnExportOrder" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Orders CSV</button>
-                  <button id="btnExportCategory" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Categories CSV</button>
-                  <button id="btnExportExcel" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Excel Workbook</button>
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print mb-4">
+            <h2 class="text-lg md:text-xl font-medium">Report</h2>
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <div class="relative inline-block w-full sm:w-auto">
+                <button id="exportMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Export ▾</button>
+                <div id="exportMenu" class="dropdown-menu hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20 min-w-48">
+                  <button id="btnExportItem" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Items CSV</button>
+                  <button id="btnExportDate" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Dates CSV</button>
+                  <button id="btnExportClient" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Clients CSV</button>
+                  <button id="btnExportStaff" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Staff CSV</button>
+                  <button id="btnExportOrder" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Orders CSV</button>
+                  <button id="btnExportCategory" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Categories CSV</button>
+                  <button id="btnExportExcel" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Excel Workbook</button>
                 </div>
               </div>
-              <div class="relative inline-block">
-                <button id="printMenuBtn" class="px-3 py-1.5 border rounded-md text-sm">Print ▾</button>
-                <div id="printMenu" class="hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20">
-                  <button id="btnPrintReport" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Print</button>
-                  <button id="btnPrintAll" class="block w-full text-left px-3 py-1.5 rounded-md text-sm">Print All</button>
+              <div class="relative inline-block w-full sm:w-auto">
+                <button id="printMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print ▾</button>
+                <div id="printMenu" class="dropdown-menu hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20 min-w-32">
+                  <button id="btnPrintReport" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Print</button>
+                  <button id="btnPrintAll" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Print All</button>
                 </div>
               </div>
-              <button id="btnSaveReport" class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm">Save Report</button>
+              <button id="btnSaveReport" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Report</button>
             </div>
           </div>
           <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3 no-print">
@@ -355,9 +382,9 @@
               </label>
             </div>
           </div>
-          <div class="mt-3 flex gap-2 no-print">
-            <button id="btnApplyFilters" class="px-3 py-1.5 border rounded-md text-sm">Apply Filters</button>
-            <button id="btnClearFilters" class="px-3 py-1.5 border rounded-md text-sm">Clear</button>
+          <div class="mt-4 flex flex-col sm:flex-row gap-2 no-print">
+            <button id="btnApplyFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Apply Filters</button>
+            <button id="btnClearFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Clear</button>
           </div>
           <div id="totals" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 print-section"></div>
           <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4 print-section">
@@ -734,7 +761,7 @@
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.24"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.25"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">
