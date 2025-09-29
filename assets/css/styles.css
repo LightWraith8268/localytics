@@ -357,8 +357,8 @@ input[type="file"]::file-selector-button{
   --card-bg: #1f2937;
   --text: #f9fafb;
   --border: #374151;
-  --accent: #3b82f6;
-  --text-muted: #9ca3af;
+  --accent: #60a5fa;
+  --text-muted: #d1d5db;
   --hover-bg: #374151;
 }
 
@@ -371,8 +371,13 @@ body {
 
 /* Enhanced text visibility across themes */
 .text-gray-900, .text-gray-800, .text-gray-700 { color: var(--text) !important; }
-.text-gray-600, .text-gray-500 { color: color-mix(in srgb, var(--text) 75%, var(--bg)) !important; }
-.text-blue-700, .text-blue-800 { color: var(--accent) !important; }
+.text-gray-600, .text-gray-500 { color: var(--text-muted) !important; }
+.text-gray-400 { color: color-mix(in srgb, var(--text-muted) 80%, var(--bg)) !important; }
+.text-blue-700, .text-blue-800, .text-blue-600 { color: var(--accent) !important; }
+.text-green-700, .text-green-800, .text-green-600 { color: #10b981 !important; }
+.text-purple-700, .text-purple-800, .text-purple-600 { color: #8b5cf6 !important; }
+.text-orange-700, .text-orange-800, .text-orange-600 { color: #f59e0b !important; }
+.text-red-700, .text-red-800, .text-red-600 { color: #ef4444 !important; }
 
 /* Form elements with proper contrast */
 input, select, textarea {
@@ -381,12 +386,19 @@ input, select, textarea {
   border-color: var(--border) !important;
 }
 
-/* Button text visibility */
+/* Button text visibility - ensure contrast in both light and dark modes */
 .bg-blue-50 .text-blue-700 { color: #1d4ed8 !important; }
 .bg-green-50 .text-green-700 { color: #047857 !important; }
 .bg-purple-50 .text-purple-700 { color: #7c3aed !important; }
 .bg-orange-50 .text-orange-700 { color: #c2410c !important; }
 .bg-gray-50 .text-gray-700 { color: #374151 !important; }
+
+/* Dark mode specific hover text colors */
+.dark .hover\:text-blue-700:hover { color: #60a5fa !important; }
+.dark .hover\:text-green-700:hover { color: #34d399 !important; }
+.dark .hover\:text-purple-700:hover { color: #a78bfa !important; }
+.dark .hover\:text-orange-700:hover { color: #fbbf24 !important; }
+.dark .hover\:text-gray-700:hover { color: var(--text) !important; }
 
 /* Sidebar Navigation */
 .nav-link { color: var(--text) !important; opacity: 0.9; }
@@ -514,6 +526,35 @@ details[data-accordion][open] summary::before {
 /* Additional utilities */
 .overflow-x-hidden { overflow-x: hidden; }
 .accent { color: var(--accent); }
+
+/* Table contrast improvements */
+.dark th, .dark td {
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+.dark thead tr {
+  background-color: var(--card-bg) !important;
+}
+
+/* Label and small text contrast */
+.dark label, .dark .text-sm, .dark .text-xs {
+  color: var(--text-muted) !important;
+}
+
+/* Status text and badges */
+.dark .status-text { color: var(--text-muted) !important; }
+.dark .badge {
+  background-color: var(--card-bg) !important;
+  color: var(--text) !important;
+  border-color: var(--border) !important;
+}
+
+/* Link colors in dark mode */
+.dark a { color: var(--accent) !important; }
+.dark a:hover { color: color-mix(in srgb, var(--accent) 80%, white) !important; }
+
+/* Chart legend and axis text */
+.dark .chart-legend, .dark .chart-axis { color: var(--text-muted) !important; }
 
 /* Desktop content padding - ensure minimum 10px buffer, larger on bigger screens */
 @media (min-width: 1024px) {
