@@ -42,9 +42,17 @@ async function ensureAuth() {
 
 export async function observeAuth(cb) {
   const mod = await ensureAuth();
-  if (!mod) { cb(null); return; }
+  if (!mod) {
+    console.log('[storage] observeAuth: Firebase not available, calling callback with null user');
+    cb(null);
+    return;
+  }
   const { auth, onAuthStateChanged } = mod;
-  onAuthStateChanged(auth, user => cb(user));
+  console.log('[storage] observeAuth: Setting up Firebase auth state observer');
+  onAuthStateChanged(auth, user => {
+    console.log('[storage] Auth state changed:', user ? `User: ${user.email}` : 'No user');
+    cb(user);
+  });
 }
 
 export async function signInWithGoogle() {

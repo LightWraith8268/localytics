@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.34';
+const APP_VERSION = '1.2.35';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -85,6 +85,7 @@ window.addEventListener('DOMContentLoaded', () => {
       status.textContent = `Signed in as ${user.displayName || user.email || 'user'}`;
       btnIn.classList.add('hidden');
       btnOut.classList.remove('hidden');
+      console.log('[app] User authenticated:', user.email);
     } else {
       if (window.__firebaseDisabled) {
         status.textContent = 'Sign-in disabled (no Firebase config).';
@@ -94,7 +95,11 @@ window.addEventListener('DOMContentLoaded', () => {
       }
       btnIn.classList.remove('hidden');
       btnOut.classList.add('hidden');
+      console.log('[app] User not authenticated');
     }
+
+    // Load settings now that auth state is determined
+    loadUserSettingsAfterAuth();
   });
 
   qs('btnSignIn').addEventListener('click', signInWithGoogle);
@@ -143,10 +148,26 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Initialize dark mode
   initDarkMode();
-  // Load category map, filters, and custom chart preferences
-  (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch (e) { console.warn('Failed to load categoryMap settings:', e); } })();
-  (async ()=>{ try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); } })();
-  (async ()=>{ try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch (e) { console.warn('Failed to load customChartPrefs settings:', e); } })();
+
+  // Load settings after authentication state is determined
+  let authStateReady = false;
+  async function loadUserSettingsAfterAuth() {
+    if (authStateReady) return; // Already loaded
+    authStateReady = true;
+    console.log('[app] Loading user settings after auth state determined');
+
+    try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch (e) { console.warn('Failed to load categoryMap settings:', e); }
+    try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
+    try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch (e) { console.warn('Failed to load customChartPrefs settings:', e); }
+  }
+
+  // Fallback: load settings after 3 seconds if auth state hasn't been determined
+  setTimeout(() => {
+    if (!authStateReady) {
+      console.log('[app] Auth state timeout - loading settings anyway');
+      loadUserSettingsAfterAuth();
+    }
+  }, 3000);
 
   // File handling
   const fileInput = qs('fileInput');
