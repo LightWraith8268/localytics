@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Localytics is a lightweight, Progressive Web App (PWA) for CSV analytics that runs entirely on GitHub Pages. It provides revenue, quantity and trend analysis with print-friendly layouts and multi-theme support. The application is built with vanilla JavaScript ES6 modules and uses Workbox for service worker functionality.
+Localytics is a lightweight, Progressive Web App (PWA) for CSV analytics that runs entirely on GitHub Pages. It provides comprehensive revenue, quantity and trend analysis with dedicated pages for Reports, Trends, Analytics, Orders, Clients, Staff, and Items tracking. Features print-friendly layouts and multi-theme support with 11+ themes. The application is built with vanilla JavaScript ES6 modules and uses Workbox for service worker functionality.
 
 ## Architecture
 
@@ -36,11 +36,11 @@ This is a static web application with no build process dependencies. The codebas
 ```
 
 ### Module Responsibilities
-- **app.js**: Application state, routing (`#/upload`, `#/reports`, etc.), initialization
-- **csv.js**: File parsing, column detection, data transformation
+- **app.js**: Application state, routing (`#/upload`, `#/reports`, `#/trends`, `#/analytics`, etc.), initialization, authentication state management
+- **csv.js**: File parsing with Papa Parse, column detection, data transformation, comprehensive debug logging
 - **reports.js**: Business logic for aggregations (by date, item, client, category, etc.)
-- **ui.js**: Chart.js integration, table rendering, export functions (CSV/Excel)
-- **storage.js**: Firebase Authentication, report persistence, localStorage fallback
+- **ui.js**: Chart.js integration, table rendering, export functions (CSV/Excel), navigation active state management
+- **storage.js**: Firebase Authentication, hybrid storage (Firestore + localStorage), report persistence
 
 ## Development Workflow
 
@@ -51,11 +51,11 @@ This is a static web application with no build process dependencies. The codebas
 
 ### Version Management
 **CRITICAL**: CI automatically bumps versions on every deploy:
-- `APP_VERSION` in `assets/js/app.js`
-- `VERSION` in `service-worker.js` (prefixed with `wb-`)
+- `APP_VERSION` in `assets/js/app.js` (currently 1.2.44)
+- `VERSION` in `service-worker.js` (currently wb-1.2.44)
 - Query strings in `index.html` for cache-busting
 
-When developing locally, you can manually bump versions, but CI will override them for deployed artifacts.
+When developing locally, you can manually bump versions, but CI will override them for deployed artifacts. The service worker excludes Firebase domains from caching to prevent API conflicts.
 
 ### Firebase Configuration
 - **Optional**: App works without Firebase (uses localStorage)
@@ -72,10 +72,12 @@ The app implements proper PWA update UX:
 ## Data Processing Rules
 
 ### CSV Parsing
+- **Papa Parse Integration**: Uses Papa Parse library with worker mode disabled to prevent errors
 - **Totals Row**: Always drop the trailing totals row from uploaded CSVs
 - **No Deduplication**: Each CSV upload replaces the current in-memory dataset completely
 - **Missing Data**: Text fields → `undefined`, numeric fields → `0`
 - **Multi-file**: Supports multiple CSV uploads that get concatenated
+- **Debug Logging**: Comprehensive logging for troubleshooting parsing issues
 
 ### Column Mapping
 The app auto-detects and maps CSV columns to internal fields:
@@ -111,3 +113,39 @@ The application supports 11+ themes using CSS custom properties:
 - Light (default), Dark, Sepia, Ocean, Forest, Rose, Slate, Contrast
 - Solarized Light/Dark, Dracula, Nord
 - All themes defined in `index.html` `<style>` block using CSS variables
+- Dark mode persistence uses hybrid storage (localStorage for immediate access, user settings for sync)
+
+## Navigation & UI
+
+### Page Structure
+- **Upload**: CSV file processing with drag-and-drop support
+- **Reports**: Main analytics dashboard with revenue, quantity, and profit summaries
+- **Trends**: Time-series charts and trend analysis
+- **Analytics**: Advanced analytics views and custom chart configurations
+- **Orders/Clients/Staff/Items**: Dedicated tracking views for business entities
+- **History**: Saved reports management
+- **Settings**: User preferences and Firebase configuration
+
+### Navigation State Management
+- Active navigation links are highlighted with proper contrast using `.nav-link.active` CSS class
+- Active state applied via `setActiveNav()` function in `ui.js` on route changes
+- Both mobile and desktop sidebars maintain active state consistency
+
+## Recent Technical Fixes
+
+### CSV Processing Pipeline
+- Fixed Papa Parse "p1 is not defined" error by disabling worker mode
+- Implemented comprehensive debug logging throughout the parsing pipeline
+- Added null safety checks for DOM elements to prevent runtime errors
+- Fixed element ID mismatches between HTML and JavaScript
+
+### Storage Architecture
+- Implemented hybrid storage to handle Firestore 1MB document size limits
+- CSV metadata stored in Firestore, full data in localStorage for performance
+- Enhanced error logging for Firebase operations
+- Authentication-aware data loading prevents localStorage bypass
+
+### Service Worker Improvements
+- Excluded Firebase domains from caching to prevent API conflicts
+- Enhanced version management for proper PWA update notifications
+- Maintains separate caching strategies for assets vs. API calls

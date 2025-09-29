@@ -1,7 +1,7 @@
 export function setActiveNav(hash) {
   document.querySelectorAll('a.nav-link').forEach(a => {
-    if (a.getAttribute('href') === hash) a.classList.add('text-blue-600');
-    else a.classList.remove('text-blue-600');
+    if (a.getAttribute('href') === hash) a.classList.add('active');
+    else a.classList.remove('active');
   });
 }
 
