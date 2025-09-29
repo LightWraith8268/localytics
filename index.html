@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.25">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.26">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -195,38 +195,52 @@
     <link rel="icon" href="data:,">
   </head>
   <body>
-    <header class="app-card border app-border sticky top-0 z-10 no-print">
-      <div class="container mx-auto py-3 flex items-center justify-between relative">
-        <h1 class="text-lg md:text-xl font-semibold">Localytics</h1>
-        <button id="navToggle" class="md:hidden px-3 py-2 border app-border rounded-md text-sm mobile-stack" aria-expanded="false" aria-controls="navLinks">
-          <span class="sr-only">Menu</span>
-          ☰ Menu
-        </button>
-        <nav id="navLinks" class="nav-links flex flex-col md:flex-row gap-2 md:gap-3 items-stretch md:items-center text-sm">
-          <div class="flex flex-col md:flex-row gap-2 md:gap-3">
-            <a href="#/upload" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Upload</a>
-            <a href="#/report" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Report</a>
-            <a href="#/history" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">History</a>
-            <a href="#/settings" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Settings</a>
-            <a href="#/custom" class="nav-link px-3 py-2 md:px-2 md:py-1 rounded-md md:rounded-none">Custom</a>
+    <header class="app-card border-b app-border sticky top-0 z-10 no-print shadow-sm">
+      <div class="container mx-auto py-4 flex items-center justify-between relative">
+        <!-- Logo and Brand -->
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-sm">L</span>
           </div>
-          <div class="flex flex-col md:flex-row gap-2 md:gap-3 mt-2 md:mt-0">
-            <select id="themeSelect" class="border app-border rounded-md px-3 py-2 text-sm w-full md:w-auto">
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-              <option value="sepia">Sepia</option>
-              <option value="ocean">Ocean</option>
-              <option value="forest">Forest</option>
-              <option value="rose">Rose</option>
-              <option value="slate">Slate</option>
-              <option value="contrast">High Contrast</option>
-              <option value="solarized-light">Solarized Light</option>
-              <option value="solarized-dark">Solarized Dark</option>
-              <option value="dracula">Dracula</option>
-              <option value="nord">Nord</option>
-              <option value="custom">Custom…</option>
-            </select>
-            <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card text-center md:text-left">v?</span>
+          <h1 class="text-xl md:text-2xl font-bold text-gray-900">Localytics</h1>
+        </div>
+
+        <!-- Mobile Menu Toggle -->
+        <button id="navToggle" class="md:hidden px-3 py-2 border app-border rounded-lg text-sm font-medium hover:bg-gray-50" aria-expanded="false" aria-controls="navLinks">
+          <span class="sr-only">Menu</span>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+          <span class="hidden sm:inline ml-2">Menu</span>
+        </button>
+
+        <!-- Navigation -->
+        <nav id="navLinks" class="nav-links flex flex-col md:flex-row gap-1 md:gap-6 items-stretch md:items-center">
+          <!-- Main Navigation Links -->
+          <div class="flex flex-col md:flex-row gap-1 md:gap-6">
+            <a href="#/upload" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+              📤 Upload Data
+            </a>
+            <a href="#/report" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+              📊 Reports
+            </a>
+            <a href="#/custom" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+              🎨 Custom Charts
+            </a>
+            <a href="#/history" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+              📋 Saved Reports
+            </a>
+            <a href="#/settings" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+              ⚙️ Settings
+            </a>
+          </div>
+
+          <!-- Theme and Actions -->
+          <div class="flex flex-col md:flex-row gap-2 md:gap-3 mt-3 md:mt-0 pt-3 md:pt-0 border-t md:border-t-0 app-border md:border-l md:pl-6">
+            <button id="btnOpenThemeModal" class="px-3 py-2 border app-border rounded-md text-xs font-medium hover:bg-gray-50 w-full md:w-auto">
+              🎨 Theme
+            </button>
+            <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card text-center self-center">v?</span>
           </div>
         </nav>
       </div>
@@ -248,7 +262,7 @@
               <select id="col-date" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Item/SKU column</label>
+              <label class="block text-sm text-gray-600 mb-1">Item/Name column</label>
               <select id="col-item" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
@@ -256,7 +270,7 @@
               <select id="col-qty" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Price column (optional)</label>
+              <label class="block text-sm text-gray-600 mb-1">Price column</label>
               <select id="col-price" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
@@ -268,19 +282,19 @@
               <select id="col-category" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Order Number</label>
+              <label class="block text-sm text-gray-600 mb-1">Order Number (optional)</label>
               <select id="col-order" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Client</label>
+              <label class="block text-sm text-gray-600 mb-1">Client (optional)</label>
               <select id="col-client" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Staff</label>
+              <label class="block text-sm text-gray-600 mb-1">Staff (optional)</label>
               <select id="col-staff" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Cost (unit)</label>
+              <label class="block text-sm text-gray-600 mb-1">Cost (unit) (optional)</label>
               <select id="col-cost" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
           </div>
@@ -386,139 +400,163 @@
             <button id="btnApplyFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Apply Filters</button>
             <button id="btnClearFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Clear</button>
           </div>
-          <div id="totals" class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 print-section"></div>
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-4 print-section">
-            <details class="app-card border app-border rounded-md p-3" open data-accordion>
-              <summary class="cursor-pointer select-none text-sm font-semibold">By Item</summary>
-              <div id="table-item" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
-            </details>
-            <details class="app-card border app-border rounded-md p-3" data-accordion>
-              <summary class="cursor-pointer select-none text-sm font-semibold">By Date</summary>
-              <div id="table-date" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
-            </details>
-            <details class="app-card border app-border rounded-md p-3" data-accordion>
-              <summary class="cursor-pointer select-none text-sm font-semibold">By Client</summary>
-              <div id="table-client" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
-            </details>
-            <details class="app-card border app-border rounded-md p-3" data-accordion>
-              <summary class="cursor-pointer select-none text-sm font-semibold">By Staff</summary>
-              <div id="table-staff" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
-            </details>
-            <details class="app-card border app-border rounded-md p-3" id="section-category" data-accordion>
-              <summary class="cursor-pointer select-none text-sm font-semibold">By Category</summary>
-              <div id="table-category" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
-            </details>
-            <details class="app-card border app-border rounded-md p-3" data-accordion>
-              <summary class="cursor-pointer select-none text-sm font-semibold">By Order</summary>
-              <div id="table-order" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
-            </details>
+          <!-- Key Metrics Summary -->
+          <div class="mt-6">
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 print-section">📊 Key Metrics</h2>
+            <div id="totals" class="grid grid-cols-1 sm:grid-cols-3 gap-4 print-section"></div>
           </div>
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">
-            <div>
-              <h3 class="text-sm font-semibold mb-2">By Client</h3>
-              <div id="table-client" class="overflow-auto border rounded-md"></div>
+
+          <!-- Data Tables Section -->
+          <div class="mt-8">
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 print-section">📋 Detailed Breakdowns</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">
+              <details class="app-card border app-border rounded-lg p-4" open data-accordion>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📦 By Item</summary>
+                <div id="table-item" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
+              </details>
+              <details class="app-card border app-border rounded-lg p-4" data-accordion>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📅 By Date</summary>
+                <div id="table-date" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
+              </details>
+              <details class="app-card border app-border rounded-lg p-4" data-accordion>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">👥 By Client</summary>
+                <div id="table-client-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
+              </details>
+              <details class="app-card border app-border rounded-lg p-4" data-accordion>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">👤 By Staff</summary>
+                <div id="table-staff-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
+              </details>
+              <details class="app-card border app-border rounded-lg p-4" id="section-category" data-accordion>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">🏷️ By Category</summary>
+                <div id="table-category-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
+              </details>
+              <details class="app-card border app-border rounded-lg p-4" data-accordion>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">🧾 By Order</summary>
+                <div id="table-order-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
+              </details>
             </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">By Staff</h3>
-              <div id="table-staff" class="overflow-auto border rounded-md"></div>
-            </div>
-          </div>
-          <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6 print-section" id="section-category">
-            <div>
-              <h3 class="text-sm font-semibold mb-2">By Category</h3>
-              <div id="table-category" class="overflow-auto border rounded-md"></div>
-            </div>
-            <div>
-              <h3 class="text-sm font-semibold mb-2">Category Share</h3>
-              <div class="h-64"><canvas id="chart-category-share"></canvas></div>
-            </div>
-          </div>
-          <div class="mt-6 print-section">
-            <h3 class="text-sm font-semibold mb-2">By Order</h3>
-            <div id="table-order" class="overflow-auto border rounded-md"></div>
           </div>
           <details class="app-card border app-border rounded-md p-3 mt-6" data-accordion open>
             <summary class="cursor-pointer select-none text-sm font-semibold">Trends & Charts</summary>
+            <!-- Core Time Series Section -->
             <div class="mt-3">
-              <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
-              <div class="h-64"><canvas id="chart-revenue" data-zoom="1"></canvas></div>
+              <h4 class="text-base font-medium text-blue-800 mb-4 border-b border-blue-200 pb-2">📊 Core Time Series</h4>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
+                <div class="h-64"><canvas id="chart-revenue" data-zoom="1"></canvas></div>
+              </div>
+              <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
+                  <div class="h-64"><canvas id="chart-qty" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
+                  <div class="h-64"><canvas id="chart-orders" data-zoom="1"></canvas></div>
+                </div>
+              </div>
             </div>
-            <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
-                <div class="h-64"><canvas id="chart-qty" data-zoom="1"></canvas></div>
+
+            <!-- Top Rankings Section -->
+            <div class="mt-8">
+              <h4 class="text-base font-medium text-green-800 mb-4 border-b border-green-200 pb-2">🏆 Top Rankings</h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
+                  <div class="h-64"><canvas id="chart-top-items" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
+                  <div class="h-64"><canvas id="chart-top-clients" data-zoom="1"></canvas></div>
+                </div>
               </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
-                <div class="h-64"><canvas id="chart-top-items" data-zoom="1"></canvas></div>
+            </div>
+
+            <!-- Profitability Analysis Section -->
+            <div class="mt-8">
+              <h4 class="text-base font-medium text-purple-800 mb-4 border-b border-purple-200 pb-2">💰 Profitability Analysis</h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
+                  <div class="h-64"><canvas id="chart-profit" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
+                  <div class="h-64"><canvas id="chart-margin" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
+                  <div class="h-64"><canvas id="chart-aov" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
+                  <div class="h-64"><canvas id="chart-ipo" data-zoom="1"></canvas></div>
+                </div>
               </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
-                <div class="h-64"><canvas id="chart-top-clients" data-zoom="1"></canvas></div>
+            </div>
+
+            <!-- Trend Analysis Section -->
+            <div class="mt-8">
+              <h4 class="text-base font-medium text-orange-800 mb-4 border-b border-orange-200 pb-2">📈 Trend Analysis</h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
+                  <div class="h-64"><canvas id="chart-rev-rolling" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
+                  <div class="h-64"><canvas id="chart-qty-rolling" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
+                  <div class="h-64"><canvas id="chart-rev-rolling-30" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
+                  <div class="h-64"><canvas id="chart-rev-mom" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
+                  <div class="h-64"><canvas id="chart-rev-yoy" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
+                  <div class="h-64"><canvas id="chart-cat-trend" data-zoom="1"></canvas></div>
+                </div>
               </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
-                <div class="h-64"><canvas id="chart-orders" data-zoom="1"></canvas></div>
+            </div>
+
+            <!-- Time Pattern Analysis Section -->
+            <div class="mt-8">
+              <h4 class="text-base font-medium text-indigo-800 mb-4 border-b border-indigo-200 pb-2">⏰ Time Pattern Analysis</h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
+                  <div class="h-64"><canvas id="chart-dow-revenue" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
+                  <div class="h-64"><canvas id="chart-hour-revenue" data-zoom="1"></canvas></div>
+                </div>
               </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
-                <div class="h-64"><canvas id="chart-profit" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
-                <div class="h-64"><canvas id="chart-margin" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
-                <div class="h-64"><canvas id="chart-aov" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
-                <div class="h-64"><canvas id="chart-ipo" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
-                <div class="h-64"><canvas id="chart-rev-rolling" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
-                <div class="h-64"><canvas id="chart-qty-rolling" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
-                <div class="h-64"><canvas id="chart-rev-rolling-30" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
-                <div class="h-64"><canvas id="chart-rev-mom" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
-                <div class="h-64"><canvas id="chart-rev-yoy" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
-                <div class="h-64"><canvas id="chart-dow-revenue" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
-                <div class="h-64"><canvas id="chart-hour-revenue" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
-                <div class="h-64"><canvas id="chart-cat-trend" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue by Client</h3>
-                <div class="h-64"><canvas id="chart-by-client" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue by Staff</h3>
-                <div class="h-64"><canvas id="chart-by-staff" data-zoom="1"></canvas></div>
-              </div>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue by Order</h3>
-                <div class="h-64"><canvas id="chart-by-order" data-zoom="1"></canvas></div>
+            </div>
+
+            <!-- Segment Analysis Section -->
+            <div class="mt-8">
+              <h4 class="text-base font-medium text-red-800 mb-4 border-b border-red-200 pb-2">👥 Segment Analysis</h4>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Revenue by Client</h3>
+                  <div class="h-64"><canvas id="chart-by-client" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Revenue by Staff</h3>
+                  <div class="h-64"><canvas id="chart-by-staff" data-zoom="1"></canvas></div>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold mb-2">Revenue by Order</h3>
+                  <div class="h-64"><canvas id="chart-by-order" data-zoom="1"></canvas></div>
+                </div>
               </div>
             </div>
           </details>
@@ -606,148 +644,128 @@
 
       <!-- Settings View -->
       <section id="view-settings" class="view hidden">
-        <div class="app-card rounded-lg border app-border shadow-sm p-5">
-          <h2 class="text-base font-medium">Settings</h2>
-          <div class="mt-4 text-sm">
-            <p id="authStatus">Not signed in.</p>
-            <div class="mt-3 flex gap-2">
-              <button id="btnSignIn" class="px-3 py-1.5 border rounded-md">Sign in with Google</button>
-              <button id="btnSignOut" class="px-3 py-1.5 border rounded-md hidden">Sign out</button>
+        <div class="space-y-6">
+
+          <!-- Account Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Account & Authentication</h2>
+            <div class="space-y-4">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <p id="authStatus" class="text-sm font-medium">Not signed in.</p>
+                  <p class="text-xs text-gray-600 mt-1">Sign in to sync your data across devices</p>
+                </div>
+                <div class="flex gap-2">
+                  <button id="btnSignIn" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Sign in with Google</button>
+                  <button id="btnSignOut" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 hidden">Sign out</button>
+                </div>
+              </div>
             </div>
-            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          </div>
+
+          <!-- Data Management Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Data Management</h2>
+            <div class="space-y-4">
+              <div class="bg-blue-50 border border-blue-200 rounded-md p-4">
+                <h3 class="text-sm font-medium text-blue-900">Automatic Data Storage</h3>
+                <p class="text-xs text-blue-700 mt-1">Your uploaded CSV data is automatically saved to Firebase (when signed in) or browser storage. Data persists between sessions.</p>
+              </div>
+
+              <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btnDeleteCsvData" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear CSV Data</button>
+                <button id="btnDeleteAllData" class="px-4 py-2 border border-red-300 text-red-700 rounded-md text-sm font-medium hover:bg-red-50">Delete All Data</button>
+              </div>
+
+              <div class="text-xs text-gray-600">
+                <p><strong>Clear CSV Data:</strong> Removes uploaded CSV data but keeps settings and reports</p>
+                <p><strong>Delete All Data:</strong> Removes everything including settings, reports, and CSV data</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Appearance Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Appearance & Theme</h2>
+            <div class="space-y-4">
+              <p class="text-sm text-gray-600">Choose a predefined theme or create your own custom theme</p>
+              <button id="btnOpenThemeModal" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Customize Theme</button>
+            </div>
+          </div>
+
+          <!-- Branding Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Branding & Identity</h2>
+            <div class="space-y-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Brand Name</label>
+                  <input type="text" id="brandName" placeholder="Your company" class="w-full border app-border rounded-md px-3 py-2 text-sm">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                  <input type="url" id="brandLogo" placeholder="https://...logo.png" class="w-full border app-border rounded-md px-3 py-2 text-sm">
+                </div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
+                  <input type="email" id="ownerEmail" placeholder="you@example.com" class="w-full border app-border rounded-md px-3 py-2 text-sm">
+                  <p class="text-xs text-gray-600 mt-1">Restrict features to this user</p>
+                </div>
+                <div class="flex items-end">
+                  <button id="btnSaveOwner" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Save Owner</button>
+                </div>
+              </div>
               <div>
-                <label class="block text-xs text-gray-500 mb-1">Brand Name</label>
-                <input type="text" id="brandName" placeholder="Your company" class="w-full border rounded-md px-3 py-2 text-sm">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Logo URL</label>
-                <input type="url" id="brandLogo" placeholder="https://...logo.png" class="w-full border rounded-md px-3 py-2 text-sm">
+                <button id="btnSaveBrand" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Branding</button>
               </div>
             </div>
-            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Owner Email (restrict features to this user)</label>
-                <input type="email" id="ownerEmail" placeholder="you@example.com" class="w-full border rounded-md px-3 py-2 text-sm" />
+          </div>
+
+          <!-- Category Mapping Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Category Mapping</h2>
+            <div class="space-y-4">
+              <p class="text-sm text-gray-600">Assign categories to item names. Manual mappings override CSV categories.</p>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button id="btnLoadItemsMapping" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Load Items from Data</button>
+                <button id="btnSaveCategoryMap" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Mapping</button>
+                <button id="btnClearCategoryMap" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear Mapping</button>
               </div>
-              <div class="flex items-end">
-                <button id="btnSaveOwner" class="px-3 py-1.5 border rounded-md">Save Owner</button>
-              </div>
+              <div id="categoryMapEditor" class="max-h-96 overflow-auto border app-border rounded-md divide-y"></div>
             </div>
-            <div class="mt-2">
-              <button id="btnSaveBrand" class="px-3 py-1.5 border rounded-md">Save Branding</button>
-              <button id="btnOpenThemeModal" class="ml-2 px-3 py-1.5 border rounded-md">Customize Theme…</button>
-            </div>
-            <div class="mt-8">
-              <h3 class="text-base font-medium">Theme Preview & Custom Theme</h3>
-              <div class="mt-2 grid grid-cols-1 md:grid-cols-5 gap-3">
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Background</label>
-                  <input type="color" id="ctBg" class="w-full h-10 border rounded-md" value="#f8fafc" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Card</label>
-                  <input type="color" id="ctCard" class="w-full h-10 border rounded-md" value="#ffffff" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Text</label>
-                  <input type="color" id="ctText" class="w-full h-10 border rounded-md" value="#0f172a" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Border</label>
-                  <input type="color" id="ctBorder" class="w-full h-10 border rounded-md" value="#e5e7eb" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Accent</label>
-                  <input type="color" id="ctAccent" class="w-full h-10 border rounded-md" value="#2563eb" />
-                </div>
-              </div>
-              <div class="mt-3 flex gap-2">
-                <button id="btnSaveCustomTheme" class="px-3 py-1.5 border rounded-md">Save Custom Theme</button>
-                <button id="btnResetCustomTheme" class="px-3 py-1.5 border rounded-md">Reset</button>
-              </div>
-              <div class="mt-3">
-                <div id="themePreview" class="app-card border app-border rounded-md p-4">
-                  <div class="text-sm font-semibold">Preview Title</div>
-                  <div class="text-xs text-gray-600">This text previews your current theme variables.</div>
-                  <button class="mt-2 px-3 py-1.5 border rounded-md">Neutral Button</button>
-                  <button class="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-md">Accent Button</button>
-                </div>
-              </div>
-            </div>
-            <div class="mt-8">
-              <h3 class="text-base font-medium">Category Mapping</h3>
-              <p class="text-xs text-gray-600">Assign categories to item names. Manual mappings override CSV categories.</p>
-              <div class="mt-2 flex gap-2">
-                <button id="btnLoadItemsMapping" class="px-3 py-1.5 border rounded-md">Load Items from Data</button>
-                <button id="btnSaveCategoryMap" class="px-3 py-1.5 border rounded-md">Save Mapping</button>
-                <button id="btnClearCategoryMap" class="px-3 py-1.5 border rounded-md">Clear Mapping</button>
-              </div>
-              <div id="categoryMapEditor" class="mt-3 max-h-96 overflow-auto border rounded-md divide-y"></div>
-            </div>
-            <div class="mt-8">
-              <h3 class="text-base font-medium">Allowed Items Filter</h3>
-              <p class="text-xs text-gray-600">Hard-code a list of item names (one per line) to include. If enabled, only rows whose item matches will be used.</p>
-              <textarea id="allowedItems" rows="6" class="w-full border rounded-md px-3 py-2 text-sm monospace" placeholder="Widget A\nWidget B"></textarea>
-              <div class="mt-2 flex items-center gap-2">
+          </div>
+
+          <!-- Item Filter Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Allowed Items Filter</h2>
+            <div class="space-y-4">
+              <p class="text-sm text-gray-600">Hard-code a list of item names (one per line) to include. If enabled, only rows whose item matches will be used.</p>
+              <textarea id="allowedItems" rows="6" class="w-full border app-border rounded-md px-3 py-2 text-sm monospace" placeholder="Widget A&#10;Widget B&#10;Product C"></textarea>
+              <div class="flex items-center gap-2">
                 <input type="checkbox" id="enforceAllowed" class="h-4 w-4">
                 <label for="enforceAllowed" class="text-sm">Enforce allowed items only</label>
               </div>
-              <div class="mt-2">
-                <button id="btnSaveAllowed" class="px-3 py-1.5 border rounded-md">Save Allowed Items</button>
+              <div>
+                <button id="btnSaveAllowed" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Allowed Items</button>
               </div>
-            </div>
-            <div class="mt-8">
-              <h3 class="text-base font-medium">Item Synonyms</h3>
-              <p class="text-xs text-gray-600">Define mappings to normalize names. One mapping per line using "from =&gt; to". Example: <span class="monospace">Tri Color =&gt; Northern</span></p>
-              <textarea id="itemSynonyms" rows="6" class="w-full border rounded-md px-3 py-2 text-sm monospace" placeholder="Tri Color => Northern\nTri-Color => Northern"></textarea>
-              <div class="mt-2 flex gap-2">
-                <button id="btnSaveSynonyms" class="px-3 py-1.5 border rounded-md">Save Synonyms</button>
-                <button id="btnClearSynonyms" class="px-3 py-1.5 border rounded-md">Clear Synonyms</button>
-              </div>
-            </div>
-            <div class="mt-8">
-              <h3 class="text-base font-medium">Theme Preview & Custom Theme</h3>
-              <div class="mt-2 grid grid-cols-1 md:grid-cols-5 gap-3">
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Background</label>
-                  <input type="color" id="ctBg" class="w-full h-10 border rounded-md" value="#f8fafc" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Card</label>
-                  <input type="color" id="ctCard" class="w-full h-10 border rounded-md" value="#ffffff" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Text</label>
-                  <input type="color" id="ctText" class="w-full h-10 border rounded-md" value="#0f172a" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Border</label>
-                  <input type="color" id="ctBorder" class="w-full h-10 border rounded-md" value="#e5e7eb" />
-                </div>
-                <div>
-                  <label class="block text-xs text-gray-500 mb-1">Accent</label>
-                  <input type="color" id="ctAccent" class="w-full h-10 border rounded-md" value="#2563eb" />
-                </div>
-              </div>
-              <div class="mt-3 flex gap-2">
-                <button id="btnSaveCustomTheme" class="px-3 py-1.5 border rounded-md">Save Custom Theme</button>
-                <button id="btnResetCustomTheme" class="px-3 py-1.5 border rounded-md">Reset</button>
-              </div>
-              <div class="mt-3">
-                <div id="themePreview" class="app-card border app-border rounded-md p-4">
-                  <div class="text-sm font-semibold">Preview Title</div>
-                  <div class="text-xs text-gray-600">This text previews your current theme variables.</div>
-                  <button class="mt-2 px-3 py-1.5 border rounded-md">Neutral Button</button>
-                  <button class="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-md">Accent Button</button>
-                </div>
-              </div>
-            </div>
-            <div class="mt-8">
-              <h3 class="text-base font-medium">Data Reset</h3>
-              <p class="text-xs text-gray-600">Clear local demo and mapping data, then reload. This does not delete any saved reports in Firestore.</p>
-              <button id="btnClearLocal" class="mt-2 px-3 py-1.5 border rounded-md">Clear Local Data</button>
             </div>
           </div>
+
+          <!-- Item Synonyms Section -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <h2 class="text-lg md:text-xl font-medium mb-4">Item Synonyms</h2>
+            <div class="space-y-4">
+              <p class="text-sm text-gray-600">Define mappings to normalize names. One mapping per line using "from => to". Example: <span class="monospace">Tri Color => Northern</span></p>
+              <textarea id="itemSynonyms" rows="6" class="w-full border app-border rounded-md px-3 py-2 text-sm monospace" placeholder="Tri Color => Northern&#10;Tri-Color => Northern"></textarea>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button id="btnSaveSynonyms" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Synonyms</button>
+                <button id="btnClearSynonyms" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear Synonyms</button>
+              </div>
+            </div>
+          </div>
+
         </div>
       </section>
     </main>
@@ -761,7 +779,7 @@
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.25"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.26"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">
@@ -864,45 +882,122 @@
       </div>
     </div>
   <!-- Theme Modal -->
-  <div id="themeModal" class="hidden fixed inset-0 z-50" style="background: rgba(0,0,0,0.6);">
+  <!-- Theme Customization Modal -->
+  <div id="themeModal" class="hidden fixed inset-0 z-50" style="background: rgba(0,0,0,0.75);">
     <div class="absolute inset-0 flex items-center justify-center px-4">
-      <div class="app-card border app-border rounded-lg p-5" style="max-width:800px; width:100%;">
-        <div class="flex items-center justify-between">
-          <h3 class="text-base font-medium">Theme Preview & Custom Theme</h3>
-          <button id="btnCloseThemeModal" class="px-3 py-1.5 border rounded-md">Close</button>
+      <div class="app-card border app-border rounded-xl shadow-2xl overflow-hidden" style="max-width:900px; width:100%; max-height:90vh;">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between p-6 border-b app-border">
+          <div>
+            <h3 class="text-xl font-semibold">Theme Customization</h3>
+            <p class="text-sm text-gray-600 mt-1">Choose a preset theme or create your own custom design</p>
+          </div>
+          <button id="btnCloseThemeModal" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">✕ Close</button>
         </div>
-        <div class="mt-3 grid grid-cols-1 md:grid-cols-5 gap-3">
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Background</label>
-            <input type="color" id="ctBg" class="w-full h-10 border rounded-md" value="#f8fafc" />
+
+        <div class="p-6 overflow-y-auto" style="max-height:calc(90vh - 120px);">
+          <!-- Preset Themes -->
+          <div class="mb-8">
+            <h4 class="text-lg font-medium mb-4">Preset Themes</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="light">
+                <div class="w-full h-8 rounded mb-2 bg-gray-100 border"></div>
+                Light
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="dark">
+                <div class="w-full h-8 rounded mb-2 bg-gray-800"></div>
+                Dark
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="sepia">
+                <div class="w-full h-8 rounded mb-2 bg-yellow-100 border"></div>
+                Sepia
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="ocean">
+                <div class="w-full h-8 rounded mb-2 bg-blue-900"></div>
+                Ocean
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="forest">
+                <div class="w-full h-8 rounded mb-2 bg-green-900"></div>
+                Forest
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="rose">
+                <div class="w-full h-8 rounded mb-2 bg-pink-100 border"></div>
+                Rose
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="dracula">
+                <div class="w-full h-8 rounded mb-2 bg-purple-900"></div>
+                Dracula
+              </button>
+              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500" data-theme="nord">
+                <div class="w-full h-8 rounded mb-2 bg-slate-600"></div>
+                Nord
+              </button>
+            </div>
           </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Card</label>
-            <input type="color" id="ctCard" class="w-full h-10 border rounded-md" value="#ffffff" />
+
+          <!-- Custom Theme Editor -->
+          <div class="mb-8">
+            <h4 class="text-lg font-medium mb-4">Custom Theme Editor</h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Background</label>
+                <input type="color" id="ctBg" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#f8fafc" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Card Background</label>
+                <input type="color" id="ctCard" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#ffffff" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
+                <input type="color" id="ctText" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#0f172a" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Border Color</label>
+                <input type="color" id="ctBorder" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#e5e7eb" />
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                <input type="color" id="ctAccent" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#2563eb" />
+              </div>
+            </div>
+
+            <div class="mt-6 flex flex-col sm:flex-row gap-3">
+              <button id="btnSaveCustomTheme" class="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Custom Theme</button>
+              <button id="btnResetCustomTheme" class="px-6 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Reset to Defaults</button>
+            </div>
           </div>
+
+          <!-- Live Preview -->
           <div>
-            <label class="block text-xs text-gray-500 mb-1">Text</label>
-            <input type="color" id="ctText" class="w-full h-10 border rounded-md" value="#0f172a" />
-          </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Border</label>
-            <input type="color" id="ctBorder" class="w-full h-10 border rounded-md" value="#e5e7eb" />
-          </div>
-          <div>
-            <label class="block text-xs text-gray-500 mb-1">Accent</label>
-            <input type="color" id="ctAccent" class="w-full h-10 border rounded-md" value="#2563eb" />
-          </div>
-        </div>
-        <div class="mt-3 flex gap-2">
-          <button id="btnSaveCustomTheme" class="px-3 py-1.5 border rounded-md">Save Custom Theme</button>
-          <button id="btnResetCustomTheme" class="px-3 py-1.5 border rounded-md">Reset</button>
-        </div>
-        <div class="mt-3">
-          <div id="themePreview" class="app-card border app-border rounded-md p-4">
-            <div class="text-sm font-semibold">Preview Title</div>
-            <div class="text-xs text-gray-600">This text previews your current theme variables.</div>
-            <button class="mt-2 px-3 py-1.5 border rounded-md">Neutral Button</button>
-            <button class="mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-md">Accent Button</button>
+            <h4 class="text-lg font-medium mb-4">Live Preview</h4>
+            <div id="themePreview" class="app-card border app-border rounded-lg p-6">
+              <div class="flex items-center justify-between mb-4">
+                <h5 class="text-lg font-semibold">Sample Report</h5>
+                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs">Live Preview</span>
+              </div>
+              <p class="text-sm text-gray-600 mb-4">This preview shows how your theme will look across the application.</p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <button class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Neutral Button</button>
+                <button class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Primary Button</button>
+                <select class="px-3 py-2 border app-border rounded-md text-sm">
+                  <option>Sample Dropdown</option>
+                </select>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="app-card border app-border rounded-md p-3">
+                  <div class="text-sm font-medium">Revenue</div>
+                  <div class="text-xl font-bold">$12,345</div>
+                </div>
+                <div class="app-card border app-border rounded-md p-3">
+                  <div class="text-sm font-medium">Orders</div>
+                  <div class="text-xl font-bold">456</div>
+                </div>
+                <div class="app-card border app-border rounded-md p-3">
+                  <div class="text-sm font-medium">Items</div>
+                  <div class="text-xl font-bold">789</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

@@ -157,3 +157,140 @@ export async function saveUserSettings(key, value) {
   return false;
 }
 
+// CSV Data Storage
+export async function saveCsvData(rows, headers, mapping) {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      const m = await import(FIRESTORE_URL);
+
+      const dataToSave = {
+        rows: rows,
+        headers: headers,
+        mapping: mapping,
+        uploadedAt: new Date().toISOString(),
+        rowCount: rows.length
+      };
+
+      await m.setDoc(m.doc(db, 'userData', uid), { csvData: dataToSave }, { merge: true });
+      return true;
+    }
+  } catch (e) {
+    console.warn('[storage] saveCsvData Firestore failed', e);
+  }
+
+  // Fallback to localStorage
+  try {
+    const dataToSave = {
+      rows: rows,
+      headers: headers,
+      mapping: mapping,
+      uploadedAt: new Date().toISOString(),
+      rowCount: rows.length
+    };
+    localStorage.setItem('csvData', JSON.stringify(dataToSave));
+    return true;
+  } catch (e) {
+    console.warn('[storage] saveCsvData localStorage failed', e);
+  }
+  return false;
+}
+
+export async function loadCsvData() {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      const m = await import(FIRESTORE_URL);
+
+      const snap = await m.getDoc(m.doc(db, 'userData', uid));
+      if (snap.exists()) {
+        const data = snap.data();
+        return data.csvData || null;
+      }
+    }
+  } catch (e) {
+    console.warn('[storage] loadCsvData Firestore failed', e);
+  }
+
+  // Fallback to localStorage
+  try {
+    const local = localStorage.getItem('csvData');
+    return local ? JSON.parse(local) : null;
+  } catch (e) {
+    console.warn('[storage] loadCsvData localStorage failed', e);
+  }
+  return null;
+}
+
+export async function deleteCsvData() {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      const m = await import(FIRESTORE_URL);
+
+      await m.updateDoc(m.doc(db, 'userData', uid), {
+        csvData: m.deleteField()
+      });
+      return true;
+    }
+  } catch (e) {
+    console.warn('[storage] deleteCsvData Firestore failed', e);
+  }
+
+  // Fallback to localStorage
+  try {
+    localStorage.removeItem('csvData');
+    return true;
+  } catch (e) {
+    console.warn('[storage] deleteCsvData localStorage failed', e);
+  }
+  return false;
+}
+
+export async function deleteAllUserData() {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      const m = await import(FIRESTORE_URL);
+
+      // Delete user data document
+      await m.deleteDoc(m.doc(db, 'userData', uid));
+
+      // Delete user settings document
+      await m.deleteDoc(m.doc(db, 'userSettings', uid));
+
+      // Delete all user reports
+      const q = m.query(
+        m.collection(db, 'reports'),
+        m.where('ownerUid', '==', uid)
+      );
+      const snap = await m.getDocs(q);
+      const batch = m.writeBatch(db);
+      snap.docs.forEach(doc => batch.delete(doc.ref));
+      await batch.commit();
+
+      return true;
+    }
+  } catch (e) {
+    console.warn('[storage] deleteAllUserData Firestore failed', e);
+  }
+
+  // Fallback to localStorage
+  try {
+    localStorage.removeItem('csvData');
+    localStorage.removeItem('userSettings');
+    return true;
+  } catch (e) {
+    console.warn('[storage] deleteAllUserData localStorage failed', e);
+  }
+  return false;
+}
+

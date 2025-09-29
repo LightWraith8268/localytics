@@ -1,11 +1,11 @@
 import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
 import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime, aggregateByField, aggregateByOrder } from './reports.js';
 import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
-import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings } from './storage.js';
+import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings, saveCsvData, loadCsvData, deleteCsvData, deleteAllUserData } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.25';
+const APP_VERSION = '1.2.26';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -31,7 +31,7 @@ const state = {
   chartHourRevenue: null,
   chartRevYoy: null,
   chartCatTrend: null,
-  filters: { start: '', end: '', item: '' },
+  filters: { start: '', end: '', item: '', client: '', staff: '', order: '', category: '', revMin: '', revMax: '', qtyMin: '', qtyMax: '', noZero: false },
   user: null,
   customChart: null,
   categoryMap: {},
@@ -107,6 +107,43 @@ window.addEventListener('DOMContentLoaded', () => {
 
   qs('btnSignIn').addEventListener('click', signInWithGoogle);
   qs('btnSignOut').addEventListener('click', signOutUser);
+
+  // Load stored CSV data on app startup
+  (async () => {
+    try {
+      const storedData = await loadCsvData();
+      if (storedData && storedData.rows && storedData.rows.length > 0) {
+        state.rows = storedData.rows;
+        state.headers = storedData.headers || [];
+        state.mapping = storedData.mapping || state.mapping;
+
+        // Show data info in upload status
+        const uploadStatus = qs('uploadStatus');
+        if (uploadStatus) {
+          const uploadedDate = storedData.uploadedAt ? new Date(storedData.uploadedAt).toLocaleDateString() : 'unknown date';
+          uploadStatus.textContent = `${storedData.rowCount} rows loaded from ${uploadedDate}`;
+        }
+
+        // Generate reports automatically
+        const filtered = applyFilters(state.rows, state.mapping, state.filters);
+        state.filtered = filtered;
+        state.report = computeReport(filtered, state.mapping);
+        renderReport();
+      } else {
+        // No stored data, load sample data for demo
+        const demoKey = 'qr_demo_autoloaded';
+        const demoDis = 'qr_demo_disabled';
+        if (!localStorage.getItem(demoKey) && !localStorage.getItem(demoDis)) {
+          ingestRows(SAMPLE_ROWS);
+          const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
+          localStorage.setItem(demoKey, '1');
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load stored CSV data:', e);
+    }
+  })();
+
   // Theme modal open/close
   try {
     const openTheme = document.getElementById('btnOpenThemeModal');
@@ -115,20 +152,12 @@ window.addEventListener('DOMContentLoaded', () => {
     if (openTheme && modalTheme) openTheme.addEventListener('click', () => { modalTheme.classList.remove('hidden'); });
     if (closeTheme && modalTheme) closeTheme.addEventListener('click', () => { modalTheme.classList.add('hidden'); });
   } catch {}
-  // Load category map
+  // Load category map, filters, and custom chart preferences
   (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch {} })();
+  (async ()=>{ try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch {} })();
+  (async ()=>{ try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch {} })();
   // Theme load
   initTheme();
-  // Auto-load sample data on first visit for default reports
-  try {
-    const demoKey = 'qr_demo_autoloaded';
-    const demoDis = 'qr_demo_disabled';
-    if (!localStorage.getItem(demoKey) && !localStorage.getItem(demoDis)) {
-      ingestRows(SAMPLE_ROWS);
-      const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
-      localStorage.setItem(demoKey, '1');
-    }
-  } catch {}
 
   // File handling
   const fileInput = qs('fileInput');
@@ -230,7 +259,11 @@ window.addEventListener('DOMContentLoaded', () => {
       setProgress(Math.min(99, pct), `Normalizing ${Math.min(processed,total).toLocaleString()}/${total.toLocaleString()} rows — ${pct}%`);
     });
     state.rows = normalized;
-  const filtered = applyFilters(normalized, state.mapping, state.filters);
+
+    // Save CSV data to Firebase/localStorage for persistence
+    await saveCsvData(normalized, headers, state.mapping);
+
+    const filtered = applyFilters(normalized, state.mapping, state.filters);
     state.filtered = filtered;
     state.report = computeReport(filtered, state.mapping);
     renderReport();
@@ -272,19 +305,21 @@ window.addEventListener('DOMContentLoaded', () => {
   const st = qs('filterStart'); const en = qs('filterEnd'); const it = qs('filterItem');
   const fClient = qs('filterClient'); const fStaff = qs('filterStaff'); const fOrder = qs('filterOrder'); const fCat = qs('filterCategory');
   const fRevMin = qs('filterRevMin'); const fRevMax = qs('filterRevMax'); const fQtyMin = qs('filterQtyMin'); const fQtyMax = qs('filterQtyMax'); const fNoZero = qs('filterNoZero');
-  qs('btnApplyFilters').addEventListener('click', () => {
+  qs('btnApplyFilters').addEventListener('click', async () => {
     state.filters = {
       start: st.value, end: en.value, item: it.value,
       client: fClient?.value || '', staff: fStaff?.value || '', order: fOrder?.value || '', category: fCat?.value || '',
       revMin: fRevMin?.value || '', revMax: fRevMax?.value || '', qtyMin: fQtyMin?.value || '', qtyMax: fQtyMax?.value || '',
       noZero: !!(fNoZero && fNoZero.checked)
     };
+    // Save filters for persistence
+    try { await saveUserSettings('filters', state.filters); } catch {}
     if (!state.rows.length || !state.mapping.date) return;
     const filtered = applyFilters(state.rows, state.mapping, state.filters);
     state.report = computeReport(filtered, state.mapping);
     renderReport();
   });
-  qs('btnClearFilters').addEventListener('click', () => {
+  qs('btnClearFilters').addEventListener('click', async () => {
     st.value = en.value = it.value = '';
     if (fClient) fClient.value = '';
     if (fStaff) fStaff.value = '';
@@ -296,6 +331,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (fQtyMax) fQtyMax.value = '';
     if (fNoZero) fNoZero.checked = false;
     state.filters = { start:'', end:'', item:'', client:'', staff:'', order:'', category:'', revMin:'', revMax:'', qtyMin:'', qtyMax:'', noZero:false };
+    // Save cleared filters for persistence
+    try { await saveUserSettings('filters', state.filters); } catch {}
     if (!state.rows.length || !state.mapping.date) return;
     state.filtered = state.rows;
     state.report = computeReport(state.rows, state.mapping);
@@ -343,9 +380,13 @@ window.addEventListener('DOMContentLoaded', () => {
   const elType = qs('customChartType');
   const elTopN = qs('customTopN');
   const elStack = document.getElementById('customStackCat');
-  elGroupBy.addEventListener('change', () => {
+  elGroupBy.addEventListener('change', async () => {
     elGranWrap.style.display = (elGroupBy.value === 'date') ? '' : 'none';
+    await saveCustomChartPrefs();
   });
+  elGran.addEventListener('change', saveCustomChartPrefs);
+  elMetric.addEventListener('change', saveCustomChartPrefs);
+  elType.addEventListener('change', saveCustomChartPrefs);
   elGranWrap.style.display = (elGroupBy.value === 'date') ? '' : 'none';
   qs('btnBuildChart').addEventListener('click', () => {
     buildCustomChart({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, type: elType.value, topN: elTopN.value, stackCat: elStack?.checked });
@@ -429,6 +470,67 @@ window.addEventListener('DOMContentLoaded', () => {
     // Navigate to Upload and reload UI
     location.href = '#/upload';
     location.reload();
+  });
+
+  // Data Management Handlers
+  qs('btnDeleteCsvData')?.addEventListener('click', async () => {
+    if (!confirm('This will delete your uploaded CSV data but keep settings and saved reports. Continue?')) return;
+
+    try {
+      await deleteCsvData();
+
+      // Clear in-memory data
+      state.rows = [];
+      state.headers = [];
+      state.filtered = [];
+      state.report = null;
+
+      // Update UI
+      const uploadStatus = qs('uploadStatus');
+      if (uploadStatus) uploadStatus.textContent = 'CSV data cleared';
+
+      // Navigate back to upload
+      location.hash = '#/upload';
+      alert('CSV data has been cleared.');
+    } catch (e) {
+      console.error('Failed to delete CSV data:', e);
+      alert('Failed to delete CSV data. Please try again.');
+    }
+  });
+
+  qs('btnDeleteAllData')?.addEventListener('click', async () => {
+    if (!confirm('⚠️ WARNING: This will permanently delete ALL your data including CSV data, settings, saved reports, and preferences. This action cannot be undone. Are you absolutely sure?')) return;
+
+    if (!confirm('Last chance! This will delete everything. Type YES in the next prompt to confirm.')) return;
+
+    const confirmation = prompt('Type "DELETE ALL" to confirm deletion of all data:');
+    if (confirmation !== 'DELETE ALL') {
+      alert('Deletion cancelled.');
+      return;
+    }
+
+    try {
+      await deleteAllUserData();
+
+      // Clear all in-memory data
+      state.rows = [];
+      state.headers = [];
+      state.filtered = [];
+      state.report = null;
+      state.mapping = { date: '', item: '', qty: '', price: '', cost: '', revenue: '', category: '', order: '', client: '', staff: '' };
+      state.categoryMap = {};
+      state.itemSynonyms = [];
+
+      // Update UI
+      const uploadStatus = qs('uploadStatus');
+      if (uploadStatus) uploadStatus.textContent = 'All data deleted';
+
+      alert('All data has been permanently deleted. The page will now reload.');
+      location.reload();
+    } catch (e) {
+      console.error('Failed to delete all data:', e);
+      alert('Failed to delete all data. Please try again.');
+    }
   });
 
   // Synonyms save/clear
@@ -680,6 +782,39 @@ function applyFilters(rows, mapping, filters) {
   });
 }
 
+function restoreFilterUI() {
+  const fs = state.filters;
+  const st = qs('filterStart'); if (st && fs.start) st.value = fs.start;
+  const en = qs('filterEnd'); if (en && fs.end) en.value = fs.end;
+  const it = qs('filterItem'); if (it && fs.item) it.value = fs.item;
+  const fClient = qs('filterClient'); if (fClient && fs.client) fClient.value = fs.client;
+  const fStaff = qs('filterStaff'); if (fStaff && fs.staff) fStaff.value = fs.staff;
+  const fOrder = qs('filterOrder'); if (fOrder && fs.order) fOrder.value = fs.order;
+  const fCat = qs('filterCategory'); if (fCat && fs.category) fCat.value = fs.category;
+  const fRevMin = qs('filterRevMin'); if (fRevMin && fs.revMin) fRevMin.value = fs.revMin;
+  const fRevMax = qs('filterRevMax'); if (fRevMax && fs.revMax) fRevMax.value = fs.revMax;
+  const fQtyMin = qs('filterQtyMin'); if (fQtyMin && fs.qtyMin) fQtyMin.value = fs.qtyMin;
+  const fQtyMax = qs('filterQtyMax'); if (fQtyMax && fs.qtyMax) fQtyMax.value = fs.qtyMax;
+  const fNoZero = qs('filterNoZero'); if (fNoZero) fNoZero.checked = !!fs.noZero;
+}
+
+function restoreCustomChartPrefs(prefs) {
+  const groupBy = qs('customGroupBy'); if (groupBy && prefs.groupBy) groupBy.value = prefs.groupBy;
+  const granularity = qs('customGranularity'); if (granularity && prefs.granularity) granularity.value = prefs.granularity;
+  const metric = qs('customMetric'); if (metric && prefs.metric) metric.value = prefs.metric;
+  const chartType = qs('customChartType'); if (chartType && prefs.chartType) chartType.value = prefs.chartType;
+}
+
+async function saveCustomChartPrefs() {
+  const prefs = {
+    groupBy: qs('customGroupBy')?.value || 'date',
+    granularity: qs('customGranularity')?.value || 'month',
+    metric: qs('customMetric')?.value || 'revenue',
+    chartType: qs('customChartType')?.value || 'line'
+  };
+  try { await saveUserSettings('customChartPrefs', prefs); } catch {}
+}
+
 async function loadLastMapping() {
   try {
     const local = localStorage.getItem('qr_mapping');
@@ -788,25 +923,51 @@ document.addEventListener('click', (e) => {
 });
 window.addEventListener('beforeprint', () => { document.querySelectorAll('details[data-accordion]').forEach(d => d.open = true); });
 
-function initTheme(){
+async function initTheme(){
   const sel = document.getElementById('themeSelect');
-  const saved = localStorage.getItem('qr_theme') || 'light';
+  // Load theme from Firebase first, fallback to localStorage
+  let saved = 'light';
+  try {
+    const firebaseTheme = await loadUserSettings('theme');
+    saved = firebaseTheme || localStorage.getItem('qr_theme') || 'light';
+  } catch {
+    saved = localStorage.getItem('qr_theme') || 'light';
+  }
+
   applyTheme(saved);
   if (sel) sel.value = saved;
-  sel?.addEventListener('change', () => {
+  sel?.addEventListener('change', async () => {
     const val = sel.value;
-    applyTheme(val); localStorage.setItem('qr_theme', val);
-    if (val === 'custom') applyCustomThemeFromInputs();
+    applyTheme(val);
+    localStorage.setItem('qr_theme', val);
+    try { await saveUserSettings('theme', val); } catch {}
+    if (val === 'custom') await applyCustomThemeFromInputs();
   });
   if (saved === 'custom') {
-    try { const vars = JSON.parse(localStorage.getItem('customThemeVars')||'{}'); applyCustomTheme(vars); fillCustomThemeInputs(vars); } catch {}
+    try {
+      // Load custom theme from Firebase first, fallback to localStorage
+      let vars = {};
+      try {
+        const firebaseVars = await loadUserSettings('customThemeVars');
+        vars = firebaseVars || JSON.parse(localStorage.getItem('customThemeVars')||'{}');
+      } catch {
+        vars = JSON.parse(localStorage.getItem('customThemeVars')||'{}');
+      }
+      applyCustomTheme(vars);
+      fillCustomThemeInputs(vars);
+    } catch {}
   }
   ['ctBg','ctCard','ctText','ctBorder','ctAccent'].forEach(id => {
     const el = document.getElementById(id);
-    if (el) el.addEventListener('input', () => { if (document.getElementById('themeSelect')?.value === 'custom') applyCustomThemeFromInputs(true); updateThemePreview(); });
+    if (el) el.addEventListener('input', async () => { if (document.getElementById('themeSelect')?.value === 'custom') await applyCustomThemeFromInputs(true); updateThemePreview(); });
   });
-  const b1 = document.getElementById('btnSaveCustomTheme'); if (b1) b1.addEventListener('click', () => { applyCustomThemeFromInputs(true); alert('Custom theme saved. Choose "Custom…" to use it.'); });
-  const b2 = document.getElementById('btnResetCustomTheme'); if (b2) b2.addEventListener('click', () => { localStorage.removeItem('customThemeVars'); fillCustomThemeInputs({}); updateThemePreview(); });
+  const b1 = document.getElementById('btnSaveCustomTheme'); if (b1) b1.addEventListener('click', async () => { await applyCustomThemeFromInputs(true); alert('Custom theme saved. Choose "Custom…" to use it.'); });
+  const b2 = document.getElementById('btnResetCustomTheme'); if (b2) b2.addEventListener('click', async () => {
+    localStorage.removeItem('customThemeVars');
+    try { await saveUserSettings('customThemeVars', null); } catch {}
+    fillCustomThemeInputs({});
+    updateThemePreview();
+  });
   updateThemePreview();
 }
 function applyTheme(name){
@@ -819,7 +980,7 @@ function applyTheme(name){
   }
 }
 
-function applyCustomThemeFromInputs(save){
+async function applyCustomThemeFromInputs(save){
   const vars = {
     bg: document.getElementById('ctBg')?.value || '#f8fafc',
     card: document.getElementById('ctCard')?.value || '#ffffff',
@@ -828,7 +989,10 @@ function applyCustomThemeFromInputs(save){
     accent: document.getElementById('ctAccent')?.value || '#2563eb'
   };
   applyCustomTheme(vars);
-  if (save) try { localStorage.setItem('customThemeVars', JSON.stringify(vars)); } catch {}
+  if (save) {
+    try { localStorage.setItem('customThemeVars', JSON.stringify(vars)); } catch {}
+    try { await saveUserSettings('customThemeVars', vars); } catch {}
+  }
 }
 function applyCustomTheme(vars){
   const el = document.documentElement;
@@ -951,7 +1115,18 @@ function preparePrintCover() {
   // Filters summary
   const fs = state.filters; const fm = state.mapping;
   const fParts = [];
-  if (fs.start) fParts.push(`Start: ${fs.start}`); if (fs.end) fParts.push(`End: ${fs.end}`); if (fs.item) fParts.push(`Item contains: ${fs.item}`);
+  if (fs.start) fParts.push(`Start: ${fs.start}`);
+  if (fs.end) fParts.push(`End: ${fs.end}`);
+  if (fs.item) fParts.push(`Item contains: ${fs.item}`);
+  if (fs.client) fParts.push(`Client contains: ${fs.client}`);
+  if (fs.staff) fParts.push(`Staff contains: ${fs.staff}`);
+  if (fs.order) fParts.push(`Order contains: ${fs.order}`);
+  if (fs.category) fParts.push(`Category contains: ${fs.category}`);
+  if (fs.revMin) fParts.push(`Min revenue: ${fs.revMin}`);
+  if (fs.revMax) fParts.push(`Max revenue: ${fs.revMax}`);
+  if (fs.qtyMin) fParts.push(`Min quantity: ${fs.qtyMin}`);
+  if (fs.qtyMax) fParts.push(`Max quantity: ${fs.qtyMax}`);
+  if (fs.noZero) fParts.push('Exclude zero qty/revenue');
   document.getElementById('printFilters')?.replaceChildren(document.createTextNode(fParts.length? fParts.join(' | ') : 'None'));
   const mParts = [];
   ['date','item','qty','price','cost','revenue','category','order','client','staff'].forEach(k => { if (fm[k]) mParts.push(`${k}: ${fm[k]}`); });

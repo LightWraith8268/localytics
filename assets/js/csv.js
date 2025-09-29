@@ -32,15 +32,15 @@ export function detectColumns(headers = []) {
   };
   return {
     date: find('date', 'time', 'timestamp'),
-    item: find('item', 'sku', 'product', 'name', 'title'),
+    item: find('name', 'title', 'product', 'item', 'sku'),
     qty: find('qty', 'quantity', 'units'),
     price: find('price', 'unit price', 'amount'),
     revenue: find('revenue', 'total', 'gross', 'net', 'sales'),
-    category: find('category', 'department', 'group', 'type'),
-    order: find('order number','order#','order'),
-    client: find('client','customer'),
-    staff: find('staff','employee','agent'),
-    cost: find('cost')
+    category: '',
+    order: '',
+    client: '',
+    staff: '',
+    cost: ''
   };
 }
 
