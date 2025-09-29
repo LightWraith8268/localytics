@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.36';
+const APP_VERSION = '1.2.37';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -105,48 +105,9 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnSignIn').addEventListener('click', signInWithGoogle);
   qs('btnSignOut').addEventListener('click', signOutUser);
 
-  // Load stored CSV data on app startup
-  (async () => {
-    try {
-      const storedData = await loadCsvData();
-      if (storedData && storedData.rows && storedData.rows.length > 0) {
-        state.rows = storedData.rows;
-        state.headers = storedData.headers || [];
-        state.mapping = storedData.mapping || state.mapping;
+  // Note: CSV data and demo state now loaded in loadUserSettingsAfterAuth() after authentication
 
-        // Show data info in upload status
-        const uploadStatus = qs('uploadStatus');
-        if (uploadStatus) {
-          const uploadedDate = storedData.uploadedAt ? new Date(storedData.uploadedAt).toLocaleDateString() : 'unknown date';
-          uploadStatus.textContent = `${storedData.rowCount} rows loaded from ${uploadedDate}`;
-        }
-
-        // Generate reports automatically
-        const filtered = applyFilters(state.rows, state.mapping, state.filters);
-        state.filtered = filtered;
-        state.report = computeReport(filtered, state.mapping);
-        renderReport();
-      } else {
-        // No stored data, load sample data for demo
-        try {
-          const m = await import('./storage.js');
-          const autoloaded = await m.getDemoState('autoloaded');
-          const disabled = await m.getDemoState('disabled');
-          if (!autoloaded && !disabled) {
-            ingestRows(SAMPLE_ROWS);
-            const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
-            await m.setDemoState('autoloaded', '1');
-          }
-        } catch (e) {
-          console.warn('Failed to manage demo state:', e);
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to load stored CSV data:', e);
-    }
-  })();
-
-  // Initialize dark mode
+  // Initialize dark mode UI (preference loaded in loadUserSettingsAfterAuth() after authentication)
   initDarkMode();
 
   // Load settings after authentication state is determined
@@ -204,6 +165,57 @@ window.addEventListener('DOMContentLoaded', () => {
       if (nameInput && name) nameInput.value = name;
       if (logoInput && logo) logoInput.value = logo;
     } catch (e) { console.warn('Failed to load branding settings:', e); }
+
+    // Load CSV data and demo state after authentication is determined
+    try {
+      const storedData = await loadCsvData();
+      if (storedData && storedData.rows && storedData.rows.length > 0) {
+        state.rows = storedData.rows;
+        state.headers = storedData.headers || [];
+        state.mapping = storedData.mapping || state.mapping;
+
+        // Show data info in upload status
+        const uploadStatus = qs('uploadStatus');
+        if (uploadStatus) {
+          const uploadedDate = storedData.uploadedAt ? new Date(storedData.uploadedAt).toLocaleDateString() : 'unknown date';
+          uploadStatus.textContent = `${storedData.rowCount} rows loaded from ${uploadedDate}`;
+        }
+
+        // Generate reports automatically
+        const filtered = applyFilters(state.rows, state.mapping, state.filters);
+        state.filtered = filtered;
+        state.report = computeReport(filtered, state.mapping);
+        renderReport();
+      } else {
+        // No stored data, load sample data for demo (but only after checking demo state)
+        try {
+          const m = await import('./storage.js');
+          const autoloaded = await m.getDemoState('autoloaded');
+          const disabled = await m.getDemoState('disabled');
+          if (!autoloaded && !disabled) {
+            ingestRows(SAMPLE_ROWS);
+            const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
+            await m.setDemoState('autoloaded', '1');
+          }
+        } catch (e) {
+          console.warn('Failed to manage demo state:', e);
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load CSV data after auth:', e);
+    }
+
+    // Load dark mode preference (now from user settings instead of localStorage)
+    try {
+      const darkMode = await loadUserSettings('darkMode');
+      if (darkMode === 'true' || darkMode === true) {
+        document.documentElement.classList.add('dark');
+      } else if (darkMode === 'false' || darkMode === false) {
+        document.documentElement.classList.remove('dark');
+      }
+      // Update the dark mode button state
+      updateDarkModeButton();
+    } catch (e) { console.warn('Failed to load dark mode setting:', e); }
   }
 
   // Fallback: load settings after 3 seconds if auth state hasn't been determined
@@ -971,24 +983,21 @@ function restoreChartsAfterPrint(){
 window.addEventListener('beforeprint', () => { document.querySelectorAll('details[data-accordion]').forEach(d => d.open = true); });
 
 function initDarkMode() {
-  // Load dark mode preference
-  const isDark = localStorage.getItem('darkMode') === 'true';
-  if (isDark) {
-    document.documentElement.classList.add('dark');
-  }
+  // Note: Dark mode preference now loaded from user settings in loadUserSettingsAfterAuth()
+  // Just initialize the button state
   updateDarkModeButton();
 }
 
-function toggleDarkMode() {
+async function toggleDarkMode() {
   const html = document.documentElement;
   const isDark = html.classList.contains('dark');
 
   if (isDark) {
     html.classList.remove('dark');
-    localStorage.setItem('darkMode', 'false');
+    try { await saveUserSettings('darkMode', 'false'); } catch (e) { console.warn('Failed to save dark mode setting:', e); }
   } else {
     html.classList.add('dark');
-    localStorage.setItem('darkMode', 'true');
+    try { await saveUserSettings('darkMode', 'true'); } catch (e) { console.warn('Failed to save dark mode setting:', e); }
   }
 
   updateDarkModeButton();
