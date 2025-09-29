@@ -4,7 +4,7 @@ export async function parseCsv(fileOrText, options = {}) {
     skipEmptyLines: true,
     dynamicTyping: false,
     preview: options.preview || 0,
-    worker: true,
+    worker: false, // Disable worker mode to avoid "p1 is not defined" error
   };
   const input = fileOrText;
   const res = await new Promise((resolve, reject) => {

@@ -25,6 +25,10 @@ export function renderTotals(container, totals) {
 }
 
 export function renderTable(container, columns, rows) {
+  if (!container) {
+    console.warn('renderTable: container element is null');
+    return;
+  }
   container.innerHTML = '';
   const table = document.createElement('table');
   table.className = 'w-full text-sm';

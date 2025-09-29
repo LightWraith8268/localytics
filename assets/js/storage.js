@@ -159,29 +159,7 @@ export async function saveUserSettings(key, value) {
 
 // CSV Data Storage
 export async function saveCsvData(rows, headers, mapping) {
-  try {
-    const mod = await ensureAuth();
-    if (mod && mod.auth.currentUser) {
-      const uid = mod.auth.currentUser.uid;
-      const db = await ensureDb();
-      const m = await import(FIRESTORE_URL);
-
-      const dataToSave = {
-        rows: rows,
-        headers: headers,
-        mapping: mapping,
-        uploadedAt: new Date().toISOString(),
-        rowCount: rows.length
-      };
-
-      await m.setDoc(m.doc(db, 'userData', uid), { csvData: dataToSave }, { merge: true });
-      return true;
-    }
-  } catch (e) {
-    console.warn('[storage] saveCsvData Firestore failed', e);
-  }
-
-  // Fallback to localStorage
+  // Always save the full data to localStorage
   try {
     const dataToSave = {
       rows: rows,
@@ -191,14 +169,49 @@ export async function saveCsvData(rows, headers, mapping) {
       rowCount: rows.length
     };
     localStorage.setItem('csvData', JSON.stringify(dataToSave));
-    return true;
   } catch (e) {
     console.warn('[storage] saveCsvData localStorage failed', e);
+    return false;
   }
-  return false;
+
+  // Save only metadata to Firestore to avoid size limits
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      const m = await import(FIRESTORE_URL);
+
+      const metadataToSave = {
+        headers: headers,
+        mapping: mapping,
+        uploadedAt: new Date().toISOString(),
+        rowCount: rows.length,
+        dataSource: 'localStorage' // Indicate where the actual data is stored
+      };
+
+      await m.setDoc(m.doc(db, 'userData', uid), { csvMetadata: metadataToSave }, { merge: true });
+    }
+  } catch (e) {
+    console.warn('[storage] saveCsvData Firestore metadata failed', e);
+    // Don't return false here since localStorage succeeded
+  }
+
+  return true;
 }
 
 export async function loadCsvData() {
+  // Always try localStorage first since that's where we store the actual data
+  try {
+    const local = localStorage.getItem('csvData');
+    if (local) {
+      return JSON.parse(local);
+    }
+  } catch (e) {
+    console.warn('[storage] loadCsvData localStorage failed', e);
+  }
+
+  // If no localStorage data, check Firestore for legacy data
   try {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
@@ -209,20 +222,26 @@ export async function loadCsvData() {
       const snap = await m.getDoc(m.doc(db, 'userData', uid));
       if (snap.exists()) {
         const data = snap.data();
-        return data.csvData || null;
+        // Check for legacy csvData or new csvMetadata
+        if (data.csvData) {
+          // Legacy data - migrate to localStorage
+          const csvData = data.csvData;
+          try {
+            localStorage.setItem('csvData', JSON.stringify(csvData));
+            return csvData;
+          } catch (e) {
+            console.warn('[storage] Failed to migrate legacy data to localStorage', e);
+            return csvData; // Return it anyway
+          }
+        }
+        // New structure doesn't store actual data in Firestore
+        return null;
       }
     }
   } catch (e) {
     console.warn('[storage] loadCsvData Firestore failed', e);
   }
 
-  // Fallback to localStorage
-  try {
-    const local = localStorage.getItem('csvData');
-    return local ? JSON.parse(local) : null;
-  } catch (e) {
-    console.warn('[storage] loadCsvData localStorage failed', e);
-  }
   return null;
 }
 

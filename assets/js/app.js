@@ -619,13 +619,13 @@ function renderReport() {
 
   const clientRows = state.byClient.map(x => ({ client: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
   const staffRows = state.byStaff.map(x => ({ staff: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
-  renderTable(qs('table-client'), ['client','orders','quantity','revenue','cost','profit','margin'], clientRows);
-  renderTable(qs('table-staff'), ['staff','orders','quantity','revenue','cost','profit','margin'], staffRows);
+  renderTable(qs('table-client-main'), ['client','orders','quantity','revenue','cost','profit','margin'], clientRows);
+  renderTable(qs('table-staff-main'), ['staff','orders','quantity','revenue','cost','profit','margin'], staffRows);
   const catSection = document.getElementById('section-category');
   if (state.byCategory && state.byCategory.length) {
     catSection?.classList.remove('hidden');
     const catRows = state.byCategory.map(x => ({ category: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
-    renderTable(qs('table-category'), ['category','orders','quantity','revenue','cost','profit','margin'], catRows);
+    renderTable(qs('table-category-main'), ['category','orders','quantity','revenue','cost','profit','margin'], catRows);
     // Category share chart
     if (state.chartCatShare) { state.chartCatShare.destroy(); state.chartCatShare = null; }
     const labelsCat = state.byCategory.map(x => x.label);
@@ -634,7 +634,7 @@ function renderReport() {
   } else {
     catSection?.classList.add('hidden');
   }
-  renderTable(qs('table-order'), ['order','date','client','staff','quantity','revenue','cost','profit','margin'], state.byOrder);
+  renderTable(qs('table-order-main'), ['order','date','client','staff','quantity','revenue','cost','profit','margin'], state.byOrder);
   if (state.chartTopClients) { state.chartTopClients.destroy(); state.chartTopClients = null; }
   const topClients = state.byClient.slice(0, 10);
   state.chartTopClients = makeBarChart(document.getElementById('chart-top-clients'), topClients.map(x=>x.label), topClients.map(x=>x.revenue), 'Top Clients by Revenue');
