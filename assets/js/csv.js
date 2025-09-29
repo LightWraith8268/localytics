@@ -19,6 +19,9 @@ export async function parseCsv(fileOrText, options = {}) {
   // Filter out rows that don't have data in the name/item column
   // First, get headers to identify the name column
   const headers = res.meta?.fields || Object.keys(rows[0] || {});
+  console.log('[csv] Parsed headers:', headers);
+  console.log('[csv] Total rows before filtering:', rows.length);
+
   const nameColumn = headers.find(h =>
     h.toLowerCase().includes('name') ||
     h.toLowerCase().includes('item') ||
@@ -26,19 +29,34 @@ export async function parseCsv(fileOrText, options = {}) {
     h.toLowerCase().includes('title')
   ) || headers[0]; // fallback to first column
 
+  console.log('[csv] Detected name column:', nameColumn);
+
   // Filter out rows without data in the name column
+  const originalRowCount = rows.length;
   rows = rows.filter(row => {
     const nameValue = row[nameColumn];
-    return nameValue && nameValue.toString().trim() !== '';
+    const hasValue = nameValue && nameValue.toString().trim() !== '';
+    if (!hasValue) {
+      console.log('[csv] Filtering out row with empty name column:', row);
+    }
+    return hasValue;
   });
+
+  console.log('[csv] Rows after name column filtering:', rows.length, 'of', originalRowCount);
 
   // Remove final empty row if it exists (common in exports)
   if (rows.length > 0) {
     const lastRow = rows[rows.length - 1];
     const hasData = Object.values(lastRow).some(val => val && val.toString().trim() !== '');
     if (!hasData) {
+      console.log('[csv] Removing empty last row:', lastRow);
       rows = rows.slice(0, -1);
     }
+  }
+
+  console.log('[csv] Final result - rows:', rows.length, 'headers:', headers.length);
+  if (rows.length > 0) {
+    console.log('[csv] Sample first row:', rows[0]);
   }
 
   return { rows, headers };

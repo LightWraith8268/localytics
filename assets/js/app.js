@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.40';
+const APP_VERSION = '1.2.41';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -256,11 +256,14 @@ window.addEventListener('DOMContentLoaded', () => {
   fileInput.addEventListener('change', async () => {
     const files = fileInput.files;
     if (!files || !files.length) return;
+    console.log('[app] Starting CSV file processing, files:', files.length);
     qs('uploadStatus').textContent = files.length > 1 ? `Reading ${files.length} files…` : 'Reading sample to detect columns…';
     const { rows, headers } = await parseCsvFiles(files, { preview: 100 });
+    console.log('[app] Parsed CSV result - rows:', rows.length, 'headers:', headers);
     state.rows = rows;
     state.headers = headers;
     const detected = detectColumns(headers);
+    console.log('[app] Detected columns:', detected);
     // Populate selects
     for (const id of ['col-date','col-item','col-qty','col-price','col-cost','col-revenue','col-category','col-order','col-client','col-staff']) {
       const sel = qs(id); sel.innerHTML = '';
@@ -313,6 +316,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const btn = qs('btnParse'); if (btn) btn.disabled = true;
     showProgress(true); setProgress(0, '0%');
     let lastText = '';
+    console.log('[app] Starting full CSV parsing');
     const { rows, headers } = await parseCsvFiles(files, {
       onProgress: (p) => {
         const pct = Number.isFinite(p.percent) ? p.percent : 0;
@@ -320,6 +324,7 @@ window.addEventListener('DOMContentLoaded', () => {
         if (txt !== lastText) { setProgress(pct, txt); lastText = txt; }
       }
     });
+    console.log('[app] Full parsing complete - rows:', rows.length, 'headers:', headers);
     state.rows = rows; state.headers = headers;
     state.mapping = {
       date: qs('col-date').value,
