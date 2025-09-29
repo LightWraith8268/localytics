@@ -18,90 +18,26 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./assets/icons/icon.svg">
     <style>
+      /* Light theme (default) */
       :root {
-        --bg: #f8fafc;
-        --card-bg: #ffffff;
-        --text: #0f172a;
+        --bg: #ffffff;
+        --card-bg: #f8fafc;
+        --text: #1f2937;
         --border: #e5e7eb;
         --accent: #2563eb;
+        --text-muted: #6b7280;
+        --hover-bg: #f3f4f6;
       }
-      .theme-dark {
-        --bg: #0b1220;
-        --card-bg: #111827;
-        --text: #e5e7eb;
+
+      /* Dark theme */
+      .dark {
+        --bg: #111827;
+        --card-bg: #1f2937;
+        --text: #f9fafb;
         --border: #374151;
         --accent: #3b82f6;
-      }
-      .theme-sepia {
-        --bg: #f7f1e3;
-        --card-bg: #fbfaf5;
-        --text: #3e2723;
-        --border: #e0d6c8;
-        --accent: #b08968;
-      }
-      /* Additional themes */
-      .theme-ocean {
-        --bg: #0b132b;
-        --card-bg: #1c2541;
-        --text: #e5e7eb;
-        --border: #3a506b;
-        --accent: #5bc0be;
-      }
-      .theme-forest {
-        --bg: #0b1f12;
-        --card-bg: #123524;
-        --text: #e8f5e9;
-        --border: #1f6f43;
-        --accent: #66bb6a;
-      }
-      .theme-rose {
-        --bg: #fff1f2;
-        --card-bg: #ffe4e6;
-        --text: #4a0010;
-        --border: #fecdd3;
-        --accent: #e11d48;
-      }
-      .theme-slate {
-        --bg: #0f172a;
-        --card-bg: #111827;
-        --text: #e2e8f0;
-        --border: #334155;
-        --accent: #64748b;
-      }
-      .theme-contrast {
-        --bg: #000000;
-        --card-bg: #0a0a0a;
-        --text: #ffffff;
-        --border: #4b5563;
-        --accent: #f59e0b;
-      }
-      .theme-solarized-light {
-        --bg: #fdf6e3;
-        --card-bg: #fffdf5;
-        --text: #073642;
-        --border: #eee8d5;
-        --accent: #268bd2;
-      }
-      .theme-solarized-dark {
-        --bg: #002b36;
-        --card-bg: #073642;
-        --text: #eee8d5;
-        --border: #0f3a44;
-        --accent: #b58900;
-      }
-      .theme-dracula {
-        --bg: #282a36;
-        --card-bg: #343746;
-        --text: #f8f8f2;
-        --border: #44475a;
-        --accent: #bd93f9;
-      }
-      .theme-nord {
-        --bg: #2e3440;
-        --card-bg: #3b4252;
-        --text: #eceff4;
-        --border: #4c566a;
-        --accent: #88c0d0;
+        --text-muted: #9ca3af;
+        --hover-bg: #374151;
       }
       body { font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); }
       .container { max-width: 1100px; }
@@ -143,6 +79,28 @@
       .nav-link.active .group-hover\:scale-110 {
         color: white;
       }
+      /* Fix text colors for dark mode */
+      .text-gray-900 { color: var(--text) !important; }
+      .text-gray-800 { color: var(--text) !important; }
+      .text-gray-700 { color: var(--text) !important; }
+      .text-gray-600 { color: var(--text-muted) !important; }
+      .text-gray-500 { color: var(--text-muted) !important; }
+
+      /* Fix backgrounds for dark mode */
+      .bg-gray-50 { background-color: var(--hover-bg) !important; }
+      .bg-gray-100 { background-color: var(--hover-bg) !important; }
+      .hover\:bg-gray-50:hover { background-color: var(--hover-bg) !important; }
+      .hover\:bg-gray-100:hover { background-color: var(--hover-bg) !important; }
+
+      /* Fix borders for dark mode */
+      .border-gray-200 { border-color: var(--border) !important; }
+      .border-gray-300 { border-color: var(--border) !important; }
+
+      /* Fix blue backgrounds to work in dark mode */
+      .bg-blue-50 { background-color: color-mix(in srgb, var(--accent) 10%, var(--card-bg)) !important; }
+      .text-blue-800 { color: var(--accent) !important; }
+      .text-blue-700 { color: var(--accent) !important; }
+      .border-blue-200 { border-color: color-mix(in srgb, var(--accent) 30%, var(--border)) !important; }
       /* Themed form controls */
       input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="email"], input[type="url"], input[type="file"], select, textarea {
         background-color: var(--card-bg) !important;
@@ -235,7 +193,7 @@
     </style>
     <link rel="icon" href="data:,">
   </head>
-  <body class="overflow-x-hidden">
+  <body class="overflow-x-hidden lg:flex">
     <!-- Mobile Header -->
     <header class="lg:hidden app-card border-b app-border sticky top-0 z-50 no-print shadow-sm">
       <div class="px-4 py-3 flex items-center justify-between">
@@ -257,7 +215,7 @@
     </header>
 
     <!-- Sidebar Navigation -->
-    <nav id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 ease-in-out app-card border-r app-border no-print">
+    <nav id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out app-card border-r app-border no-print">
       <div class="flex flex-col h-full">
         <!-- Sidebar Header -->
         <div class="hidden lg:flex items-center gap-3 p-6 border-b app-border">
@@ -309,11 +267,11 @@
           </a>
         </div>
 
-        <!-- Theme Button -->
+        <!-- Dark Mode Toggle -->
         <div class="p-4 border-t app-border">
-          <button id="btnOpenThemeModal" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group">
-            <span class="text-xl group-hover:scale-110 transition-transform">🎨</span>
-            <span>Theme Settings</span>
+          <button id="darkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
+            <span class="text-xl group-hover:scale-110 transition-transform">🌙</span>
+            <span>Toggle Dark Mode</span>
           </button>
         </div>
       </div>
@@ -323,8 +281,8 @@
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
 
     <!-- Main Content -->
-    <main class="lg:ml-64 min-h-screen">
-      <div class="container mx-auto py-4 md:py-6">
+    <main class="flex-1 min-h-screen">
+      <div class="container mx-auto py-4 md:py-6 max-w-none lg:max-w-6xl">
       <!-- Upload View -->
       <section id="view-upload" class="view">
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
@@ -862,6 +820,7 @@
     <!-- Firebase init (loads config from assets/js/firebase.js) -->
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
+
     <!-- Sidebar Navigation Script -->
     <script>
       // Sidebar navigation functionality
@@ -1043,184 +1002,6 @@
         </div>
       </div>
     </div>
-  <!-- Theme Modal -->
-  <div id="themeModal" class="hidden fixed inset-0 z-50" style="background: rgba(0,0,0,0.75);" onclick="if (event.target === this) this.classList.add('hidden')">
-    <div class="flex items-center justify-center min-h-screen px-4 py-8">
-      <div class="app-card border app-border rounded-xl shadow-2xl overflow-hidden w-full max-w-4xl max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between p-6 border-b app-border">
-          <div>
-            <h3 class="text-xl font-semibold">Theme Customization</h3>
-            <p class="text-sm text-gray-600 mt-1">Choose a preset theme or create your own custom design</p>
-          </div>
-          <button id="btnCloseThemeModal" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">✕ Close</button>
-        </div>
-
-        <div class="p-6 overflow-y-auto" style="max-height:calc(90vh - 120px);">
-          <!-- Preset Themes -->
-          <div class="mb-8">
-            <h4 class="text-lg font-medium mb-4">Preset Themes</h4>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="light">
-                <div class="w-full h-8 rounded mb-2 bg-gray-100 border"></div>
-                Light
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="dark">
-                <div class="w-full h-8 rounded mb-2 bg-gray-800"></div>
-                Dark
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="sepia">
-                <div class="w-full h-8 rounded mb-2 bg-yellow-100 border"></div>
-                Sepia
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="ocean">
-                <div class="w-full h-8 rounded mb-2 bg-blue-900"></div>
-                Ocean
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="forest">
-                <div class="w-full h-8 rounded mb-2 bg-green-900"></div>
-                Forest
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="rose">
-                <div class="w-full h-8 rounded mb-2 bg-pink-100 border"></div>
-                Rose
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="dracula">
-                <div class="w-full h-8 rounded mb-2 bg-purple-900"></div>
-                Dracula
-              </button>
-              <button class="theme-preset p-3 border app-border rounded-lg text-sm font-medium hover:border-blue-500 hover:bg-blue-50 transition-all duration-200" data-theme="nord">
-                <div class="w-full h-8 rounded mb-2 bg-slate-600"></div>
-                Nord
-              </button>
-            </div>
-          </div>
-
-          <script>
-            // Theme preset button functionality
-            function initThemePresetButtons() {
-              const themeButtons = document.querySelectorAll('.theme-preset');
-              themeButtons.forEach(button => {
-                button.addEventListener('click', async () => {
-                  const theme = button.dataset.theme;
-
-                  // Remove active state from all buttons
-                  themeButtons.forEach(btn => btn.classList.remove('border-blue-500', 'bg-blue-50'));
-
-                  // Add active state to clicked button
-                  button.classList.add('border-blue-500', 'bg-blue-50');
-
-                  // Apply theme - wait for function to be available
-                  const applyTheme = window.applyTheme;
-                  if (applyTheme) {
-                    applyTheme(theme);
-                  } else {
-                    // Wait for app.js to load applyTheme function
-                    setTimeout(() => {
-                      if (window.applyTheme) window.applyTheme(theme);
-                    }, 100);
-                  }
-
-                  // Save theme
-                  try {
-                    const { saveUserSettings } = await import('./assets/js/storage.js');
-                    await saveUserSettings('theme', theme);
-                  } catch (e) {
-                    console.warn('Failed to save theme:', e);
-                  }
-                });
-              });
-
-              // Set initial active button based on current theme
-              function setActiveThemeButton() {
-                const currentTheme = localStorage.getItem('qr_theme') || 'light';
-                const activeButton = document.querySelector(`[data-theme="${currentTheme}"]`);
-                if (activeButton) {
-                  themeButtons.forEach(btn => btn.classList.remove('border-blue-500', 'bg-blue-50'));
-                  activeButton.classList.add('border-blue-500', 'bg-blue-50');
-                }
-              }
-
-              setActiveThemeButton();
-            }
-
-            // Initialize when DOM is ready
-            if (document.readyState === 'loading') {
-              document.addEventListener('DOMContentLoaded', initThemePresetButtons);
-            } else {
-              initThemePresetButtons();
-            }
-          </script>
-
-          <!-- Custom Theme Editor -->
-          <div class="mb-8">
-            <h4 class="text-lg font-medium mb-4">Custom Theme Editor</h4>
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Background</label>
-                <input type="color" id="ctBg" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#f8fafc" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Card Background</label>
-                <input type="color" id="ctCard" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#ffffff" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Text Color</label>
-                <input type="color" id="ctText" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#0f172a" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Border Color</label>
-                <input type="color" id="ctBorder" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#e5e7eb" />
-              </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
-                <input type="color" id="ctAccent" class="w-full h-12 border app-border rounded-md cursor-pointer" value="#2563eb" />
-              </div>
-            </div>
-
-            <div class="mt-6 flex flex-col sm:flex-row gap-3">
-              <button id="btnSaveCustomTheme" class="px-6 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Custom Theme</button>
-              <button id="btnResetCustomTheme" class="px-6 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Reset to Defaults</button>
-            </div>
-          </div>
-
-          <!-- Live Preview -->
-          <div>
-            <h4 class="text-lg font-medium mb-4">Live Preview</h4>
-            <div id="themePreview" class="app-card border app-border rounded-lg p-6">
-              <div class="flex items-center justify-between mb-4">
-                <h5 class="text-lg font-semibold">Sample Report</h5>
-                <span class="px-3 py-1 bg-blue-600 text-white rounded-full text-xs">Live Preview</span>
-              </div>
-              <p class="text-sm text-gray-600 mb-4">This preview shows how your theme will look across the application.</p>
-              <div class="flex flex-wrap gap-2 mb-4">
-                <button class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Neutral Button</button>
-                <button class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Primary Button</button>
-                <select class="px-3 py-2 border app-border rounded-md text-sm">
-                  <option>Sample Dropdown</option>
-                </select>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div class="app-card border app-border rounded-md p-3">
-                  <div class="text-sm font-medium">Revenue</div>
-                  <div class="text-xl font-bold">$12,345</div>
-                </div>
-                <div class="app-card border app-border rounded-md p-3">
-                  <div class="text-sm font-medium">Orders</div>
-                  <div class="text-xl font-bold">456</div>
-                </div>
-                <div class="app-card border app-border rounded-md p-3">
-                  <div class="text-sm font-medium">Items</div>
-                  <div class="text-xl font-bold">789</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  </div>
   </body>
   <!-- Chart Zoom Modal -->
   <div id="chartZoom" class="hidden fixed top-0 left-0 right-0 bottom-0 z-50" style="background: rgba(0,0,0,0.6);">

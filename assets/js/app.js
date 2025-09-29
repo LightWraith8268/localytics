@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.29';
+const APP_VERSION = '1.2.30';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -52,17 +52,12 @@ window.addEventListener('hashchange', () => showView(location.hash));
 window.addEventListener('DOMContentLoaded', () => {
   // Router
   showView(location.hash);
-  // Header theme gear opens theme modal
+  // Simple dark mode toggle
   try {
-    const headerOpen = document.getElementById('headerOpenTheme');
-    const openTheme = document.getElementById('btnOpenThemeModal');
-    const closeTheme = document.getElementById('btnCloseThemeModal');
-    const modalTheme = document.getElementById('themeModal');
-    const open = () => modalTheme?.classList.remove('hidden');
-    const close = () => modalTheme?.classList.add('hidden');
-    if (headerOpen) headerOpen.addEventListener('click', open);
-    if (openTheme) openTheme.addEventListener('click', open);
-    if (closeTheme) closeTheme.addEventListener('click', close);
+    const darkModeToggle = document.getElementById('darkModeToggle');
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
   } catch {}
   // Version badge
   const vEl = document.getElementById('appVersionBadge'); if (vEl) vEl.textContent = `v${APP_VERSION}`;
@@ -134,20 +129,12 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })();
 
-  // Theme modal open/close
-  try {
-    const openTheme = document.getElementById('btnOpenThemeModal');
-    const closeTheme = document.getElementById('btnCloseThemeModal');
-    const modalTheme = document.getElementById('themeModal');
-    if (openTheme && modalTheme) openTheme.addEventListener('click', () => { modalTheme.classList.remove('hidden'); });
-    if (closeTheme && modalTheme) closeTheme.addEventListener('click', () => { modalTheme.classList.add('hidden'); });
-  } catch {}
+  // Initialize dark mode
+  initDarkMode();
   // Load category map, filters, and custom chart preferences
   (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch {} })();
   (async ()=>{ try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch {} })();
   (async ()=>{ try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch {} })();
-  // Theme load
-  initTheme();
 
   // File handling
   const fileInput = qs('fileInput');
@@ -930,98 +917,39 @@ function restoreChartsAfterPrint(){
 // Removed accordion auto-close behavior to allow multiple expansions
 window.addEventListener('beforeprint', () => { document.querySelectorAll('details[data-accordion]').forEach(d => d.open = true); });
 
-async function initTheme(){
-  const sel = document.getElementById('themeSelect');
-  // Load theme from Firebase first, fallback to localStorage
-  let saved = 'light';
-  try {
-    const firebaseTheme = await loadUserSettings('theme');
-    saved = firebaseTheme || localStorage.getItem('qr_theme') || 'light';
-  } catch {
-    saved = localStorage.getItem('qr_theme') || 'light';
+function initDarkMode() {
+  // Load dark mode preference
+  const isDark = localStorage.getItem('darkMode') === 'true';
+  if (isDark) {
+    document.documentElement.classList.add('dark');
   }
-
-  applyTheme(saved);
-  if (sel) sel.value = saved;
-  sel?.addEventListener('change', async () => {
-    const val = sel.value;
-    applyTheme(val);
-    try { await saveUserSettings('theme', val); } catch {}
-    if (val === 'custom') await applyCustomThemeFromInputs();
-  });
-  if (saved === 'custom') {
-    try {
-      // Load custom theme from Firebase first, fallback to localStorage
-      let vars = {};
-      try {
-        const firebaseVars = await loadUserSettings('customThemeVars');
-        vars = firebaseVars || JSON.parse(localStorage.getItem('customThemeVars')||'{}');
-      } catch {
-        vars = JSON.parse(localStorage.getItem('customThemeVars')||'{}');
-      }
-      applyCustomTheme(vars);
-      fillCustomThemeInputs(vars);
-    } catch {}
-  }
-  ['ctBg','ctCard','ctText','ctBorder','ctAccent'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.addEventListener('input', async () => { if (document.getElementById('themeSelect')?.value === 'custom') await applyCustomThemeFromInputs(true); updateThemePreview(); });
-  });
-  const b1 = document.getElementById('btnSaveCustomTheme'); if (b1) b1.addEventListener('click', async () => { await applyCustomThemeFromInputs(true); alert('Custom theme saved. Choose "Custom…" to use it.'); });
-  const b2 = document.getElementById('btnResetCustomTheme'); if (b2) b2.addEventListener('click', async () => {
-    try { await saveUserSettings('customThemeVars', null); } catch {}
-    fillCustomThemeInputs({});
-    updateThemePreview();
-  });
-  updateThemePreview();
-}
-function applyTheme(name){
-  const el = document.documentElement;
-  const classes = ['theme-dark','theme-sepia','theme-ocean','theme-forest','theme-rose','theme-slate','theme-contrast','theme-solarized-light','theme-solarized-dark','theme-dracula','theme-nord'];
-  el.classList.remove(...classes);
-  if (name && name !== 'light') {
-    const cls = 'theme-' + name;
-    if (classes.includes(cls)) el.classList.add(cls);
-  }
+  updateDarkModeButton();
 }
 
-// Make applyTheme globally available
-window.applyTheme = applyTheme;
+function toggleDarkMode() {
+  const html = document.documentElement;
+  const isDark = html.classList.contains('dark');
 
-async function applyCustomThemeFromInputs(save){
-  const vars = {
-    bg: document.getElementById('ctBg')?.value || '#f8fafc',
-    card: document.getElementById('ctCard')?.value || '#ffffff',
-    text: document.getElementById('ctText')?.value || '#0f172a',
-    border: document.getElementById('ctBorder')?.value || '#e5e7eb',
-    accent: document.getElementById('ctAccent')?.value || '#2563eb'
-  };
-  applyCustomTheme(vars);
-  if (save) {
-    try { await saveUserSettings('customThemeVars', vars); } catch {}
+  if (isDark) {
+    html.classList.remove('dark');
+    localStorage.setItem('darkMode', 'false');
+  } else {
+    html.classList.add('dark');
+    localStorage.setItem('darkMode', 'true');
   }
+
+  updateDarkModeButton();
 }
-function applyCustomTheme(vars){
-  const el = document.documentElement;
-  el.style.setProperty('--bg', vars.bg || '#f8fafc');
-  el.style.setProperty('--card-bg', vars.card || '#ffffff');
-  el.style.setProperty('--text', vars.text || '#0f172a');
-  el.style.setProperty('--border', vars.border || '#e5e7eb');
-  el.style.setProperty('--accent', vars.accent || '#2563eb');
-}
-function fillCustomThemeInputs(vars){
-  const set=(id,val)=>{ const el=document.getElementById(id); if(el) el.value=val; };
-  set('ctBg', vars.bg || '#f8fafc');
-  set('ctCard', vars.card || '#ffffff');
-  set('ctText', vars.text || '#0f172a');
-  set('ctBorder', vars.border || '#e5e7eb');
-  set('ctAccent', vars.accent || '#2563eb');
-}
-function updateThemePreview(){
-  const prev = document.getElementById('themePreview'); if (!prev) return;
-  prev.style.backgroundColor = getComputedStyle(document.documentElement).getPropertyValue('--card-bg');
-  prev.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text');
-  prev.style.borderColor = getComputedStyle(document.documentElement).getPropertyValue('--border');
+
+function updateDarkModeButton() {
+  const isDark = document.documentElement.classList.contains('dark');
+  const toggle = document.getElementById('darkModeToggle');
+  if (toggle) {
+    const icon = toggle.querySelector('span:first-child');
+    const text = toggle.querySelector('span:last-child');
+    if (icon) icon.textContent = isDark ? '☀️' : '🌙';
+    if (text) text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  }
 }
 
 function ingestRows(rows){
