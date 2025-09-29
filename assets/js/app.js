@@ -1006,6 +1006,18 @@ function renderOrdersView() {
     return;
   }
 
+  // Set up search and sort event listeners
+  const searchInput = qs('ordersSearch');
+  const sortSelect = qs('ordersSort');
+  if (searchInput && !searchInput.hasAttribute('data-listener')) {
+    searchInput.setAttribute('data-listener', 'true');
+    searchInput.addEventListener('input', () => renderOrdersView());
+  }
+  if (sortSelect && !sortSelect.hasAttribute('data-listener')) {
+    sortSelect.setAttribute('data-listener', 'true');
+    sortSelect.addEventListener('change', () => renderOrdersView());
+  }
+
   const workingRows = getWorkingRows();
   const rowsByOrder = new Map();
   workingRows.forEach(row => {
@@ -1022,11 +1034,52 @@ function renderOrdersView() {
     }, '');
   };
 
-  const orders = [...state.byOrder].sort((a, b) => {
-    const dateA = getLatestDate(a.order) || a.date || '';
-    const dateB = getLatestDate(b.order) || b.date || '';
-    if (dateA === dateB) return b.revenue - a.revenue;
-    return dateB.localeCompare(dateA);
+  // Get search term and sort option
+  const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+  const sortOption = sortSelect?.value || 'date-desc';
+
+  // Filter orders based on search term
+  let orders = [...state.byOrder];
+  if (searchTerm) {
+    orders = orders.filter(order => {
+      // Search in order ID, client, staff
+      const orderText = `${order.order} ${order.client || ''} ${order.staff || ''}`.toLowerCase();
+      if (orderText.includes(searchTerm)) return true;
+
+      // Search in items within the order
+      const orderRows = rowsByOrder.get(order.order) || [];
+      return orderRows.some(row => {
+        const itemName = String(row[state.mapping.item] || row.item || '').toLowerCase();
+        return itemName.includes(searchTerm);
+      });
+    });
+  }
+
+  // Sort orders based on selected option
+  orders.sort((a, b) => {
+    switch (sortOption) {
+      case 'date-asc':
+        const dateA = getLatestDate(a.order) || a.date || '';
+        const dateB = getLatestDate(b.order) || b.date || '';
+        return dateA.localeCompare(dateB);
+      case 'date-desc':
+        const dateA2 = getLatestDate(a.order) || a.date || '';
+        const dateB2 = getLatestDate(b.order) || b.date || '';
+        return dateB2.localeCompare(dateA2);
+      case 'revenue-desc':
+        return b.revenue - a.revenue;
+      case 'revenue-asc':
+        return a.revenue - b.revenue;
+      case 'order-asc':
+        return a.order.localeCompare(b.order);
+      case 'order-desc':
+        return b.order.localeCompare(a.order);
+      default:
+        const dateA3 = getLatestDate(a.order) || a.date || '';
+        const dateB3 = getLatestDate(b.order) || b.date || '';
+        if (dateA3 === dateB3) return b.revenue - a.revenue;
+        return dateB3.localeCompare(dateA3);
+    }
   });
 
   const totals = orders.reduce((acc, order) => {
@@ -1034,7 +1087,12 @@ function renderOrdersView() {
     acc.profit += Number(order.profit || 0);
     return acc;
   }, { revenue: 0, profit: 0 });
-  summaryEl.textContent = `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
+  const totalOrdersCount = state.byOrder.length;
+  const isFiltered = orders.length !== totalOrdersCount || searchTerm;
+  const summaryText = isFiltered
+    ? `${formatNumber(orders.length)} of ${formatNumber(totalOrdersCount)} orders${searchTerm ? ` matching "${searchTerm}"` : ''} · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`
+    : `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
+  summaryEl.textContent = summaryText;
 
   listEl.innerHTML = orders.map(order => {
     const orderRows = rowsByOrder.get(order.order) || [];
