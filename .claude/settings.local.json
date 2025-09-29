@@ -11,7 +11,8 @@
       "Bash(python:*)",
       "Bash(node:*)",
       "Bash(rm:*)",
-      "Bash(gh browse:*)"
+      "Bash(gh browse:*)",
+      "Bash(gh run:*)"
     ]
   },
   "outputStyle": "Explanatory"
