@@ -286,7 +286,13 @@ export async function saveCsvData(rows, headers, mapping) {
             try {
               await m.deleteDoc(docSnap.ref);
             } catch (err) {
-              console.warn('[storage] saveCsvData failed to delete existing chunk', err);
+              console.info('[storage] saveCsvData could not delete existing chunk, overwriting in place', err);
+              try {
+                const docData = docSnap.data() || {};
+                await m.setDoc(docSnap.ref, { index: docData.index ?? 0, rows: [], stale: true, updatedAt: uploadedAt }, { merge: true });
+              } catch (overwriteError) {
+                console.warn('[storage] saveCsvData failed to clear existing chunk data', overwriteError);
+              }
             }
           }
         }
