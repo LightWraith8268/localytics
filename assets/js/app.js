@@ -782,7 +782,7 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnCategoryApplyBulk')?.addEventListener('click', () => {
     const textarea = qs('categoryMapBulkInput');
     if (!textarea) return;
-    const lines = textarea.value.split(/\r?\n/);
+    const lines = textarea.value.replace(/\r/g, '').split('\n');
     const current = collectCategoryMapDraft('categoryMapList');
     lines.forEach(line => {
       const trimmed = line.trim();
