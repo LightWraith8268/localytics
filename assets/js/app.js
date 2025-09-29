@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.28';
+const APP_VERSION = '1.2.29';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -66,22 +66,7 @@ window.addEventListener('DOMContentLoaded', () => {
   } catch {}
   // Version badge
   const vEl = document.getElementById('appVersionBadge'); if (vEl) vEl.textContent = `v${APP_VERSION}`;
-  // Mobile nav toggle
-  const navToggle = document.getElementById('navToggle');
-  const navLinks = document.getElementById('navLinks');
-  if (navToggle && navLinks) {
-    navToggle.addEventListener('click', () => {
-      const isOpen = navLinks.classList.toggle('show');
-      navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-    });
-    // Hide menu on hash change/navigation
-    window.addEventListener('hashchange', () => { navLinks.classList.remove('show'); navToggle.setAttribute('aria-expanded','false'); });
-    document.addEventListener('click', (e) => {
-      if (!navLinks.contains(e.target) && e.target !== navToggle) {
-        navLinks.classList.remove('show'); navToggle.setAttribute('aria-expanded','false');
-      }
-    });
-  }
+  // Mobile navigation handled by sidebar script
 
   // Auth observe
   observeAuth(user => {
@@ -942,16 +927,7 @@ function restoreChartsAfterPrint(){
 }
 
 // Accordion behavior and theme utilities
-document.addEventListener('click', (e) => {
-  const t = e.target; if (!(t instanceof Element)) return;
-  if (t.tagName.toLowerCase() === 'summary') {
-    const parent = t.closest('details[data-accordion]');
-    if (!parent) return;
-    setTimeout(() => {
-      if (parent.open) document.querySelectorAll('details[data-accordion]').forEach(d => { if (d !== parent) d.open = false; });
-    }, 0);
-  }
-});
+// Removed accordion auto-close behavior to allow multiple expansions
 window.addEventListener('beforeprint', () => { document.querySelectorAll('details[data-accordion]').forEach(d => d.open = true); });
 
 async function initTheme(){
@@ -1008,6 +984,9 @@ function applyTheme(name){
     if (classes.includes(cls)) el.classList.add(cls);
   }
 }
+
+// Make applyTheme globally available
+window.applyTheme = applyTheme;
 
 async function applyCustomThemeFromInputs(save){
   const vars = {

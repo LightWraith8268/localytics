@@ -131,42 +131,17 @@
       .bg-purple-50 .text-purple-700 { color: #7c3aed !important; }
       .bg-orange-50 .text-orange-700 { color: #c2410c !important; }
       .bg-gray-50 .text-gray-700 { color: #374151 !important; }
-      /* Mobile navigation */
-      @media (max-width: 767px) {
-        header .nav-links {
-          display: none;
-          position: absolute;
-          right: 1rem;
-          top: 4rem;
-          left: 1rem;
-          background: var(--card-bg);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          padding: 1rem;
-          flex-direction: column;
-          gap: 0;
-          z-index: 40;
-          box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-        }
-        header .nav-links.show { display: flex; }
-
-        /* Improve mobile dropdown appearance */
-        header .nav-links a {
-          padding: 0.75rem 1rem;
-          border-radius: 12px;
-          border-bottom: none;
-          margin-bottom: 0.5rem;
-          font-weight: bold;
-          text-align: center;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        header .nav-links a:last-of-type {
-          margin-bottom: 0;
-        }
-        header .nav-links a:hover {
-          transform: scale(1.02);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
+      /* Sidebar Navigation */
+      .nav-link.active {
+        background: var(--accent);
+        color: white;
+      }
+      .nav-link.active:hover {
+        background: var(--accent);
+        color: white;
+      }
+      .nav-link.active .group-hover\:scale-110 {
+        color: white;
       }
       /* Themed form controls */
       input[type="text"], input[type="number"], input[type="date"], input[type="time"], input[type="email"], input[type="url"], input[type="file"], select, textarea {
@@ -260,59 +235,96 @@
     </style>
     <link rel="icon" href="data:,">
   </head>
-  <body>
-    <header class="app-card border-b app-border sticky top-0 z-10 no-print shadow-sm">
-      <div class="container mx-auto py-4 flex items-center justify-between relative">
-        <!-- Logo and Brand -->
+  <body class="overflow-x-hidden">
+    <!-- Mobile Header -->
+    <header class="lg:hidden app-card border-b app-border sticky top-0 z-50 no-print shadow-sm">
+      <div class="px-4 py-3 flex items-center justify-between">
+        <!-- Logo -->
         <div class="flex items-center gap-3">
           <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
             <span class="text-white font-bold text-sm">L</span>
           </div>
-          <h1 class="text-xl md:text-2xl font-bold text-gray-900">Localytics</h1>
+          <h1 class="text-lg font-bold text-gray-900">Localytics</h1>
         </div>
 
         <!-- Mobile Menu Toggle -->
-        <button id="navToggle" class="md:hidden px-3 py-2 border app-border rounded-lg text-sm font-medium hover:bg-gray-50" aria-expanded="false" aria-controls="navLinks">
-          <span class="sr-only">Menu</span>
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <button id="mobileMenuToggle" class="p-2 rounded-lg border app-border hover:bg-gray-50" aria-label="Open menu">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
-          <span class="hidden sm:inline ml-2">Menu</span>
         </button>
-
-        <!-- Navigation -->
-        <nav id="navLinks" class="nav-links flex flex-col md:flex-row gap-1 md:gap-6 items-stretch md:items-center">
-          <!-- Main Navigation Links -->
-          <div class="flex flex-col md:flex-row gap-1 md:gap-6">
-            <a href="#/upload" class="nav-link inline-flex items-center justify-center px-6 py-3 bg-blue-500 border-2 border-blue-600 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 hover:bg-blue-600 hover:border-blue-700 hover:shadow-xl hover:scale-105 active:bg-blue-700 active:scale-95 focus:outline-none focus:ring-3 focus:ring-blue-300 focus:ring-offset-2">
-              📤 Upload Data
-            </a>
-            <a href="#/report" class="nav-link inline-flex items-center justify-center px-6 py-3 bg-green-500 border-2 border-green-600 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 hover:bg-green-600 hover:border-green-700 hover:shadow-xl hover:scale-105 active:bg-green-700 active:scale-95 focus:outline-none focus:ring-3 focus:ring-green-300 focus:ring-offset-2">
-              📊 Reports
-            </a>
-            <a href="#/custom" class="nav-link inline-flex items-center justify-center px-6 py-3 bg-purple-500 border-2 border-purple-600 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 hover:bg-purple-600 hover:border-purple-700 hover:shadow-xl hover:scale-105 active:bg-purple-700 active:scale-95 focus:outline-none focus:ring-3 focus:ring-purple-300 focus:ring-offset-2">
-              🎨 Custom Charts
-            </a>
-            <a href="#/history" class="nav-link inline-flex items-center justify-center px-6 py-3 bg-orange-500 border-2 border-orange-600 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 hover:bg-orange-600 hover:border-orange-700 hover:shadow-xl hover:scale-105 active:bg-orange-700 active:scale-95 focus:outline-none focus:ring-3 focus:ring-orange-300 focus:ring-offset-2">
-              📋 Saved Reports
-            </a>
-            <a href="#/settings" class="nav-link inline-flex items-center justify-center px-6 py-3 bg-gray-500 border-2 border-gray-600 rounded-xl text-sm font-bold text-white shadow-lg transition-all duration-200 hover:bg-gray-600 hover:border-gray-700 hover:shadow-xl hover:scale-105 active:bg-gray-700 active:scale-95 focus:outline-none focus:ring-3 focus:ring-gray-300 focus:ring-offset-2">
-              ⚙️ Settings
-            </a>
-          </div>
-
-          <!-- Theme and Actions -->
-          <div class="flex flex-col md:flex-row gap-2 md:gap-3 mt-3 md:mt-0 pt-3 md:pt-0 border-t md:border-t-0 app-border md:border-l md:pl-6">
-            <button id="btnOpenThemeModal" class="px-3 py-2 border app-border rounded-md text-xs font-medium hover:bg-gray-50 w-full md:w-auto">
-              🎨 Theme
-            </button>
-            <span id="appVersionBadge" title="App version" class="text-xs px-2 py-1 rounded-full border app-border app-card text-center self-center">v?</span>
-          </div>
-        </nav>
       </div>
     </header>
 
-    <main class="container mx-auto py-4 md:py-6">
+    <!-- Sidebar Navigation -->
+    <nav id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0 transition-transform duration-300 ease-in-out app-card border-r app-border no-print">
+      <div class="flex flex-col h-full">
+        <!-- Sidebar Header -->
+        <div class="hidden lg:flex items-center gap-3 p-6 border-b app-border">
+          <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold text-lg">L</span>
+          </div>
+          <div>
+            <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
+            <p class="text-xs text-gray-500" id="sidebarVersion">v?</p>
+          </div>
+        </div>
+
+        <!-- Mobile Header in Sidebar -->
+        <div class="lg:hidden flex items-center justify-between p-4 border-b app-border">
+          <div class="flex items-center gap-3">
+            <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span class="text-white font-bold text-sm">L</span>
+            </div>
+            <h1 class="text-lg font-bold text-gray-900">Localytics</h1>
+          </div>
+          <button id="closeMobileMenu" class="p-2 rounded-lg hover:bg-gray-100" aria-label="Close menu">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Navigation Links -->
+        <div class="flex-1 p-4 space-y-2">
+          <a href="#/upload" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">📤</span>
+            <span>Upload Data</span>
+          </a>
+          <a href="#/report" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-green-50 hover:text-green-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
+            <span>Reports</span>
+          </a>
+          <a href="#/custom" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-purple-50 hover:text-purple-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">🎨</span>
+            <span>Custom Charts</span>
+          </a>
+          <a href="#/history" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-orange-50 hover:text-orange-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">📋</span>
+            <span>Saved Reports</span>
+          </a>
+          <a href="#/settings" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">⚙️</span>
+            <span>Settings</span>
+          </a>
+        </div>
+
+        <!-- Theme Button -->
+        <div class="p-4 border-t app-border">
+          <button id="btnOpenThemeModal" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group">
+            <span class="text-xl group-hover:scale-110 transition-transform">🎨</span>
+            <span>Theme Settings</span>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 min-h-screen">
+      <div class="container mx-auto py-4 md:py-6">
       <!-- Upload View -->
       <section id="view-upload" class="view">
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
@@ -839,6 +851,7 @@
 
         </div>
       </section>
+      </div>
     </main>
 
     <!-- Vendor libs -->
@@ -849,8 +862,86 @@
     <!-- Firebase init (loads config from assets/js/firebase.js) -->
     <script type="module" src="./assets/js/firebase-init.js"></script>
 
+    <!-- Sidebar Navigation Script -->
+    <script>
+      // Sidebar navigation functionality
+      document.addEventListener('DOMContentLoaded', () => {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const mobileToggle = document.getElementById('mobileMenuToggle');
+        const closeBtn = document.getElementById('closeMobileMenu');
+
+        // Toggle mobile sidebar
+        function openSidebar() {
+          sidebar.classList.remove('-translate-x-full');
+          overlay.classList.remove('hidden');
+          document.body.classList.add('overflow-hidden');
+        }
+
+        function closeSidebar() {
+          sidebar.classList.add('-translate-x-full');
+          overlay.classList.add('hidden');
+          document.body.classList.remove('overflow-hidden');
+        }
+
+        // Event listeners
+        mobileToggle?.addEventListener('click', openSidebar);
+        closeBtn?.addEventListener('click', closeSidebar);
+        overlay?.addEventListener('click', closeSidebar);
+
+        // Close sidebar on navigation for mobile
+        const navLinks = document.querySelectorAll('.nav-link');
+        navLinks.forEach(link => {
+          link.addEventListener('click', () => {
+            if (window.innerWidth < 1024) {
+              closeSidebar();
+            }
+          });
+        });
+
+        // Update version in sidebar
+        function updateSidebarVersion() {
+          const versionEl = document.getElementById('sidebarVersion');
+          if (versionEl && window.APP_VERSION) {
+            versionEl.textContent = `v${window.APP_VERSION}`;
+          }
+        }
+
+        // Set active nav link
+        function setActiveNavLink() {
+          const currentHash = location.hash || '#/upload';
+          const currentPath = currentHash.replace('#/', '');
+
+          navLinks.forEach(link => {
+            link.classList.remove('active');
+            const href = link.getAttribute('href') || '';
+            const linkPath = href.replace('#/', '');
+
+            if (linkPath === currentPath || (currentPath === '' && linkPath === 'upload')) {
+              link.classList.add('active');
+            }
+          });
+        }
+
+        // Initialize
+        updateSidebarVersion();
+        setActiveNavLink();
+
+        // Update active nav on hash change
+        window.addEventListener('hashchange', setActiveNavLink);
+
+        // Update version when APP_VERSION is available
+        if (window.APP_VERSION) {
+          updateSidebarVersion();
+        } else {
+          // Wait for app.js to load
+          setTimeout(updateSidebarVersion, 100);
+        }
+      });
+    </script>
+
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.26"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.28"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">
@@ -953,9 +1044,9 @@
       </div>
     </div>
   <!-- Theme Modal -->
-  <!-- Theme Customization Modal -->
-  <div id="themeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4" style="background: rgba(0,0,0,0.75);">
-    <div class="app-card border app-border rounded-xl shadow-2xl overflow-hidden" style="max-width:900px; width:100%; max-height:90vh;">
+  <div id="themeModal" class="hidden fixed inset-0 z-50" style="background: rgba(0,0,0,0.75);" onclick="if (event.target === this) this.classList.add('hidden')">
+    <div class="flex items-center justify-center min-h-screen px-4 py-8">
+      <div class="app-card border app-border rounded-xl shadow-2xl overflow-hidden w-full max-w-4xl max-h-screen overflow-y-auto" onclick="event.stopPropagation()">
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6 border-b app-border">
           <div>
@@ -1007,7 +1098,7 @@
 
           <script>
             // Theme preset button functionality
-            document.addEventListener('DOMContentLoaded', () => {
+            function initThemePresetButtons() {
               const themeButtons = document.querySelectorAll('.theme-preset');
               themeButtons.forEach(button => {
                 button.addEventListener('click', async () => {
@@ -1019,9 +1110,15 @@
                   // Add active state to clicked button
                   button.classList.add('border-blue-500', 'bg-blue-50');
 
-                  // Apply theme
-                  if (window.applyTheme) {
-                    window.applyTheme(theme);
+                  // Apply theme - wait for function to be available
+                  const applyTheme = window.applyTheme;
+                  if (applyTheme) {
+                    applyTheme(theme);
+                  } else {
+                    // Wait for app.js to load applyTheme function
+                    setTimeout(() => {
+                      if (window.applyTheme) window.applyTheme(theme);
+                    }, 100);
                   }
 
                   // Save theme
@@ -1033,7 +1130,26 @@
                   }
                 });
               });
-            });
+
+              // Set initial active button based on current theme
+              function setActiveThemeButton() {
+                const currentTheme = localStorage.getItem('qr_theme') || 'light';
+                const activeButton = document.querySelector(`[data-theme="${currentTheme}"]`);
+                if (activeButton) {
+                  themeButtons.forEach(btn => btn.classList.remove('border-blue-500', 'bg-blue-50'));
+                  activeButton.classList.add('border-blue-500', 'bg-blue-50');
+                }
+              }
+
+              setActiveThemeButton();
+            }
+
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', initThemePresetButtons);
+            } else {
+              initThemePresetButtons();
+            }
           </script>
 
           <!-- Custom Theme Editor -->
@@ -1103,6 +1219,7 @@
         </div>
       </div>
     </div>
+  </div>
   </div>
   </body>
   <!-- Chart Zoom Modal -->
