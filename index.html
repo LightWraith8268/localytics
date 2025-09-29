@@ -193,7 +193,7 @@
     </style>
     <link rel="icon" href="data:,">
   </head>
-  <body class="overflow-x-hidden lg:flex">
+  <body class="overflow-x-hidden">
     <!-- Mobile Header -->
     <header class="lg:hidden app-card border-b app-border sticky top-0 z-50 no-print shadow-sm">
       <div class="px-4 py-3 flex items-center justify-between">
@@ -214,8 +214,10 @@
       </div>
     </header>
 
-    <!-- Sidebar Navigation -->
-    <nav id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out app-card border-r app-border no-print">
+    <!-- Desktop Layout Container -->
+    <div class="lg:flex min-h-screen">
+      <!-- Sidebar Navigation -->
+      <nav id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:relative lg:transform-none transition-transform duration-300 ease-in-out app-card border-r app-border no-print">
       <div class="flex flex-col h-full">
         <!-- Sidebar Header -->
         <div class="hidden lg:flex items-center gap-3 p-6 border-b app-border">
@@ -275,14 +277,11 @@
           </button>
         </div>
       </div>
-    </nav>
+      </nav>
 
-    <!-- Mobile Sidebar Overlay -->
-    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
-
-    <!-- Main Content -->
-    <main class="flex-1 min-h-screen">
-      <div class="container mx-auto py-4 md:py-6 max-w-none lg:max-w-6xl">
+      <!-- Main Content -->
+      <main class="flex-1 min-h-screen overflow-auto">
+        <div class="container mx-auto py-4 md:py-6 max-w-none lg:max-w-6xl">
       <!-- Upload View -->
       <section id="view-upload" class="view">
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
@@ -809,8 +808,12 @@
 
         </div>
       </section>
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
+
+    <!-- Mobile Sidebar Overlay -->
+    <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
 
     <!-- Vendor libs -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
