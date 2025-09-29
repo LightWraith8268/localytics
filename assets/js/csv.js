@@ -116,7 +116,7 @@ export async function parseCsvFiles(fileList, options = {}) {
         header: true,
         skipEmptyLines: true,
         dynamicTyping: false,
-        worker: true,
+        worker: false, // Disable worker mode to avoid "p1 is not defined" error
         chunkSize: 1024 * 1024, // 1MB chunks
         chunk: (results) => {
           const rows = results.data.filter(r => r && typeof r === 'object');
