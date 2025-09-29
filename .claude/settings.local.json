@@ -8,7 +8,9 @@
       "Bash(gh workflow:*)",
       "Bash(gh run list:*)",
       "Bash(gh run view:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)"
     ]
   },
   "outputStyle": "Explanatory"

@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.26';
+const APP_VERSION = '1.2.27';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -131,12 +131,17 @@ window.addEventListener('DOMContentLoaded', () => {
         renderReport();
       } else {
         // No stored data, load sample data for demo
-        const demoKey = 'qr_demo_autoloaded';
-        const demoDis = 'qr_demo_disabled';
-        if (!localStorage.getItem(demoKey) && !localStorage.getItem(demoDis)) {
-          ingestRows(SAMPLE_ROWS);
-          const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
-          localStorage.setItem(demoKey, '1');
+        try {
+          const m = await import('./storage.js');
+          const autoloaded = await m.getDemoState('autoloaded');
+          const disabled = await m.getDemoState('disabled');
+          if (!autoloaded && !disabled) {
+            ingestRows(SAMPLE_ROWS);
+            const banner = document.getElementById('demoBanner'); if (banner) banner.textContent = 'Sample data loaded for demo. Upload CSVs to replace.';
+            await m.setDemoState('autoloaded', '1');
+          }
+        } catch (e) {
+          console.warn('Failed to manage demo state:', e);
         }
       }
     } catch (e) {
@@ -368,6 +373,36 @@ window.addEventListener('DOMContentLoaded', () => {
     exportExcelBook('report.xlsx', report, extras);
   }
 
+  // Dropdown functionality
+  const exportMenuBtn = qs('exportMenuBtn');
+  const exportMenu = qs('exportMenu');
+  const printMenuBtn = qs('printMenuBtn');
+  const printMenu = qs('printMenu');
+
+  // Export dropdown toggle
+  if (exportMenuBtn && exportMenu) {
+    exportMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      exportMenu.classList.toggle('hidden');
+      printMenu?.classList.add('hidden'); // Close other dropdown
+    });
+  }
+
+  // Print dropdown toggle
+  if (printMenuBtn && printMenu) {
+    printMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      printMenu.classList.toggle('hidden');
+      exportMenu?.classList.add('hidden'); // Close other dropdown
+    });
+  }
+
+  // Close dropdowns when clicking outside
+  document.addEventListener('click', () => {
+    exportMenu?.classList.add('hidden');
+    printMenu?.classList.add('hidden');
+  });
+
   // Printing
   qs('btnPrintReport').addEventListener('click', () => window.print());
   qs('btnPrintAll').addEventListener('click', () => printAllViews());
@@ -454,12 +489,13 @@ window.addEventListener('DOMContentLoaded', () => {
   })();
 
   // Clear local data
-  qs('btnClearLocal')?.addEventListener('click', () => {
+  qs('btnClearLocal')?.addEventListener('click', async () => {
     // Only clear CSV/sample in-memory data and demo autoload flag
     try {
-      localStorage.removeItem('qr_demo_autoloaded');
+      const m = await import('./storage.js');
+      await m.setDemoState('autoloaded', null);
       // Prevent auto-demo from loading immediately after clearing
-      localStorage.setItem('qr_demo_disabled', '1');
+      await m.setDemoState('disabled', '1');
     } catch {}
     // Reset in-memory dataset (do not touch theme or user settings)
     try {
@@ -817,10 +853,6 @@ async function saveCustomChartPrefs() {
 
 async function loadLastMapping() {
   try {
-    const local = localStorage.getItem('qr_mapping');
-    return local ? JSON.parse(local) : null;
-  } catch {}
-  try {
     const m = await import('./storage.js');
     return await m.loadUserSettings('mapping');
   } catch {}
@@ -828,7 +860,6 @@ async function loadLastMapping() {
 }
 
 async function saveLastMapping(mapping) {
-  try { localStorage.setItem('qr_mapping', JSON.stringify(mapping)); } catch {}
   try {
     const m = await import('./storage.js');
     await m.saveUserSettings('mapping', mapping);
@@ -939,7 +970,6 @@ async function initTheme(){
   sel?.addEventListener('change', async () => {
     const val = sel.value;
     applyTheme(val);
-    localStorage.setItem('qr_theme', val);
     try { await saveUserSettings('theme', val); } catch {}
     if (val === 'custom') await applyCustomThemeFromInputs();
   });
@@ -963,7 +993,6 @@ async function initTheme(){
   });
   const b1 = document.getElementById('btnSaveCustomTheme'); if (b1) b1.addEventListener('click', async () => { await applyCustomThemeFromInputs(true); alert('Custom theme saved. Choose "Custom…" to use it.'); });
   const b2 = document.getElementById('btnResetCustomTheme'); if (b2) b2.addEventListener('click', async () => {
-    localStorage.removeItem('customThemeVars');
     try { await saveUserSettings('customThemeVars', null); } catch {}
     fillCustomThemeInputs({});
     updateThemePreview();
@@ -990,7 +1019,6 @@ async function applyCustomThemeFromInputs(save){
   };
   applyCustomTheme(vars);
   if (save) {
-    try { localStorage.setItem('customThemeVars', JSON.stringify(vars)); } catch {}
     try { await saveUserSettings('customThemeVars', vars); } catch {}
   }
 }

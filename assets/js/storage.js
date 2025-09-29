@@ -253,6 +253,41 @@ export async function deleteCsvData() {
   return false;
 }
 
+// Demo state management for cross-platform demo tracking
+export async function getDemoState(key) {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const m = await import(FIRESTORE_URL);
+      const snap = await m.getDoc(m.doc(await ensureDb(), 'userSettings', uid));
+      const data = snap.exists() ? snap.data() : {};
+      return data?.[`demo_${key}`] || null;
+    }
+  } catch {}
+  try {
+    return localStorage.getItem(`qr_demo_${key}`);
+  } catch {}
+  return null;
+}
+
+export async function setDemoState(key, value) {
+  try {
+    const mod = await ensureAuth();
+    if (mod && mod.auth.currentUser) {
+      const uid = mod.auth.currentUser.uid;
+      const m = await import(FIRESTORE_URL);
+      await m.setDoc(m.doc(await ensureDb(), 'userSettings', uid), { [`demo_${key}`]: value }, { merge: true });
+      return true;
+    }
+  } catch (e) { console.warn('[storage] setDemoState Firestore failed', e); }
+  try {
+    localStorage.setItem(`qr_demo_${key}`, value);
+    return true;
+  } catch {}
+  return false;
+}
+
 export async function deleteAllUserData() {
   try {
     const mod = await ensureAuth();
@@ -287,6 +322,9 @@ export async function deleteAllUserData() {
   try {
     localStorage.removeItem('csvData');
     localStorage.removeItem('userSettings');
+    // Clean up demo state
+    localStorage.removeItem('qr_demo_autoloaded');
+    localStorage.removeItem('qr_demo_disabled');
     return true;
   } catch (e) {
     console.warn('[storage] deleteAllUserData localStorage failed', e);

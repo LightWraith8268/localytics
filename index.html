@@ -110,8 +110,27 @@
       .app-card { background-color: var(--card-bg) !important; border-color: var(--border) !important; }
       .app-border { border-color: var(--border) !important; }
       .accent { color: var(--accent); }
-      .nav-link { color: var(--text) !important; opacity: 0.8; }
+      .nav-link { color: var(--text) !important; opacity: 0.9; }
       .nav-link:hover { opacity: 1; color: var(--text) !important; }
+
+      /* Enhanced text visibility across themes */
+      .text-gray-900, .text-gray-800, .text-gray-700 { color: var(--text) !important; }
+      .text-gray-600, .text-gray-500 { color: color-mix(in srgb, var(--text) 75%, var(--bg)) !important; }
+      .text-blue-700, .text-blue-800 { color: var(--accent) !important; }
+
+      /* Ensure form elements have proper contrast */
+      input, select, textarea {
+        background-color: var(--card-bg) !important;
+        color: var(--text) !important;
+        border-color: var(--border) !important;
+      }
+
+      /* Button text visibility */
+      .bg-blue-50 .text-blue-700 { color: #1d4ed8 !important; }
+      .bg-green-50 .text-green-700 { color: #047857 !important; }
+      .bg-purple-50 .text-purple-700 { color: #7c3aed !important; }
+      .bg-orange-50 .text-orange-700 { color: #c2410c !important; }
+      .bg-gray-50 .text-gray-700 { color: #374151 !important; }
       /* Mobile navigation */
       @media (max-width: 767px) {
         header .nav-links {
@@ -218,19 +237,19 @@
         <nav id="navLinks" class="nav-links flex flex-col md:flex-row gap-1 md:gap-6 items-stretch md:items-center">
           <!-- Main Navigation Links -->
           <div class="flex flex-col md:flex-row gap-1 md:gap-6">
-            <a href="#/upload" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+            <a href="#/upload" class="nav-link inline-flex items-center justify-center px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 transition-all duration-200 hover:bg-blue-100 hover:border-blue-300 hover:shadow-sm active:bg-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
               📤 Upload Data
             </a>
-            <a href="#/report" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+            <a href="#/report" class="nav-link inline-flex items-center justify-center px-4 py-2.5 bg-green-50 border border-green-200 rounded-lg text-sm font-medium text-green-700 transition-all duration-200 hover:bg-green-100 hover:border-green-300 hover:shadow-sm active:bg-green-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1">
               📊 Reports
             </a>
-            <a href="#/custom" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+            <a href="#/custom" class="nav-link inline-flex items-center justify-center px-4 py-2.5 bg-purple-50 border border-purple-200 rounded-lg text-sm font-medium text-purple-700 transition-all duration-200 hover:bg-purple-100 hover:border-purple-300 hover:shadow-sm active:bg-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-1">
               🎨 Custom Charts
             </a>
-            <a href="#/history" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+            <a href="#/history" class="nav-link inline-flex items-center justify-center px-4 py-2.5 bg-orange-50 border border-orange-200 rounded-lg text-sm font-medium text-orange-700 transition-all duration-200 hover:bg-orange-100 hover:border-orange-300 hover:shadow-sm active:bg-orange-200 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-1">
               📋 Saved Reports
             </a>
-            <a href="#/settings" class="nav-link px-4 py-2 md:px-3 md:py-2 rounded-lg md:rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-50 hover:text-blue-700 border-l-4 md:border-l-0 border-transparent hover:border-blue-500 md:hover:border-transparent">
+            <a href="#/settings" class="nav-link inline-flex items-center justify-center px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-gray-100 hover:border-gray-300 hover:shadow-sm active:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1">
               ⚙️ Settings
             </a>
           </div>
@@ -282,19 +301,19 @@
               <select id="col-category" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Order Number (optional)</label>
+              <label class="block text-sm text-gray-600 mb-1">Order Number</label>
               <select id="col-order" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Client (optional)</label>
+              <label class="block text-sm text-gray-600 mb-1">Client</label>
               <select id="col-client" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Staff (optional)</label>
+              <label class="block text-sm text-gray-600 mb-1">Staff</label>
               <select id="col-staff" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
             <div>
-              <label class="block text-sm text-gray-600 mb-1">Cost (unit) (optional)</label>
+              <label class="block text-sm text-gray-600 mb-1">Cost (unit)</label>
               <select id="col-cost" class="w-full border rounded-md px-3 py-2 text-sm"></select>
             </div>
           </div>
@@ -402,36 +421,36 @@
           </div>
           <!-- Key Metrics Summary -->
           <div class="mt-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4 print-section">📊 Key Metrics</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-4 print-section">📊 Performance Summary</h2>
             <div id="totals" class="grid grid-cols-1 sm:grid-cols-3 gap-4 print-section"></div>
           </div>
 
           <!-- Data Tables Section -->
           <div class="mt-8">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6 print-section">📋 Detailed Breakdowns</h2>
+            <h2 class="text-xl font-semibold text-gray-900 mb-6 print-section">📋 Data Analysis & Breakdowns</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">
               <details class="app-card border app-border rounded-lg p-4" open data-accordion>
-                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📦 By Item</summary>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📦 Product Performance</summary>
                 <div id="table-item" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
               </details>
               <details class="app-card border app-border rounded-lg p-4" data-accordion>
-                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📅 By Date</summary>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📅 Daily Sales Trends</summary>
                 <div id="table-date" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
               </details>
               <details class="app-card border app-border rounded-lg p-4" data-accordion>
-                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">👥 By Client</summary>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">👥 Client Revenue Analysis</summary>
                 <div id="table-client-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
               </details>
               <details class="app-card border app-border rounded-lg p-4" data-accordion>
-                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">👤 By Staff</summary>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">👤 Staff Performance Metrics</summary>
                 <div id="table-staff-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
               </details>
               <details class="app-card border app-border rounded-lg p-4" id="section-category" data-accordion>
-                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">🏷️ By Category</summary>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">🏷️ Category Breakdown</summary>
                 <div id="table-category-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
               </details>
               <details class="app-card border app-border rounded-lg p-4" data-accordion>
-                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">🧾 By Order</summary>
+                <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">🧾 Order Analysis</summary>
                 <div id="table-order-main" class="mt-3 overflow-x-auto border app-border rounded-md"></div>
               </details>
             </div>
@@ -883,9 +902,8 @@
     </div>
   <!-- Theme Modal -->
   <!-- Theme Customization Modal -->
-  <div id="themeModal" class="hidden fixed inset-0 z-50" style="background: rgba(0,0,0,0.75);">
-    <div class="absolute inset-0 flex items-center justify-center px-4">
-      <div class="app-card border app-border rounded-xl shadow-2xl overflow-hidden" style="max-width:900px; width:100%; max-height:90vh;">
+  <div id="themeModal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4" style="background: rgba(0,0,0,0.75);">
+    <div class="app-card border app-border rounded-xl shadow-2xl overflow-hidden" style="max-width:900px; width:100%; max-height:90vh;">
         <!-- Modal Header -->
         <div class="flex items-center justify-between p-6 border-b app-border">
           <div>

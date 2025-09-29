@@ -15,9 +15,32 @@ export async function parseCsv(fileOrText, options = {}) {
     });
   });
   let rows = res.data.filter(r => r && typeof r === 'object');
-  // Drop last row if present (often a 'Totals' row not needed for analysis)
-  if (rows.length) rows = rows.slice(0, -1);
+
+  // Filter out rows that don't have data in the name/item column
+  // First, get headers to identify the name column
   const headers = res.meta?.fields || Object.keys(rows[0] || {});
+  const nameColumn = headers.find(h =>
+    h.toLowerCase().includes('name') ||
+    h.toLowerCase().includes('item') ||
+    h.toLowerCase().includes('product') ||
+    h.toLowerCase().includes('title')
+  ) || headers[0]; // fallback to first column
+
+  // Filter out rows without data in the name column
+  rows = rows.filter(row => {
+    const nameValue = row[nameColumn];
+    return nameValue && nameValue.toString().trim() !== '';
+  });
+
+  // Remove final empty row if it exists (common in exports)
+  if (rows.length > 0) {
+    const lastRow = rows[rows.length - 1];
+    const hasData = Object.values(lastRow).some(val => val && val.toString().trim() !== '');
+    if (!hasData) {
+      rows = rows.slice(0, -1);
+    }
+  }
+
   return { rows, headers };
 }
 
@@ -33,14 +56,14 @@ export function detectColumns(headers = []) {
   return {
     date: find('date', 'time', 'timestamp'),
     item: find('name', 'title', 'product', 'item', 'sku'),
-    qty: find('qty', 'quantity', 'units'),
+    qty: find('quantity', 'qty', 'units'),
     price: find('price', 'unit price', 'amount'),
-    revenue: find('revenue', 'total', 'gross', 'net', 'sales'),
-    category: '',
-    order: '',
-    client: '',
-    staff: '',
-    cost: ''
+    order: find('order number', 'order', 'order no', 'orderno'),
+    client: find('client', 'customer', 'company'),
+    staff: find('staff', 'employee', 'salesperson', 'rep'),
+    cost: find('cost', 'unit cost', 'cost per unit'),
+    revenue: '',  // Unmapped by default
+    category: ''  // Unmapped by default
   };
 }
 
