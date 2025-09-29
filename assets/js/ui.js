@@ -47,9 +47,9 @@ export function renderTable(container, columns, rows) {
 
 export function makeChart(canvas, labels, data, label='Series') {
   if (!window.Chart) return null;
-  if (!canvas) { console.warn('[ui] makeChart: canvas element not found'); return null; }
+  if (!canvas) { console.info('[ui] makeChart: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
-  if (!ctx) { console.warn('[ui] makeChart: unable to acquire 2d context'); return null; }
+  if (!ctx) { console.info('[ui] makeChart: unable to acquire 2d context (skipping)'); return null; }
   return new window.Chart(ctx, {
     type: 'line',
     data: {
@@ -75,9 +75,9 @@ export function makeChart(canvas, labels, data, label='Series') {
 
 export function makeBarChart(canvas, labels, data, label='Series') {
   if (!window.Chart) return null;
-  if (!canvas) { console.warn('[ui] makeBarChart: canvas element not found'); return null; }
+  if (!canvas) { console.info('[ui] makeBarChart: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
-  if (!ctx) { console.warn('[ui] makeBarChart: unable to acquire 2d context'); return null; }
+  if (!ctx) { console.info('[ui] makeBarChart: unable to acquire 2d context (skipping)'); return null; }
   return new window.Chart(ctx, {
     type: 'bar',
     data: {
@@ -103,9 +103,9 @@ export function makeBarChart(canvas, labels, data, label='Series') {
 
 export function makeChartTyped(canvas, type, labels, data, label='Series') {
   if (!window.Chart) return null;
-  if (!canvas) { console.warn('[ui] makeChartTyped: canvas element not found'); return null; }
+  if (!canvas) { console.info('[ui] makeChartTyped: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
-  if (!ctx) { console.warn('[ui] makeChartTyped: unable to acquire 2d context'); return null; }
+  if (!ctx) { console.info('[ui] makeChartTyped: unable to acquire 2d context (skipping)'); return null; }
   return new window.Chart(ctx, {
     type,
     data: {
@@ -135,9 +135,9 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
 
 export function makeStackedBarChart(canvas, labels, datasets) {
   if (!window.Chart) return null;
-  if (!canvas) { console.warn('[ui] makeStackedBarChart: canvas element not found'); return null; }
+  if (!canvas) { console.info('[ui] makeStackedBarChart: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
-  if (!ctx) { console.warn('[ui] makeStackedBarChart: unable to acquire 2d context'); return null; }
+  if (!ctx) { console.info('[ui] makeStackedBarChart: unable to acquire 2d context (skipping)'); return null; }
   return new window.Chart(ctx, {
     type: 'bar',
     data: { labels, datasets },
