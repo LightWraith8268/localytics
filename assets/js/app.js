@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.31';
+const APP_VERSION = '1.2.32';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -59,8 +59,9 @@ window.addEventListener('DOMContentLoaded', () => {
       darkModeToggle.addEventListener('click', toggleDarkMode);
     }
   } catch {}
-  // Version badge
-  const vEl = document.getElementById('appVersionBadge'); if (vEl) vEl.textContent = `v${APP_VERSION}`;
+  // Update sidebar version
+  const sidebarVersionEl = document.getElementById('sidebarVersion');
+  if (sidebarVersionEl) sidebarVersionEl.textContent = `v${APP_VERSION}`;
   // Mobile navigation handled by sidebar script
 
   // Auth observe
