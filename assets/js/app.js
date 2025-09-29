@@ -113,23 +113,7 @@ window.addEventListener('DOMContentLoaded', () => {
   const sidebarVersionEl = document.getElementById('sidebarVersion');
   if (sidebarVersionEl) sidebarVersionEl.textContent = `v${APP_VERSION}`;
 
-  // Debug navigation links
-  console.log('[DEBUG] Navigation debugging for v' + APP_VERSION);
-  const navLinks = document.querySelectorAll('a.nav-link');
-  console.log('[DEBUG] Found nav links:', navLinks.length);
-  navLinks.forEach((link, i) => {
-    const isVisible = window.getComputedStyle(link).display !== 'none' &&
-                     window.getComputedStyle(link).visibility !== 'hidden' &&
-                     window.getComputedStyle(link.closest('nav') || link).display !== 'none';
-    console.log(`[DEBUG] Link ${i}: href="${link.href}" text="${link.textContent.trim()}" visible=${isVisible}`);
-  });
-
-  // Check if desktop nav is visible
-  const desktopNav = document.querySelector('nav.hidden.lg\\:flex');
-  if (desktopNav) {
-    const navStyle = window.getComputedStyle(desktopNav);
-    console.log('[DEBUG] Desktop nav display:', navStyle.display, 'visibility:', navStyle.visibility);
-  }
+  // Navigation system ready
 
   // Mobile navigation handled by sidebar script
 
