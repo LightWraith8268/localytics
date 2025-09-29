@@ -515,7 +515,7 @@ details[data-accordion][open] summary::before {
 .overflow-x-hidden { overflow-x: hidden; }
 .accent { color: var(--accent); }
 
-/* Desktop content padding - ensure 10px buffer around main content */
+/* Desktop content padding - ensure minimum 10px buffer, larger on bigger screens */
 @media (min-width: 1024px) {
   main.flex-1 {
     padding: 10px !important;
@@ -524,6 +524,25 @@ details[data-accordion][open] summary::before {
     padding: 0 !important;
     margin: 0 !important;
     max-width: none !important;
+  }
+}
+
+/* Larger buffer on extra wide screens */
+@media (min-width: 1280px) {
+  main.flex-1 {
+    padding: 20px !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  main.flex-1 {
+    padding: 30px !important;
+  }
+}
+
+@media (min-width: 1920px) {
+  main.flex-1 {
+    padding: 40px !important;
   }
 }
 

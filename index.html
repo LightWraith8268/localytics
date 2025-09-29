@@ -68,11 +68,19 @@
             <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
             <span>Reports</span>
           </a>
-          <a href="#/custom" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-purple-50 hover:text-purple-700 group">
+          <a href="#/trends" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-purple-50 hover:text-purple-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">📈</span>
+            <span>Trends</span>
+          </a>
+          <a href="#/analytics" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-orange-50 hover:text-orange-700 group">
+            <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
+            <span>Analytics</span>
+          </a>
+          <a href="#/custom" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-yellow-50 hover:text-yellow-700 group">
             <span class="text-2xl group-hover:scale-110 transition-transform">🎨</span>
             <span>Custom Charts</span>
           </a>
-          <a href="#/history" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-orange-50 hover:text-orange-700 group">
+          <a href="#/history" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-indigo-50 hover:text-indigo-700 group">
             <span class="text-2xl group-hover:scale-110 transition-transform">📋</span>
             <span>Saved Reports</span>
           </a>
@@ -463,6 +471,144 @@
               </div>
             </div>
           </details>
+        </div>
+      </section>
+
+      <!-- Trends View -->
+      <section id="view-trends" class="view hidden">
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print mb-4">
+            <h2 class="text-lg md:text-xl font-medium">📈 Time-Based Trends</h2>
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <button id="btnPrintTrends" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print Trends</button>
+            </div>
+          </div>
+
+          <!-- Core Time Series Section -->
+          <div class="mt-6">
+            <h4 class="text-base font-medium text-blue-800 mb-4 border-b border-blue-200 pb-2">📊 Core Time Series</h4>
+            <div>
+              <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
+              <div class="h-64"><canvas id="trends-chart-revenue" data-zoom="1"></canvas></div>
+            </div>
+            <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
+                <div class="h-64"><canvas id="trends-chart-qty" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
+                <div class="h-64"><canvas id="trends-chart-orders" data-zoom="1"></canvas></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Trend Analysis Section -->
+          <div class="mt-8">
+            <h4 class="text-base font-medium text-orange-800 mb-4 border-b border-orange-200 pb-2">📈 Trend Analysis</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
+                <div class="h-64"><canvas id="trends-chart-rev-rolling" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
+                <div class="h-64"><canvas id="trends-chart-qty-rolling" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
+                <div class="h-64"><canvas id="trends-chart-rev-rolling-30" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
+                <div class="h-64"><canvas id="trends-chart-rev-mom" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
+                <div class="h-64"><canvas id="trends-chart-rev-yoy" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
+                <div class="h-64"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Time Pattern Analysis Section -->
+          <div class="mt-8">
+            <h4 class="text-base font-medium text-indigo-800 mb-4 border-b border-indigo-200 pb-2">⏰ Time Pattern Analysis</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
+                <div class="h-64"><canvas id="trends-chart-dow-revenue" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
+                <div class="h-64"><canvas id="trends-chart-hour-revenue" data-zoom="1"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Analytics View -->
+      <section id="view-analytics" class="view hidden">
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print mb-4">
+            <h2 class="text-lg md:text-xl font-medium">📊 Advanced Analytics</h2>
+            <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <button id="btnPrintAnalytics" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print Analytics</button>
+            </div>
+          </div>
+
+          <!-- Top Rankings Section -->
+          <div class="mt-6">
+            <h4 class="text-base font-medium text-green-800 mb-4 border-b border-green-200 pb-2">🏆 Top Rankings</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
+                <div class="h-64"><canvas id="analytics-chart-top-items" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
+                <div class="h-64"><canvas id="analytics-chart-top-clients" data-zoom="1"></canvas></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Profitability Analysis Section -->
+          <div class="mt-8">
+            <h4 class="text-base font-medium text-purple-800 mb-4 border-b border-purple-200 pb-2">💰 Profitability Analysis</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
+                <div class="h-64"><canvas id="analytics-chart-profit" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
+                <div class="h-64"><canvas id="analytics-chart-margin" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
+                <div class="h-64"><canvas id="analytics-chart-aov" data-zoom="1"></canvas></div>
+              </div>
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
+                <div class="h-64"><canvas id="analytics-chart-ipo" data-zoom="1"></canvas></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Segment Analysis Section -->
+          <div class="mt-8">
+            <h4 class="text-base font-medium text-red-800 mb-4 border-b border-red-200 pb-2">👥 Segment Analysis</h4>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div>
+                <h3 class="text-sm font-semibold mb-2">Category Share</h3>
+                <div class="h-64"><canvas id="analytics-chart-category-share" data-zoom="1"></canvas></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
