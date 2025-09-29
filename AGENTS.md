@@ -35,3 +35,8 @@ CSV Parsing
 2025-09-30 - Category Mapping Modal
 - Replaced inline category editor with a modal supporting CSV uploads, paste import, and row management.
 - Added category mapping summary, export button, and auto-reset of filters that hide parsed rows.
+---
+2025-09-30 - Guarded Charts & Version 1.2.43
+- Added canvas/context guards in assets/js/ui.js to stop chart rendering crashes when DOM nodes are missing during restore.
+- Hardened bulk category import to normalise newline variants before splitting.
+- Bumped app/service worker/index.html to version 1.2.43 to ensure fresh assets deploy.
