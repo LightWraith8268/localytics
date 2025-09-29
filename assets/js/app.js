@@ -782,9 +782,9 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnCategoryApplyBulk')?.addEventListener('click', () => {
     const textarea = qs('categoryMapBulkInput');
     if (!textarea) return;
-    const lines = textarea.value.replace(/\r/g, '').split('\n');
+    const rowsRaw = (textarea.value || '').replace(/\r/g, '').split('\n');
     const current = collectCategoryMapDraft('categoryMapList');
-    lines.forEach(line => {
+    rowsRaw.forEach(line => {
       const trimmed = line.trim();
       if (!trimmed) return;
       const parts = trimmed.split(/,|\t/);

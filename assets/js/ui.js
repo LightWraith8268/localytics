@@ -47,7 +47,9 @@ export function renderTable(container, columns, rows) {
 
 export function makeChart(canvas, labels, data, label='Series') {
   if (!window.Chart) return null;
-  const ctx = canvas.getContext('2d');
+  if (!canvas) { console.warn('[ui] makeChart: canvas element not found'); return null; }
+  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  if (!ctx) { console.warn('[ui] makeChart: unable to acquire 2d context'); return null; }
   return new window.Chart(ctx, {
     type: 'line',
     data: {
@@ -73,7 +75,9 @@ export function makeChart(canvas, labels, data, label='Series') {
 
 export function makeBarChart(canvas, labels, data, label='Series') {
   if (!window.Chart) return null;
-  const ctx = canvas.getContext('2d');
+  if (!canvas) { console.warn('[ui] makeBarChart: canvas element not found'); return null; }
+  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  if (!ctx) { console.warn('[ui] makeBarChart: unable to acquire 2d context'); return null; }
   return new window.Chart(ctx, {
     type: 'bar',
     data: {
@@ -99,7 +103,9 @@ export function makeBarChart(canvas, labels, data, label='Series') {
 
 export function makeChartTyped(canvas, type, labels, data, label='Series') {
   if (!window.Chart) return null;
-  const ctx = canvas.getContext('2d');
+  if (!canvas) { console.warn('[ui] makeChartTyped: canvas element not found'); return null; }
+  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  if (!ctx) { console.warn('[ui] makeChartTyped: unable to acquire 2d context'); return null; }
   return new window.Chart(ctx, {
     type,
     data: {
@@ -129,7 +135,9 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
 
 export function makeStackedBarChart(canvas, labels, datasets) {
   if (!window.Chart) return null;
-  const ctx = canvas.getContext('2d');
+  if (!canvas) { console.warn('[ui] makeStackedBarChart: canvas element not found'); return null; }
+  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  if (!ctx) { console.warn('[ui] makeStackedBarChart: unable to acquire 2d context'); return null; }
   return new window.Chart(ctx, {
     type: 'bar',
     data: { labels, datasets },
