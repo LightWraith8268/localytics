@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.35';
+const APP_VERSION = '1.2.36';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -159,6 +159,51 @@ window.addEventListener('DOMContentLoaded', () => {
     try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch (e) { console.warn('Failed to load categoryMap settings:', e); }
     try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
     try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch (e) { console.warn('Failed to load customChartPrefs settings:', e); }
+
+    // Load allowed items and synonyms
+    try {
+      let list = await loadUserSettings('allowedItemsList');
+      if (!list || !Array.isArray(list) || list.length === 0) {
+        // Prefill with default allowed list (hardcoded) if user has no saved list yet
+        list = ALLOWED_ITEMS;
+        const allowedItemsTextarea = document.getElementById('allowedItems');
+        if (allowedItemsTextarea) allowedItemsTextarea.value = list.join('\n');
+      } else {
+        const allowedItemsTextarea = document.getElementById('allowedItems');
+        if (allowedItemsTextarea) allowedItemsTextarea.value = list.join('\n');
+      }
+      window.__allowedItemsList = list;
+      window.__allowedCanonSet = new Set(list.map(canonicalizeItemName));
+      const enforce = await loadUserSettings('enforceAllowed');
+      if (typeof enforce === 'boolean') {
+        const enforceCheckbox = document.getElementById('enforceAllowed');
+        if (enforceCheckbox) enforceCheckbox.checked = enforce;
+        window.__enforceAllowed = enforce;
+      }
+      // Load synonyms
+      const syn = await loadUserSettings('itemSynonyms');
+      if (Array.isArray(syn)) {
+        state.itemSynonyms = syn;
+        const synonymsTextarea = document.getElementById('itemSynonyms');
+        if (synonymsTextarea) synonymsTextarea.value = syn.map(p => `${p.from} => ${p.to}`).join('\n');
+      } else {
+        // Default include Tri Color => Northern
+        const synonymsTextarea = document.getElementById('itemSynonyms');
+        if (synonymsTextarea && !synonymsTextarea.value.trim()) {
+          synonymsTextarea.value = 'Tri Color => Northern\nTri-Color => Northern';
+        }
+      }
+    } catch (e) { console.warn('Failed to load allowed items settings:', e); }
+
+    // Load branding settings
+    try {
+      const nameInput = document.getElementById('brandName');
+      const logoInput = document.getElementById('brandLogo');
+      const name = await loadUserSettings('brandName');
+      const logo = await loadUserSettings('brandLogo');
+      if (nameInput && name) nameInput.value = name;
+      if (logoInput && logo) logoInput.value = logo;
+    } catch (e) { console.warn('Failed to load branding settings:', e); }
   }
 
   // Fallback: load settings after 3 seconds if auth state hasn't been determined
@@ -454,8 +499,7 @@ window.addEventListener('DOMContentLoaded', () => {
     downloadCsv('report_by_category.csv', cols, state.byCategory.map(x => ({ category:x.label, orders:x.orders, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
 
-  // Branding load
-  loadBranding();
+  // Note: Branding now loaded in loadUserSettingsAfterAuth() after authentication
   qs('btnSaveBrand').addEventListener('click', saveBranding);
   // Allowed items persist
   qs('btnSaveAllowed')?.addEventListener('click', async () => {
@@ -466,32 +510,7 @@ window.addEventListener('DOMContentLoaded', () => {
     await saveUserSettings('enforceAllowed', enforce);
     alert('Allowed items saved.');
   });
-  (async ()=>{
-    try {
-      let list = await loadUserSettings('allowedItemsList');
-      if (!list || !Array.isArray(list) || list.length === 0) {
-        // Prefill with default allowed list (hardcoded) if user has no saved list yet
-        list = ALLOWED_ITEMS;
-        document.getElementById('allowedItems').value = list.join('\n');
-      } else {
-        document.getElementById('allowedItems').value = list.join('\n');
-      }
-      window.__allowedItemsList = list;
-      window.__allowedCanonSet = new Set(list.map(canonicalizeItemName));
-      const enforce = await loadUserSettings('enforceAllowed');
-      if (typeof enforce === 'boolean') { document.getElementById('enforceAllowed').checked = enforce; window.__enforceAllowed = enforce; }
-      // Load synonyms
-      const syn = await loadUserSettings('itemSynonyms');
-      if (Array.isArray(syn)) {
-        state.itemSynonyms = syn;
-        const ta = document.getElementById('itemSynonyms'); if (ta) ta.value = syn.map(p => `${p.from} => ${p.to}`).join('\n');
-      } else {
-        // Default include Tri Color => Northern
-        const ta = document.getElementById('itemSynonyms');
-        if (ta && !ta.value.trim()) ta.value = 'Tri Color => Northern\nTri-Color => Northern';
-      }
-    } catch {}
-  })();
+  // Note: Allowed items and synonyms now loaded in loadUserSettingsAfterAuth() after authentication
 
   // Clear local data
   qs('btnClearLocal')?.addEventListener('click', async () => {
@@ -1069,16 +1088,7 @@ function monthYearOverYearChange(monthSeries){
   return { labels, values };
 }
 
-async function loadBranding() {
-  const nameInput = document.getElementById('brandName');
-  const logoInput = document.getElementById('brandLogo');
-  try {
-    const name = await loadUserSettings('brandName');
-    const logo = await loadUserSettings('brandLogo');
-    if (nameInput && name) nameInput.value = name;
-    if (logoInput && logo) logoInput.value = logo;
-  } catch {}
-}
+// loadBranding function removed - now handled in loadUserSettingsAfterAuth()
 
 async function saveBranding() {
   const name = document.getElementById('brandName')?.value || '';
