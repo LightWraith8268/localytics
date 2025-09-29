@@ -57,16 +57,19 @@ if (isValidConfig(config)) {
       }
     }
 
-    // Minimal example: log a pageview
-    try {
-      await addDoc(collection(db, 'pageviews'), {
-        path: location.pathname + location.search,
-        ts: serverTimestamp(),
-        userAgent: navigator.userAgent
-      });
-      console.log('[firebase-init] Logged pageview');
-    } catch (err) {
-      console.warn('[firebase-init] Failed to log pageview:', err);
+    // Optional pageview logging - disabled by default to avoid permission errors
+    // Enable by setting window.FB_ENABLE_PAGEVIEW_LOGGING = true
+    if (window.FB_ENABLE_PAGEVIEW_LOGGING) {
+      try {
+        await addDoc(collection(db, 'pageviews'), {
+          path: location.pathname + location.search,
+          ts: serverTimestamp(),
+          userAgent: navigator.userAgent
+        });
+        console.log('[firebase-init] Logged pageview');
+      } catch (err) {
+        console.warn('[firebase-init] Failed to log pageview:', err);
+      }
     }
 
     // Expose for other scripts if needed

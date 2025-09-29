@@ -2,7 +2,7 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.33';
+const VERSION = 'wb-1.2.34';
 const PRECACHE = [
   './index.html',
   './404.html',
@@ -33,8 +33,16 @@ workbox.routing.registerRoute(
 );
 
 // Runtime caching for cross-origin (CDNs): network-first with fallback
+// Exclude Firebase domains to prevent interference with Firestore/Auth
 workbox.routing.registerRoute(
-  ({url}) => url.origin !== self.location.origin,
+  ({url}) => {
+    const isFirebase = url.hostname.includes('googleapis.com') ||
+                      url.hostname.includes('firebaseapp.com') ||
+                      url.hostname.includes('firebase.googleapis.com') ||
+                      url.hostname.includes('firestore.googleapis.com') ||
+                      url.hostname.includes('identitytoolkit.googleapis.com');
+    return url.origin !== self.location.origin && !isFirebase;
+  },
   new workbox.strategies.NetworkFirst({
     cacheName: 'cdn',
     networkTimeoutSeconds: 3,
