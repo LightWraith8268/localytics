@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.32">
+    <link rel="stylesheet" href="./assets/css/styles.css">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -214,24 +214,11 @@
       </div>
     </header>
 
-    <!-- Desktop Layout Container -->
-    <div class="lg:flex lg:h-screen">
-      <!-- Sidebar Navigation -->
-      <nav id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full lg:translate-x-0 lg:relative lg:transform-none transition-transform duration-300 ease-in-out app-card border-r app-border no-print">
+    <!-- Mobile Sidebar (fixed overlay) -->
+    <nav id="mobileSidebar" class="lg:hidden fixed inset-y-0 left-0 z-40 w-64 transform -translate-x-full transition-transform duration-300 ease-in-out app-card border-r app-border">
       <div class="flex flex-col h-full">
-        <!-- Sidebar Header -->
-        <div class="hidden lg:flex items-center gap-3 p-6 border-b app-border">
-          <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-            <span class="text-white font-bold text-lg">L</span>
-          </div>
-          <div>
-            <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-            <p class="text-xs text-gray-500" id="sidebarVersion">v?</p>
-          </div>
-        </div>
-
         <!-- Mobile Header in Sidebar -->
-        <div class="lg:hidden flex items-center justify-between p-4 border-b app-border">
+        <div class="flex items-center justify-between p-4 border-b app-border">
           <div class="flex items-center gap-3">
             <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span class="text-white font-bold text-sm">L</span>
@@ -271,12 +258,62 @@
 
         <!-- Dark Mode Toggle -->
         <div class="p-4 border-t app-border">
-          <button id="darkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
+          <button id="mobileDarkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
             <span class="text-xl group-hover:scale-110 transition-transform">🌙</span>
             <span>Toggle Dark Mode</span>
           </button>
         </div>
       </div>
+    </nav>
+
+    <!-- Desktop Layout Container -->
+    <div class="lg:flex h-screen">
+      <!-- Desktop Sidebar -->
+      <nav class="hidden lg:flex lg:flex-col lg:w-64 app-card border-r app-border">
+        <div class="flex flex-col h-full">
+          <!-- Sidebar Header -->
+          <div class="flex items-center gap-3 p-6 border-b app-border">
+            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+              <span class="text-white font-bold text-lg">L</span>
+            </div>
+            <div>
+              <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
+              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.33</p>
+            </div>
+          </div>
+
+          <!-- Navigation Links -->
+          <div class="flex-1 p-4 space-y-2">
+            <a href="#/upload" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📤</span>
+              <span>Upload Data</span>
+            </a>
+            <a href="#/report" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-green-50 hover:text-green-700 group">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📊</span>
+              <span>Reports</span>
+            </a>
+            <a href="#/custom" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-purple-50 hover:text-purple-700 group">
+              <span class="text-2xl group-hover:scale-110 transition-transform">🎨</span>
+              <span>Custom Charts</span>
+            </a>
+            <a href="#/history" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-orange-50 hover:text-orange-700 group">
+              <span class="text-2xl group-hover:scale-110 transition-transform">📋</span>
+              <span>Saved Reports</span>
+            </a>
+            <a href="#/settings" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
+              <span class="text-2xl group-hover:scale-110 transition-transform">⚙️</span>
+              <span>Settings</span>
+            </a>
+          </div>
+
+          <!-- Dark Mode Toggle -->
+          <div class="p-4 border-t app-border">
+            <button id="darkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
+              <span class="text-xl group-hover:scale-110 transition-transform">🌙</span>
+              <span>Toggle Dark Mode</span>
+            </button>
+          </div>
+        </div>
       </nav>
 
       <!-- Main Content -->
@@ -828,21 +865,21 @@
     <script>
       // Sidebar navigation functionality
       document.addEventListener('DOMContentLoaded', () => {
-        const sidebar = document.getElementById('sidebar');
+        const mobileSidebar = document.getElementById('mobileSidebar');
         const overlay = document.getElementById('sidebarOverlay');
         const mobileToggle = document.getElementById('mobileMenuToggle');
         const closeBtn = document.getElementById('closeMobileMenu');
 
         // Toggle mobile sidebar
         function openSidebar() {
-          sidebar.classList.remove('-translate-x-full');
-          overlay.classList.remove('hidden');
+          mobileSidebar?.classList.remove('-translate-x-full');
+          overlay?.classList.remove('hidden');
           document.body.classList.add('overflow-hidden');
         }
 
         function closeSidebar() {
-          sidebar.classList.add('-translate-x-full');
-          overlay.classList.add('hidden');
+          mobileSidebar?.classList.add('-translate-x-full');
+          overlay?.classList.add('hidden');
           document.body.classList.remove('overflow-hidden');
         }
 
@@ -886,7 +923,7 @@
     </script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.32"></script>
+    <script type="module" src="./assets/js/app.js"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">

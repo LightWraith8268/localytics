@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.32';
+const APP_VERSION = '1.2.33';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -55,8 +55,12 @@ window.addEventListener('DOMContentLoaded', () => {
   // Simple dark mode toggle
   try {
     const darkModeToggle = document.getElementById('darkModeToggle');
+    const mobileDarkModeToggle = document.getElementById('mobileDarkModeToggle');
     if (darkModeToggle) {
       darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+    if (mobileDarkModeToggle) {
+      mobileDarkModeToggle.addEventListener('click', toggleDarkMode);
     }
   } catch {}
   // Update sidebar version
@@ -944,12 +948,23 @@ function toggleDarkMode() {
 
 function updateDarkModeButton() {
   const isDark = document.documentElement.classList.contains('dark');
+
+  // Update desktop dark mode button
   const toggle = document.getElementById('darkModeToggle');
   if (toggle) {
     const icon = toggle.querySelector('span:first-child');
     const text = toggle.querySelector('span:last-child');
     if (icon) icon.textContent = isDark ? '☀️' : '🌙';
     if (text) text.textContent = isDark ? 'Light Mode' : 'Dark Mode';
+  }
+
+  // Update mobile dark mode button
+  const mobileToggle = document.getElementById('mobileDarkModeToggle');
+  if (mobileToggle) {
+    const mobileIcon = mobileToggle.querySelector('span:first-child');
+    const mobileText = mobileToggle.querySelector('span:last-child');
+    if (mobileIcon) mobileIcon.textContent = isDark ? '☀️' : '🌙';
+    if (mobileText) mobileText.textContent = isDark ? 'Light Mode' : 'Dark Mode';
   }
 }
 
