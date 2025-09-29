@@ -19,12 +19,14 @@ function toDateKey(v) {
 export function computeReport(rows, mapping) {
   const dateCol = mapping.date; const itemCol = mapping.item;
   const qtyCol = mapping.qty; const priceCol = mapping.price; const revCol = mapping.revenue; const costCol = mapping.cost;
+  const orderCol = mapping.order;
   const byItem = new Map();
   const byDate = new Map();
-  let totalQty = 0; let totalRev = 0; let totalCost = 0; let items = new Set();
+  let totalQty = 0; let totalRev = 0; let totalCost = 0; let items = new Set(); let orders = new Set();
 
   for (const r of rows) {
     const item = (r[itemCol] ?? '').toString().trim();
+    const order = (r[orderCol] ?? '').toString().trim();
     const q = (r.__quantity != null) ? Number(r.__quantity) : toNumber(r[qtyCol]);
     const price = toNumber(r[priceCol]);
     const unitCost = toNumber(r[costCol]);
@@ -38,6 +40,7 @@ export function computeReport(rows, mapping) {
     totalRev += rev;
     totalCost += cst;
     if (item) items.add(item);
+    if (order) orders.add(order);
 
     // Item agg
     const it = byItem.get(item) || { item, quantity: 0, revenue: 0, cost: 0, profit: 0 };
@@ -61,6 +64,7 @@ export function computeReport(rows, mapping) {
       totalProfit: Number((totalRev - totalCost).toFixed(2)),
       marginPct: totalRev > 0 ? Number((((totalRev - totalCost) / totalRev) * 100).toFixed(2)) : 0,
       distinctItems: items.size,
+      totalOrders: orders.size,
     },
     byItem: byItemArr.map(x => ({ item:x.item, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)), cost: Number(x.cost.toFixed(2)), profit: Number((x.revenue - x.cost).toFixed(2)), margin: x.revenue>0 ? Number((((x.revenue-x.cost)/x.revenue)*100).toFixed(2)) : 0 })),
     byDate: byDateArr.map(x => ({ date:x.date, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)), cost: Number(x.cost.toFixed(2)), profit: Number((x.revenue - x.cost).toFixed(2)), margin: x.revenue>0 ? Number((((x.revenue-x.cost)/x.revenue)*100).toFixed(2)) : 0 })),

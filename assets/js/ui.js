@@ -13,6 +13,7 @@ export function renderTotals(container, totals) {
     { label: 'Total Profit', value: formatCurrency(totals.totalProfit || 0) },
     { label: 'Margin', value: formatPercent(totals.marginPct) },
     { label: 'Total Quantity', value: String(totals.totalQuantity) },
+    { label: 'Total Orders', value: String(totals.totalOrders || 0) },
     { label: 'Distinct Items', value: String(totals.distinctItems) },
   ];
   cards.forEach(c => {
@@ -159,6 +160,7 @@ export function exportExcelBook(filename, report, extraSheets) {
   const totalsRows = [
     { metric: 'Total Revenue', value: report.totals.totalRevenue },
     { metric: 'Total Quantity', value: report.totals.totalQuantity },
+    { metric: 'Total Orders', value: report.totals.totalOrders || 0 },
     { metric: 'Distinct Items', value: report.totals.distinctItems },
   ];
   const wsTotals = window.XLSX.utils.json_to_sheet(totalsRows);

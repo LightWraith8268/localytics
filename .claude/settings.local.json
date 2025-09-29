@@ -10,7 +10,8 @@
       "Bash(gh run view:*)",
       "Bash(python:*)",
       "Bash(node:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(gh browse:*)"
     ]
   },
   "outputStyle": "Explanatory"
