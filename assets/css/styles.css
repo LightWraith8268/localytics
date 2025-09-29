@@ -515,6 +515,18 @@ details[data-accordion][open] summary::before {
 .overflow-x-hidden { overflow-x: hidden; }
 .accent { color: var(--accent); }
 
+/* Desktop content padding - ensure 10px buffer around main content */
+@media (min-width: 1024px) {
+  main.flex-1 {
+    padding: 10px !important;
+  }
+  main.flex-1 > .container {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: none !important;
+  }
+}
+
 /* Layout debugging - ensure flex container works properly */
 .lg\:flex { display: flex !important; }
 
