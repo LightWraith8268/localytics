@@ -5,6 +5,9 @@ function toNumber(v) {
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
+function round2(value) { const num = Number(value || 0); return Number.isFinite(num) ? Number(num.toFixed(2)) : 0; }
+
+
 
 function toDateKey(v) {
   if (!v) return '';
@@ -58,16 +61,16 @@ export function computeReport(rows, mapping) {
 
   return {
     totals: {
-      totalQuantity: totalQty,
-      totalRevenue: Number(totalRev.toFixed(2)),
-      totalCost: Number(totalCost.toFixed(2)),
-      totalProfit: Number((totalRev - totalCost).toFixed(2)),
-      marginPct: totalRev > 0 ? Number((((totalRev - totalCost) / totalRev) * 100).toFixed(2)) : 0,
+      totalQuantity: round2(totalQty),
+      totalRevenue: round2(totalRev),
+      totalCost: round2(totalCost),
+      totalProfit: round2(totalRev - totalCost),
+      marginPct: totalRev > 0 ? round2(((totalRev - totalCost) / totalRev) * 100) : 0,
       distinctItems: items.size,
       totalOrders: orders.size,
     },
-    byItem: byItemArr.map(x => ({ item:x.item, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)), cost: Number(x.cost.toFixed(2)), profit: Number((x.revenue - x.cost).toFixed(2)), margin: x.revenue>0 ? Number((((x.revenue-x.cost)/x.revenue)*100).toFixed(2)) : 0 })),
-    byDate: byDateArr.map(x => ({ date:x.date, quantity:x.quantity, revenue: Number(x.revenue.toFixed(2)), cost: Number(x.cost.toFixed(2)), profit: Number((x.revenue - x.cost).toFixed(2)), margin: x.revenue>0 ? Number((((x.revenue-x.cost)/x.revenue)*100).toFixed(2)) : 0 })),
+    byItem: byItemArr.map(x => ({ item:x.item, quantity: round2(x.quantity), revenue: round2(x.revenue), cost: round2(x.cost), profit: round2(x.revenue - x.cost), margin: x.revenue>0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0 })),
+    byDate: byDateArr.map(x => ({ date:x.date, quantity: round2(x.quantity), revenue: round2(x.revenue), cost: round2(x.cost), profit: round2(x.revenue - x.cost), margin: x.revenue>0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0 })),
   };
 }
 
@@ -123,8 +126,8 @@ export function aggregateCustom(rows, mapping, opts) {
     ));
   }
   if (topN > 0) arr = arr.slice(0, topN);
-  if (metric === 'quantity') return arr.map(x => ({ label: x.label, value: x.quantity }));
-  return arr.map(x => ({ label: x.label, value: Number(x.revenue.toFixed(2)) }));
+  if (metric === 'quantity') return arr.map(x => ({ label: x.label, value: round2(x.quantity) }));
+  return arr.map(x => ({ label: x.label, value: round2(x.revenue) }));
 }
 
 export function aggregateByGranularity(rows, mapping, granularity = 'month') {
@@ -138,7 +141,7 @@ export function aggregateByGranularity(rows, mapping, granularity = 'month') {
     const cur = map.get(key) || { period: key, quantity: 0, revenue: 0 };
     cur.quantity += q; cur.revenue += rev; map.set(key, cur);
   }
-  return Array.from(map.values()).sort((a,b)=> a.period.localeCompare(b.period)).map(x => ({ ...x, revenue: Number(x.revenue.toFixed(2)) }));
+  return Array.from(map.values()).sort((a,b)=> a.period.localeCompare(b.period)).map(x => ({ period: x.period, quantity: round2(x.quantity), revenue: round2(x.revenue) }));
 }
 
 export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month', metric = 'revenue', topN = 0) {
@@ -171,7 +174,7 @@ export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month'
   const colors = palette(entries.length);
   const datasets = entries.map(([cat, m], i) => ({
     label: cat,
-    data: labels.map(p => Number(((m.get(p) || 0)).toFixed ? (m.get(p) || 0).toFixed(2) : (m.get(p) || 0))),
+    data: labels.map(p => round2(m.get(p) || 0)),
     backgroundColor: colors[i % colors.length]
   }));
   return { labels, datasets };
@@ -221,11 +224,11 @@ export function aggregateByField(rows, field) {
     .map(x => ({
       label: x.label,
       orders: x.orders.size,
-      quantity: x.quantity,
-      revenue: Number(x.revenue.toFixed(2)),
-      cost: Number(x.cost.toFixed(2)),
-      profit: Number((x.revenue - x.cost).toFixed(2)),
-      margin: x.revenue > 0 ? Number((((x.revenue - x.cost)/x.revenue)*100).toFixed(2)) : 0
+      quantity: round2(x.quantity),
+      revenue: round2(x.revenue),
+      cost: round2(x.cost),
+      profit: round2(x.revenue - x.cost),
+      margin: x.revenue > 0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0
     }))
     .sort((a,b)=> b.revenue - a.revenue);
 }
@@ -252,11 +255,11 @@ export function aggregateByOrder(rows) {
     date: x.date,
     client: x.client,
     staff: x.staff,
-    quantity: x.quantity,
-    revenue: Number(x.revenue.toFixed(2)),
-    cost: Number(x.cost.toFixed(2)),
-    profit: Number((x.revenue - x.cost).toFixed(2)),
-    margin: x.revenue > 0 ? Number((((x.revenue - x.cost)/x.revenue)*100).toFixed(2)) : 0
+    quantity: round2(x.quantity),
+    revenue: round2(x.revenue),
+    cost: round2(x.cost),
+    profit: round2(x.revenue - x.cost),
+    margin: x.revenue > 0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0
   })).sort((a,b)=> b.revenue - a.revenue);
 }
 

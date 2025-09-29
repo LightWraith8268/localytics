@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.43">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.44">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -112,7 +112,7 @@
             </div>
             <div>
               <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.43</p>
+              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.44</p>
             </div>
           </div>
 
@@ -479,6 +479,67 @@
               </div>
             </div>
           </details>
+        </div>
+      </section>
+
+      <!-- Orders View -->
+      <section id="view-orders" class="view hidden space-y-6">
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Orders Overview</h2>
+              <p id="ordersSummary" class="text-sm text-gray-500">Upload data to view orders.</p>
+            </div>
+          </div>
+          <div id="ordersList" class="mt-4 space-y-3"></div>
+        </div>
+      </section>
+
+      <!-- Client Tracking View -->
+      <section id="view-clients" class="view hidden space-y-6">
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Client Tracking</h2>
+              <p id="clientsSummary" class="text-sm text-gray-500">Upload data to view client performance.</p>
+            </div>
+          </div>
+          <div id="clientsHighlights" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+          <div class="mt-4">
+            <div id="clientTrackingTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Staff Tracking View -->
+      <section id="view-staff" class="view hidden space-y-6">
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Staff Tracking</h2>
+              <p id="staffSummary" class="text-sm text-gray-500">Upload data to view staff performance.</p>
+            </div>
+          </div>
+          <div id="staffHighlights" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+          <div class="mt-4">
+            <div id="staffTrackingTable"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Item Tracking View -->
+      <section id="view-items" class="view hidden space-y-6">
+        <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">Item Tracking</h2>
+              <p id="itemsSummary" class="text-sm text-gray-500">Upload data to view item performance.</p>
+            </div>
+          </div>
+          <div id="itemsHighlights" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+          <div class="mt-4">
+            <div id="itemTrackingTable"></div>
+          </div>
         </div>
       </section>
 
@@ -893,7 +954,7 @@
     </script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.43"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.44"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">

@@ -12,7 +12,7 @@ export function renderTotals(container, totals) {
     { label: 'Total Cost', value: formatCurrency(totals.totalCost || 0) },
     { label: 'Total Profit', value: formatCurrency(totals.totalProfit || 0) },
     { label: 'Margin', value: formatPercent(totals.marginPct) },
-    { label: 'Total Quantity', value: String(totals.totalQuantity) },
+    { label: 'Total Quantity', value: formatNumberTwo(totals.totalQuantity) },
     { label: 'Total Orders', value: String(totals.totalOrders || 0) },
     { label: 'Distinct Items', value: String(totals.distinctItems) },
   ];

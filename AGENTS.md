@@ -40,3 +40,8 @@ CSV Parsing
 - Added canvas/context guards in assets/js/ui.js to stop chart rendering crashes when DOM nodes are missing during restore.
 - Hardened bulk category import to normalise newline variants before splitting.
 - Bumped app/service worker/index.html to version 1.2.43 to ensure fresh assets deploy.
+---
+2025-09-30 - Tracking Views & Precision (v1.2.44)
+- Added Orders, Clients, Staff, and Items tracking pages with richer summaries and tables.
+- Ensured all numeric outputs render with two decimal places, including totals and aggregated metrics.
+- Sorted date tables by most recent first and expanded order details with per-item breakdowns.

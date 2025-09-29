@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.43';
+const APP_VERSION = '1.2.44';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const DEFAULT_FILTERS = {
@@ -55,6 +55,20 @@ const state = {
 let categoryMapDraft = {};
 let previousBodyOverflow = '';
 
+
+
+const formatNumber = (value) => Number(value || 0).toFixed(2);
+const formatCurrencyShort = (value) => `$${formatNumber(value)}`;
+const formatPercentShort = (value) => `${formatNumber(value)}%`;
+const htmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (char) => htmlEscapeMap[char] || char);
+}
+const getWorkingRows = () => (state.filtered && state.filtered.length ? state.filtered : state.rows);
+
+
+
+
 function qs(id) { return document.getElementById(id); }
 function showView(hash) {
   const route = (hash || location.hash || '#/upload').replace('#', '');
@@ -69,6 +83,14 @@ function showView(hash) {
     renderTrendsCharts();
   } else if (view === 'analytics' && state.report) {
     renderAnalyticsCharts();
+  } else if (view === 'orders') {
+    renderOrdersView();
+  } else if (view === 'clients') {
+    renderClientTrackingView();
+  } else if (view === 'staff') {
+    renderStaffTrackingView();
+  } else if (view === 'items') {
+    renderItemTrackingView();
   }
 }
 
@@ -838,7 +860,7 @@ function renderReport() {
   if (!state.report) return;
   renderTotals(qs('totals'), state.report.totals);
   renderTable(qs('table-item'), ['item','quantity','revenue'], state.report.byItem);
-  renderTable(qs('table-date'), ['date','quantity','revenue'], state.report.byDate);
+  renderTable(qs('table-date'), ['date','quantity','revenue'], state.report.byDate.slice().reverse());
   if (state.chart) { state.chart.destroy(); state.chart = null; }
   const labels = state.report.byDate.map(r => r.date);
   const data = state.report.byDate.map(r => r.revenue);
@@ -964,7 +986,191 @@ function renderReport() {
 
   // Enable click-to-zoom on charts
   try { enableChartZoom(document); } catch {}
+
+  renderOrdersView();
+  renderClientTrackingView();
+  renderStaffTrackingView();
+  renderItemTrackingView();
 }
+
+function renderOrdersView() {
+  const summaryEl = qs('ordersSummary');
+  const listEl = qs('ordersList');
+  if (!summaryEl || !listEl) return;
+  if (!state.report || !state.byOrder || !state.byOrder.length) {
+    summaryEl.textContent = state.report ? 'No orders available for the current filters.' : 'Upload data to view orders.';
+    listEl.innerHTML = '<div class="text-sm text-gray-500">No orders available.</div>';
+    return;
+  }
+
+  const workingRows = getWorkingRows();
+  const rowsByOrder = new Map();
+  workingRows.forEach(row => {
+    const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
+    if (!rowsByOrder.has(key)) rowsByOrder.set(key, []);
+    rowsByOrder.get(key).push(row);
+  });
+
+  const getLatestDate = (orderId) => {
+    const rows = rowsByOrder.get(orderId) || [];
+    return rows.reduce((latest, row) => {
+      const iso = row.__dateIso || '';
+      return iso && (!latest || iso > latest) ? iso : latest;
+    }, '');
+  };
+
+  const orders = [...state.byOrder].sort((a, b) => {
+    const dateA = getLatestDate(a.order) || a.date || '';
+    const dateB = getLatestDate(b.order) || b.date || '';
+    if (dateA === dateB) return b.revenue - a.revenue;
+    return dateB.localeCompare(dateA);
+  });
+
+  const totals = orders.reduce((acc, order) => {
+    acc.revenue += Number(order.revenue || 0);
+    acc.profit += Number(order.profit || 0);
+    return acc;
+  }, { revenue: 0, profit: 0 });
+  summaryEl.textContent = `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
+
+  listEl.innerHTML = orders.map(order => {
+    const orderRows = rowsByOrder.get(order.order) || [];
+    const latestIso = getLatestDate(order.order);
+    const displayDate = latestIso ? toPrettyDate(latestIso) : '-';
+    const marginDisplay = order.revenue ? formatPercentShort((order.profit / order.revenue) * 100) : formatPercentShort(0);
+    const itemsTable = orderRows.map(row => {
+      const itemName = escapeHtml(String(row[state.mapping.item] ?? row.item ?? 'Item'));
+      const qtyDisplay = formatNumber(row.__quantity || row[state.mapping.qty] || 0);
+      const revenueDisplay = formatCurrencyShort(row.__revenue || 0);
+      const costDisplay = formatCurrencyShort(row.__cost || 0);
+      const profitValue = (row.__revenue || 0) - (row.__cost || 0);
+      const marginValue = (row.__revenue || 0) ? (profitValue / row.__revenue) * 100 : 0;
+      return `<tr class="border-t">` +
+        `<td class="px-3 py-2">${itemName}</td>` +
+        `<td class="px-3 py-2 text-right">${qtyDisplay}</td>` +
+        `<td class="px-3 py-2 text-right">${revenueDisplay}</td>` +
+        `<td class="px-3 py-2 text-right">${costDisplay}</td>` +
+        `<td class="px-3 py-2 text-right">${formatCurrencyShort(profitValue)}</td>` +
+        `<td class="px-3 py-2 text-right">${formatPercentShort(marginValue)}</td>` +
+        '</tr>';
+    }).join('');
+
+    const itemsTableHtml = itemsTable ? `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-right">Quantity</th><th class="px-3 py-2 text-right">Revenue</th><th class="px-3 py-2 text-right">Cost</th><th class="px-3 py-2 text-right">Profit</th><th class="px-3 py-2 text-right">Margin</th></tr></thead><tbody>${itemsTable}</tbody></table></div>` : '<div class="text-sm text-gray-500">No line items recorded.</div>';
+
+    return `<details class="app-card border app-border rounded-lg overflow-hidden">` +
+      `<summary class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 cursor-pointer">` +
+      `<span class="font-medium text-gray-900">Order ${escapeHtml(order.order)}</span>` +
+      `<span class="text-sm text-gray-500">${escapeHtml(displayDate)}</span>` +
+      `<span class="text-sm text-gray-500">Client: ${escapeHtml(order.client || 'Unassigned')}</span>` +
+      `<span class="text-sm text-gray-500">Staff: ${escapeHtml(order.staff || 'Unassigned')}</span>` +
+      `<span class="text-sm text-gray-900">${formatCurrencyShort(order.revenue)}</span>` +
+      `<span class="text-sm text-gray-500">Margin ${marginDisplay}</span>` +
+      '</summary>' +
+      `<div class="px-4 pb-4">${itemsTableHtml}</div>` +
+      '</details>';
+  }).join('');
+}
+
+function renderClientTrackingView() {
+  const summaryEl = qs('clientsSummary');
+  const highlightsEl = qs('clientsHighlights');
+  const tableEl = qs('clientTrackingTable');
+  if (!summaryEl || !highlightsEl || !tableEl) return;
+  if (!state.report || !state.byClient || !state.byClient.length) {
+    summaryEl.textContent = state.report ? 'No client activity for the current filters.' : 'Upload data to view client performance.';
+    highlightsEl.innerHTML = '';
+    tableEl.innerHTML = '<div class="text-sm text-gray-500">No client data available.</div>';
+    return;
+  }
+  const clients = state.byClient;
+  const totalRevenue = clients.reduce((sum, c) => sum + Number(c.revenue || 0), 0);
+  const totalOrders = clients.reduce((sum, c) => sum + Number(c.orders || 0), 0);
+  summaryEl.textContent = `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${formatNumber(totalOrders / (clients.length || 1))}`;
+  const topClients = clients.slice(0, 3);
+  highlightsEl.innerHTML = topClients.map(c => `
+    <div class="p-3 border app-border rounded-md">
+      <div class="text-xs text-gray-500 truncate">${escapeHtml(c.label || 'Unassigned')}</div>
+      <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(c.revenue)}</div>
+      <div class="text-xs text-gray-500">Orders ${formatNumber(c.orders)} · Margin ${formatPercentShort(c.margin)}</div>
+    </div>
+  `).join('');
+  renderTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
+    client: c.label || 'Unassigned',
+    orders: c.orders,
+    quantity: c.quantity,
+    revenue: c.revenue,
+    cost: c.cost,
+    profit: c.profit,
+    margin: c.margin
+  })));
+}
+
+function renderStaffTrackingView() {
+  const summaryEl = qs('staffSummary');
+  const highlightsEl = qs('staffHighlights');
+  const tableEl = qs('staffTrackingTable');
+  if (!summaryEl || !highlightsEl || !tableEl) return;
+  if (!state.report || !state.byStaff || !state.byStaff.length) {
+    summaryEl.textContent = state.report ? 'No staff activity for the current filters.' : 'Upload data to view staff performance.';
+    highlightsEl.innerHTML = '';
+    tableEl.innerHTML = '<div class="text-sm text-gray-500">No staff data available.</div>';
+    return;
+  }
+  const staff = state.byStaff;
+  const totalRevenue = staff.reduce((sum, s) => sum + Number(s.revenue || 0), 0);
+  const totalOrders = staff.reduce((sum, s) => sum + Number(s.orders || 0), 0);
+  summaryEl.textContent = `${formatNumber(staff.length)} staff · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${formatNumber(totalOrders / (staff.length || 1))}`;
+  const topStaff = staff.slice(0, 3);
+  highlightsEl.innerHTML = topStaff.map(s => `
+    <div class="p-3 border app-border rounded-md">
+      <div class="text-xs text-gray-500 truncate">${escapeHtml(s.label || 'Unassigned')}</div>
+      <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(s.revenue)}</div>
+      <div class="text-xs text-gray-500">Orders ${formatNumber(s.orders)} · Margin ${formatPercentShort(s.margin)}</div>
+    </div>
+  `).join('');
+  renderTable(tableEl, ['staff','orders','quantity','revenue','cost','profit','margin'], staff.map(s => ({
+    staff: s.label || 'Unassigned',
+    orders: s.orders,
+    quantity: s.quantity,
+    revenue: s.revenue,
+    cost: s.cost,
+    profit: s.profit,
+    margin: s.margin
+  })));
+}
+
+function renderItemTrackingView() {
+  const summaryEl = qs('itemsSummary');
+  const highlightsEl = qs('itemsHighlights');
+  const tableEl = qs('itemTrackingTable');
+  if (!summaryEl || !highlightsEl || !tableEl) return;
+  if (!state.report || !state.byItem || !state.byItem.length) {
+    summaryEl.textContent = state.report ? 'No item performance data for the current filters.' : 'Upload data to view item trends.';
+    highlightsEl.innerHTML = '';
+    tableEl.innerHTML = '<div class="text-sm text-gray-500">No item data available.</div>';
+    return;
+  }
+  const items = state.byItem;
+  const totalRevenue = items.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
+  summaryEl.textContent = `${formatNumber(items.length)} items · Revenue ${formatCurrencyShort(totalRevenue)} · Top item ${escapeHtml(items[0].item || 'Unassigned')} (${formatCurrencyShort(items[0].revenue)})`;
+  const topItems = items.slice(0, 3);
+  highlightsEl.innerHTML = topItems.map(item => `
+    <div class="p-3 border app-border rounded-md">
+      <div class="text-xs text-gray-500 truncate">${escapeHtml(item.item || 'Unassigned')}</div>
+      <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(item.revenue)}</div>
+      <div class="text-xs text-gray-500">Quantity ${formatNumber(item.quantity)} · Margin ${formatPercentShort(item.margin)}</div>
+    </div>
+  `).join('');
+  renderTable(tableEl, ['item','quantity','revenue','cost','profit','margin'], items.map(item => ({
+    item: item.item || 'Unassigned',
+    quantity: item.quantity,
+    revenue: item.revenue,
+    cost: item.cost,
+    profit: item.profit,
+    margin: item.margin
+  })));
+}
+
 
 async function loadHistory() {
   const listEl = qs('historyList');
