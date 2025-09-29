@@ -3,6 +3,38 @@ const APP_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-app.js`;
 const FIRESTORE_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-firestore.js`;
 const AUTH_URL = `https://www.gstatic.com/firebasejs/${VERSION}/firebase-auth.js`;
 
+const CSV_FIRESTORE_CHUNK_SIZE = 250;
+
+function sanitizeRowForFirestore(row) {
+  if (!row || typeof row !== 'object') return {};
+  const out = {};
+  for (const [key, value] of Object.entries(row)) {
+    if (value === undefined || value === null) {
+      out[key] = null;
+    } else if (value instanceof Date) {
+      out[key] = value.toISOString();
+    } else if (Number.isNaN(value)) {
+      out[key] = null;
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
+function hydrateRowFromFirestore(row) {
+  if (!row || typeof row !== 'object') return {};
+  const out = {};
+  for (const [key, value] of Object.entries(row)) {
+    if (value === null) {
+      out[key] = undefined;
+    } else {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 async function ensureApp() {
   const { getApps, initializeApp } = await import(APP_URL);
   let app = null;
@@ -207,49 +239,99 @@ export async function saveUserSettings(key, value) {
 
 // CSV Data Storage
 export async function saveCsvData(rows, headers, mapping) {
-  // Always save the full data to localStorage
+  const uploadedAt = new Date().toISOString();
+  const dataToSave = {
+    rows,
+    headers,
+    mapping,
+    uploadedAt,
+    rowCount: rows.length
+  };
+
+  let localSaved = true;
   try {
-    const dataToSave = {
-      rows: rows,
-      headers: headers,
-      mapping: mapping,
-      uploadedAt: new Date().toISOString(),
-      rowCount: rows.length
-    };
     localStorage.setItem('csvData', JSON.stringify(dataToSave));
   } catch (e) {
+    localSaved = false;
     console.warn('[storage] saveCsvData localStorage failed', e);
-    return false;
   }
 
-  // Save only metadata to Firestore to avoid size limits
+  let remoteSaved = false;
   try {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
       const uid = mod.auth.currentUser.uid;
       const db = await ensureDb();
+      if (!db) {
+        console.warn('[storage] saveCsvData Firestore not available');
+        return localSaved;
+      }
       const m = await import(FIRESTORE_URL);
-
+      const chunkSize = CSV_FIRESTORE_CHUNK_SIZE;
+      const chunkCount = rows.length ? Math.ceil(rows.length / chunkSize) : 0;
       const metadataToSave = {
-        headers: headers,
-        mapping: mapping,
-        uploadedAt: new Date().toISOString(),
+        headers,
+        mapping,
+        uploadedAt,
         rowCount: rows.length,
-        dataSource: 'localStorage' // Indicate where the actual data is stored
+        dataSource: 'firestoreChunks',
+        chunks: { count: chunkCount, size: chunkSize }
       };
 
-      await m.setDoc(m.doc(db, 'userData', uid), { csvMetadata: metadataToSave }, { merge: true });
+      const chunksCollection = m.collection(db, 'userData', uid, 'csvChunks');
+      try {
+        const existingChunks = await m.getDocs(chunksCollection);
+        if (!existingChunks.empty) {
+          for (const docSnap of existingChunks.docs) {
+            try {
+              await m.deleteDoc(docSnap.ref);
+            } catch (err) {
+              console.warn('[storage] saveCsvData failed to delete existing chunk', err);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[storage] saveCsvData failed to clear existing chunks', e);
+      }
+
+      if (chunkCount > 0) {
+        let batch = m.writeBatch(db);
+        const commits = [];
+        let opCount = 0;
+        for (let idx = 0; idx < chunkCount; idx++) {
+          const start = idx * chunkSize;
+          const chunkRows = rows.slice(start, start + chunkSize).map(sanitizeRowForFirestore);
+          const chunkRef = m.doc(db, 'userData', uid, 'csvChunks', `chunk-${String(idx).padStart(4, '0')}`);
+          batch.set(chunkRef, { index: idx, rows: chunkRows, updatedAt: uploadedAt });
+          opCount++;
+          if (opCount >= 400) {
+            commits.push(batch.commit());
+            batch = m.writeBatch(db);
+            opCount = 0;
+          }
+        }
+        if (opCount > 0) {
+          commits.push(batch.commit());
+        }
+        if (commits.length) {
+          await Promise.all(commits);
+        }
+      }
+
+      const metaRef = m.doc(db, 'userData', uid);
+      await m.setDoc(metaRef, { csvMetadata: metadataToSave }, { merge: true });
+      remoteSaved = true;
     }
   } catch (e) {
-    console.warn('[storage] saveCsvData Firestore metadata failed', e);
-    // Don't return false here since localStorage succeeded
+    console.warn('[storage] saveCsvData Firestore write failed', e);
   }
 
-  return true;
+  return localSaved || remoteSaved;
 }
 
+
+
 export async function loadCsvData() {
-  // Always try localStorage first since that's where we store the actual data
   try {
     const local = localStorage.getItem('csvData');
     if (local) {
@@ -259,31 +341,74 @@ export async function loadCsvData() {
     console.warn('[storage] loadCsvData localStorage failed', e);
   }
 
-  // If no localStorage data, check Firestore for legacy data
   try {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
       const uid = mod.auth.currentUser.uid;
       const db = await ensureDb();
+      if (!db) {
+        console.warn('[storage] loadCsvData Firestore not available');
+        return null;
+      }
       const m = await import(FIRESTORE_URL);
 
-      const snap = await m.getDoc(m.doc(db, 'userData', uid));
-      if (snap.exists()) {
-        const data = snap.data();
-        // Check for legacy csvData or new csvMetadata
+      const userDoc = await m.getDoc(m.doc(db, 'userData', uid));
+      if (userDoc.exists()) {
+        const data = userDoc.data();
+
         if (data.csvData) {
-          // Legacy data - migrate to localStorage
           const csvData = data.csvData;
           try {
             localStorage.setItem('csvData', JSON.stringify(csvData));
-            return csvData;
           } catch (e) {
             console.warn('[storage] Failed to migrate legacy data to localStorage', e);
-            return csvData; // Return it anyway
           }
+          return csvData;
         }
-        // New structure doesn't store actual data in Firestore
-        return null;
+
+        const metadata = data.csvMetadata;
+        if (metadata) {
+          const rows = [];
+          const expectedChunks = metadata.chunks?.count ?? null;
+          try {
+            const chunkSnap = await m.getDocs(m.collection(db, 'userData', uid, 'csvChunks'));
+            if (!chunkSnap.empty) {
+              const sorted = chunkSnap.docs.sort((a, b) => {
+                const ai = a.data().index ?? 0;
+                const bi = b.data().index ?? 0;
+                return ai - bi;
+              });
+              for (const docSnap of sorted) {
+                const docData = docSnap.data();
+                if (Array.isArray(docData.rows)) {
+                  for (const row of docData.rows) {
+                    rows.push(hydrateRowFromFirestore(row));
+                  }
+                }
+              }
+            }
+          } catch (e) {
+            console.warn('[storage] loadCsvData failed to read Firestore chunks', e);
+          }
+
+          if (expectedChunks != null && rows.length === 0) {
+            console.warn('[storage] loadCsvData expected chunk data but none was retrieved');
+          }
+
+          const payload = {
+            rows,
+            headers: metadata.headers || [],
+            mapping: metadata.mapping || {},
+            uploadedAt: metadata.uploadedAt || new Date().toISOString(),
+            rowCount: rows.length || metadata.rowCount || 0
+          };
+          try {
+            localStorage.setItem('csvData', JSON.stringify(payload));
+          } catch (e) {
+            console.warn('[storage] loadCsvData failed to write hydrated data to localStorage', e);
+          }
+          return payload;
+        }
       }
     }
   } catch (e) {
@@ -293,32 +418,53 @@ export async function loadCsvData() {
   return null;
 }
 
+
+
 export async function deleteCsvData() {
+  let remoteDeleted = false;
   try {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
       const uid = mod.auth.currentUser.uid;
       const db = await ensureDb();
-      const m = await import(FIRESTORE_URL);
-
-      await m.updateDoc(m.doc(db, 'userData', uid), {
-        csvData: m.deleteField()
-      });
-      return true;
+      if (db) {
+        const m = await import(FIRESTORE_URL);
+        try {
+          const chunkSnap = await m.getDocs(m.collection(db, 'userData', uid, 'csvChunks'));
+          if (!chunkSnap.empty) {
+            for (const docSnap of chunkSnap.docs) {
+              try {
+                await m.deleteDoc(docSnap.ref);
+              } catch (err) {
+                console.warn('[storage] deleteCsvData failed to remove chunk document', err);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[storage] deleteCsvData failed to query chunk documents', e);
+        }
+        await m.updateDoc(m.doc(db, 'userData', uid), {
+          csvData: m.deleteField(),
+          csvMetadata: m.deleteField()
+        });
+        remoteDeleted = true;
+      }
     }
   } catch (e) {
     console.warn('[storage] deleteCsvData Firestore failed', e);
   }
 
-  // Fallback to localStorage
+  let localDeleted = false;
   try {
     localStorage.removeItem('csvData');
-    return true;
+    localDeleted = true;
   } catch (e) {
     console.warn('[storage] deleteCsvData localStorage failed', e);
   }
-  return false;
+  return remoteDeleted || localDeleted;
 }
+
+
 
 // Demo state management for cross-platform demo tracking
 export async function getDemoState(key) {

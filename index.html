@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=1.2.42">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -112,7 +112,7 @@
             </div>
             <div>
               <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.41</p>
+              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.42</p>
             </div>
           </div>
 
@@ -777,11 +777,10 @@
             <div class="space-y-4">
               <p class="text-sm text-gray-600">Assign categories to item names. Manual mappings override CSV categories.</p>
               <div class="flex flex-col sm:flex-row gap-2">
-                <button id="btnLoadItemsMapping" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Load Items from Data</button>
-                <button id="btnSaveCategoryMap" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Mapping</button>
-                <button id="btnClearCategoryMap" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear Mapping</button>
+                <button id="btnOpenCategoryMapModal" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Manage Mapping</button>
+                <button id="btnExportCategoryMapCsv" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Export Mapping CSV</button>
               </div>
-              <div id="categoryMapEditor" class="max-h-96 overflow-auto border app-border rounded-md divide-y"></div>
+              <p id="categoryMapSummary" class="text-xs text-gray-500">No categories configured yet.</p>
             </div>
           </div>
 
@@ -894,7 +893,7 @@
     </script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.42"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">
@@ -996,11 +995,59 @@
         </div>
       </div>
     </div>
-  </body>
-  <!-- Chart Zoom Modal -->
+  
+<div id="categoryMapModal" class="hidden fixed inset-0 z-50">
+  <div id="categoryMapModalBackdrop" class="absolute inset-0" style="background: rgba(17, 24, 39, 0.65);"></div>
+  <div class="relative mx-auto my-10 w-full max-w-5xl px-4">
+    <div class="app-card border app-border rounded-lg shadow-xl bg-white max-h-screen overflow-hidden flex flex-col" role="dialog" aria-modal="true" aria-labelledby="categoryMapModalTitle">
+      <div class="flex items-start justify-between p-6 border-b app-border">
+        <div>
+          <h3 id="categoryMapModalTitle" class="text-lg md:text-xl font-semibold text-gray-900">Manage Category Mapping</h3>
+          <p class="text-sm text-gray-600 mt-1">Upload or edit item to category mappings. Only rows with both item and category values are saved.</p>
+        </div>
+        <button id="btnCategoryModalClose" class="text-gray-500 hover:text-gray-700" aria-label="Close category mapping modal">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="p-6 space-y-6 overflow-y-auto">
+        <div class="grid gap-6 lg:grid-cols-2">
+          <div class="space-y-2">
+            <label for="categoryMapFile" class="text-sm font-medium text-gray-700">Upload mapping CSV</label>
+            <input id="categoryMapFile" type="file" accept=".csv,.txt" class="w-full border app-border rounded-md px-3 py-2 text-sm">
+            <p class="text-xs text-gray-500">Expected columns: item/name and category. New rows overwrite existing categories for the same item.</p>
+          </div>
+          <div class="space-y-2">
+            <label for="categoryMapBulkInput" class="text-sm font-medium text-gray-700">Paste mappings (Item,Category per line)</label>
+            <textarea id="categoryMapBulkInput" rows="6" class="w-full border app-border rounded-md px-3 py-2 text-sm font-mono" placeholder="Item A,Category 1&#10;Item B,Category 2"></textarea>
+            <div class="flex gap-2">
+              <button id="btnCategoryApplyBulk" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100">Apply Pasted Rows</button>
+              <button id="btnCategoryClearBulk" class="px-3 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button id="btnLoadItemsMapping" class="px-3 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Load Items from Data</button>
+          <button id="btnCategoryAddRow" class="px-3 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Add Row</button>
+        </div>
+        <div id="categoryMapList" class="overflow-auto border app-border rounded-md divide-y bg-white" style="max-height: 60vh;"></div>
+      </div>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-6 py-4 border-t app-border bg-gray-50">
+        <span class="text-xs text-gray-500">Mappings are saved to your settings and applied after the current dataset is reprocessed.</span>
+        <div class="flex gap-2">
+          <button id="btnClearCategoryMap" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear Mapping</button>
+          <button id="btnSaveCategoryMap" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Mapping</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Chart Zoom Modal -->
   <div id="chartZoom" class="hidden fixed top-0 left-0 right-0 bottom-0 z-50" style="background: rgba(0,0,0,0.6);">
     <div class="absolute inset-0 flex items-center justify-center">
       <img id="chartZoomImg" alt="Chart" style="max-width: 90vw; max-height: 90vh; box-shadow: 0 10px 30px rgba(0,0,0,.4); border-radius: 8px; background: #fff;" />
     </div>
   </div>
-  </html>
+</body>
+</html>

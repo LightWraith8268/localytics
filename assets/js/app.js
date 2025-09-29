@@ -5,9 +5,23 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.41';
+const APP_VERSION = '1.2.42';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
+const DEFAULT_FILTERS = {
+  start: '',
+  end: '',
+  item: '',
+  client: '',
+  staff: '',
+  order: '',
+  category: '',
+  revMin: '',
+  revMax: '',
+  qtyMin: '',
+  qtyMax: '',
+  noZero: false,
+};
 const state = {
   rows: [],
   headers: [],
@@ -31,12 +45,15 @@ const state = {
   chartHourRevenue: null,
   chartRevYoy: null,
   chartCatTrend: null,
-  filters: { start: '', end: '', item: '', client: '', staff: '', order: '', category: '', revMin: '', revMax: '', qtyMin: '', qtyMax: '', noZero: false },
+  filters: { ...DEFAULT_FILTERS },
   user: null,
   customChart: null,
   categoryMap: {},
   itemSynonyms: [],
 };
+
+let categoryMapDraft = {};
+let previousBodyOverflow = '';
 
 function qs(id) { return document.getElementById(id); }
 function showView(hash) {
@@ -117,8 +134,16 @@ window.addEventListener('DOMContentLoaded', () => {
     authStateReady = true;
     console.log('[app] Loading user settings after auth state determined');
 
-    try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch (e) { console.warn('Failed to load categoryMap settings:', e); }
-    try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
+    try {
+      const m = await loadUserSettings('categoryMap');
+      if (m) {
+        state.categoryMap = m;
+      }
+    } catch (e) {
+      console.warn('Failed to load categoryMap settings:', e);
+    }
+    updateCategoryMapSummary();
+    try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...DEFAULT_FILTERS, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
     try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch (e) { console.warn('Failed to load customChartPrefs settings:', e); }
 
     // Load allowed items and synonyms
@@ -186,6 +211,7 @@ window.addEventListener('DOMContentLoaded', () => {
         state.filtered = filtered;
         state.report = computeReport(filtered, state.mapping);
         renderReport();
+        updateCategoryMapSummary();
       } else {
         // No stored data, load sample data for demo (but only after checking demo state)
         try {
@@ -308,6 +334,34 @@ window.addEventListener('DOMContentLoaded', () => {
     if (lbl) lbl.textContent = text || `${percent}%`;
   };
 
+  async function reapplyCategoryMap() {
+    if (!state.rows.length) {
+      const filtered = applyFilters(state.rows, state.mapping, state.filters);
+      state.filtered = filtered;
+      state.report = computeReport(filtered, state.mapping);
+      renderReport();
+      updateCategoryMapSummary();
+      return;
+    }
+    showProgress(true);
+    setProgress(0, 'Reapplying category mapping...');
+    try {
+      const normalized = await normalizeAndDedupeAsync(state.rows, state.mapping, (pct, processed) => {
+        setProgress(Math.min(99, pct), `Reapplying map - ${pct}%`);
+      });
+      state.rows = normalized;
+      const filtered = applyFilters(state.rows, state.mapping, state.filters);
+      state.filtered = filtered;
+      state.report = computeReport(filtered, state.mapping);
+      renderReport();
+      updateCategoryMapSummary();
+    } catch (error) {
+      console.warn('[app] Failed to reapply category mapping', error);
+    } finally {
+      showProgress(false);
+    }
+  }
+
   qs('btnParse').addEventListener('click', async () => {
     const files = fileInput.files;
     if (!files || !files.length) { alert('Choose at least one CSV.'); return; }
@@ -320,7 +374,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const { rows, headers } = await parseCsvFiles(files, {
       onProgress: (p) => {
         const pct = Number.isFinite(p.percent) ? p.percent : 0;
-        const txt = `Parsing ${p.fileIndex + 1}/${p.filesCount}: ${p.fileName} — ${pct}% (${(p.rowsParsed||0).toLocaleString()} rows)`;
+        const txt = `Parsing ${p.fileIndex + 1}/${p.filesCount}: ${p.fileName} - ${pct}% (${(p.rowsParsed||0).toLocaleString()} rows)`;
         if (txt !== lastText) { setProgress(pct, txt); lastText = txt; }
       }
     });
@@ -342,17 +396,31 @@ window.addEventListener('DOMContentLoaded', () => {
     setProgress(0, 'Normalizing rows…');
     const normalized = await normalizeAndDedupeAsync(rows, state.mapping, (pct, processed) => {
       const total = rows.length;
-      setProgress(Math.min(99, pct), `Normalizing ${Math.min(processed,total).toLocaleString()}/${total.toLocaleString()} rows — ${pct}%`);
+      setProgress(Math.min(99, pct), `Normalizing ${Math.min(processed,total).toLocaleString()}/${total.toLocaleString()} rows - ${pct}%`);
     });
+    console.log('[app] Normalization complete, setting state.rows to', normalized.length, 'rows');
     state.rows = normalized;
 
     // Save CSV data to Firebase/localStorage for persistence
     await saveCsvData(normalized, headers, state.mapping);
 
-    const filtered = applyFilters(normalized, state.mapping, state.filters);
+    console.log('[app] Applying filters to', normalized.length, 'rows');
+    let filtered = applyFilters(normalized, state.mapping, state.filters);
+    console.log('[app] After filtering:', filtered.length, 'rows remain');
+    if (normalized.length && !filtered.length) {
+      console.warn('[app] Filters removed all rows; resetting filters to defaults.');
+      state.filters = { ...DEFAULT_FILTERS };
+      restoreFilterUI();
+      try { await saveUserSettings('filters', state.filters); } catch (e) { console.warn('[app] Failed to reset filters in storage:', e); }
+      filtered = applyFilters(normalized, state.mapping, state.filters);
+      console.log('[app] After resetting filters,', filtered.length, 'rows remain');
+    }
     state.filtered = filtered;
+    console.log('[app] Computing report from', filtered.length, 'filtered rows');
     state.report = computeReport(filtered, state.mapping);
+    console.log('[app] Report computed, rendering...');
     renderReport();
+    updateCategoryMapSummary();
     location.hash = '#/report';
     qs('uploadStatus').textContent = `Parsed ${rows.length} rows.`;
     showProgress(false);
@@ -416,7 +484,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (fQtyMin) fQtyMin.value = '';
     if (fQtyMax) fQtyMax.value = '';
     if (fNoZero) fNoZero.checked = false;
-    state.filters = { start:'', end:'', item:'', client:'', staff:'', order:'', category:'', revMin:'', revMax:'', qtyMin:'', qtyMax:'', noZero:false };
+    state.filters = { ...DEFAULT_FILTERS };
     // Save cleared filters for persistence
     try { await saveUserSettings('filters', state.filters); } catch {}
     if (!state.rows.length || !state.mapping.date) return;
@@ -645,32 +713,130 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('beforeprint', freezeChartsForPrint);
   window.addEventListener('afterprint', restoreChartsAfterPrint);
   // Category mapping UI
-  qs('btnLoadItemsMapping')?.addEventListener('click', () => buildCategoryMapEditor());
-  qs('btnSaveCategoryMap')?.addEventListener('click', async () => {
-    const editor = document.getElementById('categoryMapEditor'); if (!editor) return;
-    const inputs = editor.querySelectorAll('input[data-item]'); const map = {};
-    inputs.forEach(inp => { const item = inp.getAttribute('data-item'); const val = inp.value.trim(); if (item && val) map[item] = val; });
-    state.categoryMap = map; await saveUserSettings('categoryMap', map);
-    // Re-normalize rows to apply categories (with progress)
-    if (state.rows.length) {
-      showProgress(true); setProgress(0, 'Reapplying category map…');
-      const normalized = await normalizeAndDedupeAsync(state.rows, state.mapping, (pct, processed) => {
-        setProgress(Math.min(99, pct), `Reapplying map — ${pct}%`);
-      });
-      state.rows = normalized;
-      const filtered = applyFilters(state.rows, state.mapping, state.filters); state.filtered = filtered;
-      state.report = computeReport(filtered, state.mapping); renderReport();
-      showProgress(false);
+  qs('btnOpenCategoryMapModal')?.addEventListener('click', openCategoryMapModal);
+  qs('btnCategoryModalClose')?.addEventListener('click', closeCategoryMapModal);
+  qs('categoryMapModalBackdrop')?.addEventListener('click', closeCategoryMapModal);
+
+  document.addEventListener('keydown', (evt) => {
+    if (evt.key === 'Escape') {
+      const modal = qs('categoryMapModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        closeCategoryMapModal();
+      }
     }
+  });
+
+  qs('btnCategoryAddRow')?.addEventListener('click', () => {
+    const editor = document.getElementById('categoryMapList');
+    if (!editor) return;
+    appendCategoryMapRow(editor, '', '');
+    editor.scrollTop = editor.scrollHeight;
+  });
+
+  qs('btnLoadItemsMapping')?.addEventListener('click', () => {
+    const current = collectCategoryMapDraft('categoryMapList');
+    const items = getUniqueItemsFromData();
+    items.forEach(item => {
+      if (!(item in current)) {
+        current[item] = state.categoryMap?.[item] || '';
+      }
+    });
+    setCategoryMapDraft(current);
+  });
+
+  const categoryMapFileInput = qs('categoryMapFile');
+  categoryMapFileInput?.addEventListener('change', async (event) => {
+    try {
+      const file = event.target?.files?.[0];
+      if (!file) return;
+      const current = collectCategoryMapDraft('categoryMapList');
+      const { rows, headers } = await parseCsv(file, {});
+      const headerList = (headers && headers.length) ? headers : Object.keys(rows[0] || {});
+      const lowerHeaders = headerList.map(h => h.toLowerCase());
+      let itemKey = '';
+      let categoryKey = '';
+      lowerHeaders.forEach((h, idx) => {
+        if (!itemKey && (h.includes('item') || h.includes('name') || h.includes('product'))) itemKey = headerList[idx];
+        if (!categoryKey && h.includes('category')) categoryKey = headerList[idx];
+      });
+      if (!itemKey && headerList[0]) itemKey = headerList[0];
+      if (!categoryKey && headerList[1]) categoryKey = headerList[1];
+      if (!itemKey || !categoryKey) {
+        if (event.target) event.target.value = '';
+        alert('Unable to detect item and category columns in the mapping file.');
+        return;
+      }
+      rows.forEach(row => {
+        const item = (row[itemKey] ?? '').toString().trim();
+        const category = (row[categoryKey] ?? '').toString().trim();
+        if (item && category) current[item] = category;
+      });
+      setCategoryMapDraft(current);
+      event.target.value = '';
+    } catch (error) {
+      console.warn('[app] Failed to import category map file', error);
+      alert('Unable to import mapping file. Please check the format.');
+    }
+  });
+
+  qs('btnCategoryApplyBulk')?.addEventListener('click', () => {
+    const textarea = qs('categoryMapBulkInput');
+    if (!textarea) return;
+    const lines = textarea.value.split(/
+?
+/);
+    const current = collectCategoryMapDraft('categoryMapList');
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (!trimmed) return;
+      const parts = trimmed.split(/,|	/);
+      if (parts.length < 2) return;
+      const item = parts[0].trim();
+      const category = parts.slice(1).join(',').trim();
+      if (item && category) current[item] = category;
+    });
+    setCategoryMapDraft(current);
+    textarea.value = '';
+  });
+
+  qs('btnCategoryClearBulk')?.addEventListener('click', () => {
+    const textarea = qs('categoryMapBulkInput');
+    if (textarea) textarea.value = '';
+  });
+
+  qs('btnSaveCategoryMap')?.addEventListener('click', async () => {
+    const map = collectCategoryMapDraft('categoryMapList', { includeEmpty: false });
+    state.categoryMap = map;
+    await saveUserSettings('categoryMap', map);
+    await reapplyCategoryMap();
+    updateCategoryMapSummary();
+    closeCategoryMapModal();
     alert('Category mapping saved.');
   });
+
   qs('btnClearCategoryMap')?.addEventListener('click', async () => {
-    state.categoryMap = {}; await saveUserSettings('categoryMap', {});
-    document.getElementById('categoryMapEditor')?.replaceChildren();
+    if (!window.confirm('Clear all category mappings?')) return;
+    categoryMapDraft = {};
+    setCategoryMapDraft({});
+    state.categoryMap = {};
+    await saveUserSettings('categoryMap', {});
+    await reapplyCategoryMap();
+    updateCategoryMapSummary();
+  });
+
+  qs('btnExportCategoryMapCsv')?.addEventListener('click', () => {
+    const entries = Object.entries(state.categoryMap || {});
+    if (!entries.length) {
+      alert('No category mappings to export.');
+      return;
+    }
+    const rows = entries.map(([item, category]) => ({ item, category }));
+    downloadCsv('category_mapping.csv', ['item','category'], rows);
   });
 });
 
-function renderReport() {
+
+nction renderReport() {
   if (!state.report) return;
   renderTotals(qs('totals'), state.report.totals);
   renderTable(qs('table-item'), ['item','quantity','revenue'], state.report.byItem);
@@ -1072,22 +1238,144 @@ function ingestRows(rows){
   state.rows = normalized; state.filtered = normalized;
   state.report = computeReport(normalized, state.mapping);
   renderReport(); location.hash = '#/report';
+  updateCategoryMapSummary();
 }
 
-function buildCategoryMapEditor(){
-  const editor = document.getElementById('categoryMapEditor'); if (!editor) return;
-  const base = state.filtered?.length ? state.filtered : state.rows;
-  const items = Array.from(new Set(base.map(r => (r[state.mapping.item] || '').toString().trim()).filter(Boolean))).sort();
-  editor.innerHTML = '';
-  if (!items.length) { editor.innerHTML = '<div class="p-3 text-sm text-gray-600">No items found. Upload and parse CSVs first.</div>'; return; }
-  items.forEach(it => {
-    const row = document.createElement('div'); row.className = 'flex items-center justify-between p-2';
-    const label = document.createElement('div'); label.className = 'text-sm text-gray-700'; label.textContent = it;
-    const input = document.createElement('input'); input.type = 'text'; input.className = 'border rounded-md px-2 py-1 text-sm w-60'; input.setAttribute('data-item', it);
-    input.value = state.categoryMap?.[it] || '';
-    row.appendChild(label); row.appendChild(input); editor.appendChild(row);
-  });
+
+function appendCategoryMapRow(editor, item = '', category = '') {
+  if (!editor) return;
+  const row = document.createElement('div');
+  row.className = 'flex flex-col md:flex-row md:items-center md:gap-3 p-3';
+  row.setAttribute('data-category-row', 'true');
+
+  const itemInput = document.createElement('input');
+  itemInput.type = 'text';
+  itemInput.placeholder = 'Item name';
+  itemInput.className = 'border app-border rounded-md px-2 py-1 text-sm flex-1';
+  itemInput.value = item;
+  itemInput.setAttribute('data-role', 'item');
+
+  const categoryInput = document.createElement('input');
+  categoryInput.type = 'text';
+  categoryInput.placeholder = 'Category';
+  categoryInput.className = 'border app-border rounded-md px-2 py-1 text-sm flex-1 mt-2 md:mt-0';
+  categoryInput.value = category;
+  categoryInput.setAttribute('data-role', 'category');
+
+  const actions = document.createElement('div');
+  actions.className = 'flex items-center gap-2 mt-2 md:mt-0 md:ml-2';
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.textContent = 'Remove';
+  removeBtn.className = 'px-3 py-1 border border-red-200 text-red-600 rounded-md text-sm font-medium hover:bg-red-50';
+  removeBtn.addEventListener('click', () => row.remove());
+  actions.appendChild(removeBtn);
+
+  row.appendChild(itemInput);
+  row.appendChild(categoryInput);
+  row.appendChild(actions);
+  editor.appendChild(row);
 }
+
+function collectCategoryMapDraft(containerId = 'categoryMapList', options = {}) {
+  const { includeEmpty = true } = options;
+  const editor = document.getElementById(containerId);
+  if (!editor) return {};
+  const map = {};
+  const rows = editor.querySelectorAll('[data-category-row]');
+  rows.forEach(row => {
+    const item = row.querySelector('input[data-role="item"]')?.value?.trim();
+    const category = row.querySelector('input[data-role="category"]')?.value?.trim();
+    if (!item) return;
+    if (!category && !includeEmpty) return;
+    map[item] = category || '';
+  });
+  return map;
+}
+
+function setCategoryMapDraft(map = {}) {
+  categoryMapDraft = { ...map };
+  const editor = document.getElementById('categoryMapList');
+  if (!editor) return;
+  editor.innerHTML = '';
+  const entries = Object.entries(categoryMapDraft)
+    .filter(([item]) => item)
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  if (entries.length) {
+    entries.forEach(([item, category]) => appendCategoryMapRow(editor, item, category));
+  } else {
+    appendCategoryMapRow(editor, '', '');
+  }
+}
+
+function getUniqueItemsFromData() {
+  const itemCol = state.mapping?.item;
+  if (!itemCol) return [];
+  const source = Array.isArray(state.rows) ? state.rows : [];
+  const items = new Set();
+  source.forEach(row => {
+    const raw = row?.[itemCol];
+    if (raw == null) return;
+    const name = String(raw).trim();
+    if (name) items.add(name);
+  });
+  return Array.from(items).sort((a, b) => a.localeCompare(b));
+}
+
+function openCategoryMapModal() {
+  const modal = qs('categoryMapModal');
+  if (!modal) return;
+  const baseMap = { ...(state.categoryMap || {}) };
+  const items = getUniqueItemsFromData();
+  items.forEach(item => {
+    if (!(item in baseMap)) baseMap[item] = baseMap[item] || '';
+  });
+  setCategoryMapDraft(baseMap);
+  const fileInput = qs('categoryMapFile');
+  if (fileInput) fileInput.value = '';
+  const textarea = qs('categoryMapBulkInput');
+  if (textarea) textarea.value = '';
+  const list = document.getElementById('categoryMapList');
+  if (list) list.scrollTop = 0;
+  modal.classList.remove('hidden');
+  previousBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeCategoryMapModal() {
+  const modal = qs('categoryMapModal');
+  if (!modal || modal.classList.contains('hidden')) return;
+  modal.classList.add('hidden');
+  document.body.style.overflow = previousBodyOverflow;
+  previousBodyOverflow = '';
+  const fileInput = qs('categoryMapFile');
+  if (fileInput) fileInput.value = '';
+  const textarea = qs('categoryMapBulkInput');
+  if (textarea) textarea.value = '';
+}
+
+function updateCategoryMapSummary() {
+  const summary = qs('categoryMapSummary');
+  if (!summary) return;
+  const map = state.categoryMap || {};
+  const totalMappings = Object.keys(map).length;
+  const dataItems = getUniqueItemsFromData();
+  if (!totalMappings) {
+    if (dataItems.length) {
+      summary.textContent = `${dataItems.length} item${dataItems.length === 1 ? '' : 's'} detected. No saved mappings yet.`;
+    } else {
+      summary.textContent = 'No categories configured yet.';
+    }
+    return;
+  }
+  const mappedFromData = dataItems.filter(item => map[item]).length;
+  if (dataItems.length) {
+    summary.textContent = `${totalMappings} mapped item${totalMappings === 1 ? '' : 's'} (${mappedFromData}/${dataItems.length} from current data).`;
+  } else {
+    summary.textContent = `${totalMappings} mapped item${totalMappings === 1 ? '' : 's'} saved.`;
+  }
+}
+
 
 function aggregateOrdersByDate(rows){
   const map = new Map();
@@ -1216,6 +1504,9 @@ function normalizeAndDedupe(rows, mapping) {
 
 // Async version with chunked progress updates (UI-friendly for large datasets)
 async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
+  console.log('[app] Starting normalizeAndDedupeAsync with', rows.length, 'rows');
+  console.log('[app] Mapping:', mapping);
+
   const orderCol = mapping.order;
   const dateCol = mapping.date;
   const itemCol = mapping.item;
@@ -1226,6 +1517,8 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   const staffCol = mapping.staff;
   const total = rows.length || 0;
   const chunk = Math.max(500, Math.floor(total / 20) || 500);
+
+  console.log('[app] Using columns - date:', dateCol, 'item:', itemCol, 'qty:', qtyCol, 'price:', priceCol);
   const out = [];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
@@ -1269,6 +1562,12 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
       try { onProgress(pct, i + 1); } catch {}
       await new Promise(requestAnimationFrame);
     }
+  }
+  console.log('[app] normalizeAndDedupeAsync complete - output rows:', out.length);
+  if (out.length > 0) {
+    console.log('[app] Sample normalized row:', out[0]);
+  } else {
+    console.warn('[app] WARNING: No rows in normalized output!');
   }
   return out;
 }

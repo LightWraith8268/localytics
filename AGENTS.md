@@ -21,3 +21,17 @@ CSV Parsing
 - Always drop the trailing totals row.
 - Do NOT dedupe on ingest. Each CSV upload replaces the current in-memory dataset.
 - Missing text fields set to `undefined`; missing numeric fields set to `0`.
+
+---
+2025-09-30 - Status Check
+- APP_VERSION in assets/js/app.js remains 1.2.41; service-worker.js VERSION is wb-1.2.41.
+- index.html currently links ./assets/css/styles.css and ./assets/js/app.js without query string parameters.
+- git status shows working tree changes in .claude/settings.local.json and assets/js/app.js (additional logging around normalization flow).
+---
+2025-09-30 - CSV Persistence & Filters
+- Added DEFAULT_FILTERS and reset logic in assets/js/app.js to prevent stale filters from hiding newly parsed rows.
+- Persisted full CSV datasets in Firestore via chunked documents and hydrate/delete helpers in assets/js/storage.js.
+---
+2025-09-30 - Category Mapping Modal
+- Replaced inline category editor with a modal supporting CSV uploads, paste import, and row management.
+- Added category mapping summary, export button, and auto-reset of filters that hide parsed rows.
