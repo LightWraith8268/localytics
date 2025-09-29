@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.38';
+const APP_VERSION = '1.2.39';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const state = {
@@ -205,14 +205,28 @@ window.addEventListener('DOMContentLoaded', () => {
       console.warn('Failed to load CSV data after auth:', e);
     }
 
-    // Load dark mode preference (now from user settings instead of localStorage)
+    // Load dark mode preference and sync between localStorage and user settings
     try {
-      const darkMode = await loadUserSettings('darkMode');
-      if (darkMode === 'true' || darkMode === true) {
+      const userDarkMode = await loadUserSettings('darkMode');
+      const localDarkMode = localStorage.getItem('darkMode');
+
+      // If user has a saved preference in Firestore, use that and sync to localStorage
+      if (userDarkMode === 'true' || userDarkMode === true) {
         document.documentElement.classList.add('dark');
-      } else if (darkMode === 'false' || darkMode === false) {
+        localStorage.setItem('darkMode', 'true');
+      } else if (userDarkMode === 'false' || userDarkMode === false) {
         document.documentElement.classList.remove('dark');
+        localStorage.setItem('darkMode', 'false');
+      } else if (localDarkMode) {
+        // If no user setting but localStorage has a preference, sync to user settings
+        if (localDarkMode === 'true') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+        try { await saveUserSettings('darkMode', localDarkMode); } catch (e) { console.warn('Failed to sync dark mode to user settings:', e); }
       }
+
       // Update the dark mode button state
       updateDarkModeButton();
     } catch (e) { console.warn('Failed to load dark mode setting:', e); }
@@ -983,8 +997,15 @@ function restoreChartsAfterPrint(){
 window.addEventListener('beforeprint', () => { document.querySelectorAll('details[data-accordion]').forEach(d => d.open = true); });
 
 function initDarkMode() {
-  // Note: Dark mode preference now loaded from user settings in loadUserSettingsAfterAuth()
-  // Just initialize the button state
+  // Immediate loading from localStorage for instant dark mode on page load
+  // This ensures dark mode is applied immediately while waiting for authentication
+  const localDarkMode = localStorage.getItem('darkMode');
+  if (localDarkMode === 'true') {
+    document.documentElement.classList.add('dark');
+  } else if (localDarkMode === 'false') {
+    document.documentElement.classList.remove('dark');
+  }
+  // Note: User settings will override this after authentication is determined
   updateDarkModeButton();
 }
 
@@ -994,10 +1015,14 @@ async function toggleDarkMode() {
 
   if (isDark) {
     html.classList.remove('dark');
-    try { await saveUserSettings('darkMode', 'false'); } catch (e) { console.warn('Failed to save dark mode setting:', e); }
+    // Save to both localStorage (immediate) and user settings (authenticated sync)
+    localStorage.setItem('darkMode', 'false');
+    try { await saveUserSettings('darkMode', 'false'); } catch (e) { console.warn('Failed to save dark mode to user settings:', e); }
   } else {
     html.classList.add('dark');
-    try { await saveUserSettings('darkMode', 'true'); } catch (e) { console.warn('Failed to save dark mode setting:', e); }
+    // Save to both localStorage (immediate) and user settings (authenticated sync)
+    localStorage.setItem('darkMode', 'true');
+    try { await saveUserSettings('darkMode', 'true'); } catch (e) { console.warn('Failed to save dark mode to user settings:', e); }
   }
 
   updateDarkModeButton();
