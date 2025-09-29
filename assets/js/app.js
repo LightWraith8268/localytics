@@ -1,7 +1,7 @@
 import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
 import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime, aggregateByField, aggregateByOrder } from './reports.js';
 import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
-import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings, saveCsvData, loadCsvData, deleteCsvData, deleteAllUserData } from './storage.js';
+import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings, saveCsvData, loadCsvData, deleteCsvData, deleteAllUserData, testFirebaseSettings } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
@@ -144,9 +144,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize dark mode
   initDarkMode();
   // Load category map, filters, and custom chart preferences
-  (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch {} })();
-  (async ()=>{ try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch {} })();
-  (async ()=>{ try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch {} })();
+  (async ()=>{ try { const m = await loadUserSettings('categoryMap'); if (m) state.categoryMap = m; } catch (e) { console.warn('Failed to load categoryMap settings:', e); } })();
+  (async ()=>{ try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...state.filters, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); } })();
+  (async ()=>{ try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch (e) { console.warn('Failed to load customChartPrefs settings:', e); } })();
 
   // File handling
   const fileInput = qs('fileInput');
@@ -762,6 +762,7 @@ async function loadHistory() {
 
 // Expose for debugging
 window.__appState = state;
+window.__testFirebaseSettings = testFirebaseSettings;
 
 function applyFilters(rows, mapping, filters) {
   const start = filters.start || '';

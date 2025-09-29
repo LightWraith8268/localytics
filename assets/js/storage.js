@@ -129,13 +129,30 @@ export async function loadUserSettings(key) {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
       const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      if (!db) {
+        console.warn('[storage] loadUserSettings: Firestore not available, falling back to localStorage');
+        throw new Error('Firestore not available');
+      }
       const m = await import(FIRESTORE_URL);
-      const snap = await m.getDoc(m.doc(await ensureDb(), 'userSettings', uid));
+      const snap = await m.getDoc(m.doc(db, 'userSettings', uid));
       const data = snap.exists() ? snap.data() : {};
+      console.log(`[storage] loadUserSettings(${key}): Loaded from Firestore:`, data?.[key]);
       return data?.[key] || null;
+    } else {
+      console.log('[storage] loadUserSettings: User not authenticated, falling back to localStorage');
     }
-  } catch {}
-  try { const local = localStorage.getItem('userSettings'); return local ? (JSON.parse(local)[key] ?? null) : null; } catch {}
+  } catch (e) {
+    console.warn('[storage] loadUserSettings Firestore failed:', e.message);
+  }
+  try {
+    const local = localStorage.getItem('userSettings');
+    const parsed = local ? JSON.parse(local) : {};
+    console.log(`[storage] loadUserSettings(${key}): Loaded from localStorage:`, parsed[key]);
+    return parsed[key] ?? null;
+  } catch (e) {
+    console.warn('[storage] loadUserSettings localStorage failed:', e.message);
+  }
   return null;
 }
 
@@ -144,16 +161,39 @@ export async function saveUserSettings(key, value) {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
       const uid = mod.auth.currentUser.uid;
+      const db = await ensureDb();
+      if (!db) {
+        console.warn('[storage] saveUserSettings: Firestore not available, falling back to localStorage');
+        throw new Error('Firestore not available');
+      }
       const m = await import(FIRESTORE_URL);
-      await m.setDoc(m.doc(await ensureDb(), 'userSettings', uid), { [key]: value }, { merge: true });
+      await m.setDoc(m.doc(db, 'userSettings', uid), { [key]: value }, { merge: true });
+      console.log(`[storage] saveUserSettings(${key}): Saved to Firestore:`, value);
+      // Also save to localStorage as backup
+      try {
+        const all = JSON.parse(localStorage.getItem('userSettings') || '{}');
+        all[key] = value;
+        localStorage.setItem('userSettings', JSON.stringify(all));
+        console.log(`[storage] saveUserSettings(${key}): Also saved to localStorage`);
+      } catch (e) {
+        console.warn('[storage] saveUserSettings localStorage backup failed:', e.message);
+      }
       return true;
+    } else {
+      console.log('[storage] saveUserSettings: User not authenticated, saving to localStorage only');
     }
-  } catch (e) { console.warn('[storage] saveUserSettings Firestore failed', e); }
+  } catch (e) {
+    console.warn('[storage] saveUserSettings Firestore failed:', e.message);
+  }
   try {
     const all = JSON.parse(localStorage.getItem('userSettings') || '{}');
-    all[key] = value; localStorage.setItem('userSettings', JSON.stringify(all));
+    all[key] = value;
+    localStorage.setItem('userSettings', JSON.stringify(all));
+    console.log(`[storage] saveUserSettings(${key}): Saved to localStorage:`, value);
     return true;
-  } catch {}
+  } catch (e) {
+    console.warn('[storage] saveUserSettings localStorage failed:', e.message);
+  }
   return false;
 }
 
@@ -305,6 +345,56 @@ export async function setDemoState(key, value) {
     return true;
   } catch {}
   return false;
+}
+
+// Test Firebase connection and settings functionality
+export async function testFirebaseSettings() {
+  console.log('[storage] Testing Firebase settings functionality...');
+
+  try {
+    const app = await ensureApp();
+    if (!app) {
+      console.warn('[storage] Firebase app not initialized');
+      return { status: 'error', message: 'Firebase not configured' };
+    }
+    console.log('[storage] ✓ Firebase app initialized');
+
+    const db = await ensureDb();
+    if (!db) {
+      console.warn('[storage] Firestore not available');
+      return { status: 'error', message: 'Firestore not available' };
+    }
+    console.log('[storage] ✓ Firestore connected');
+
+    const mod = await ensureAuth();
+    if (!mod || !mod.auth.currentUser) {
+      console.warn('[storage] User not authenticated');
+      return { status: 'warning', message: 'User not authenticated - will use localStorage only' };
+    }
+    console.log('[storage] ✓ User authenticated:', mod.auth.currentUser.email);
+
+    // Test settings save/load
+    const testKey = 'test_' + Date.now();
+    const testValue = 'test_value_' + Math.random();
+
+    await saveUserSettings(testKey, testValue);
+    console.log('[storage] ✓ Test save completed');
+
+    const loaded = await loadUserSettings(testKey);
+    console.log('[storage] ✓ Test load completed, got:', loaded);
+
+    if (loaded === testValue) {
+      console.log('[storage] ✓ Settings save/load test passed');
+      return { status: 'success', message: 'Firebase settings working correctly' };
+    } else {
+      console.warn('[storage] ✗ Settings save/load test failed - values do not match');
+      return { status: 'error', message: 'Settings save/load test failed' };
+    }
+
+  } catch (e) {
+    console.warn('[storage] Firebase settings test failed:', e);
+    return { status: 'error', message: e.message };
+  }
 }
 
 export async function deleteAllUserData() {
