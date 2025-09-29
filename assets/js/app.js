@@ -782,14 +782,12 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnCategoryApplyBulk')?.addEventListener('click', () => {
     const textarea = qs('categoryMapBulkInput');
     if (!textarea) return;
-    const lines = textarea.value.split(/
-?
-/);
+    const lines = textarea.value.split(/\r?\n/);
     const current = collectCategoryMapDraft('categoryMapList');
     lines.forEach(line => {
       const trimmed = line.trim();
       if (!trimmed) return;
-      const parts = trimmed.split(/,|	/);
+      const parts = trimmed.split(/,|\t/);
       if (parts.length < 2) return;
       const item = parts[0].trim();
       const category = parts.slice(1).join(',').trim();
@@ -836,7 +834,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 
-nction renderReport() {
+function renderReport() {
   if (!state.report) return;
   renderTotals(qs('totals'), state.report.totals);
   renderTable(qs('table-item'), ['item','quantity','revenue'], state.report.byItem);
