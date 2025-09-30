@@ -99,41 +99,59 @@
 
       /* Gold - 1st place */
       .highlight-card.rank-1 {
-        border-left: 4px solid #FFD700;
-        background: linear-gradient(135deg, #FFF9E6 0%, #FFFBF0 100%);
+        border-left: 5px solid #D97706;
+        background-color: #FFFBEB;
+        border: 2px solid #F59E0B;
       }
       .highlight-card.rank-1::before {
         content: "🥇";
         position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 16px;
+        top: 6px;
+        right: 6px;
+        font-size: 18px;
+        opacity: 0.8;
+      }
+      .highlight-card.rank-1 .text-gray-900 {
+        color: #1F2937 !important;
+        font-weight: 600 !important;
       }
 
       /* Silver - 2nd place */
       .highlight-card.rank-2 {
-        border-left: 4px solid #C0C0C0;
-        background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
+        border-left: 5px solid #6B7280;
+        background-color: #F9FAFB;
+        border: 2px solid #9CA3AF;
       }
       .highlight-card.rank-2::before {
         content: "🥈";
         position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 16px;
+        top: 6px;
+        right: 6px;
+        font-size: 18px;
+        opacity: 0.8;
+      }
+      .highlight-card.rank-2 .text-gray-900 {
+        color: #1F2937 !important;
+        font-weight: 600 !important;
       }
 
       /* Bronze - 3rd place */
       .highlight-card.rank-3 {
-        border-left: 4px solid #CD7F32;
-        background: linear-gradient(135deg, #FDF6F0 0%, #FFFBF8 100%);
+        border-left: 5px solid #92400E;
+        background-color: #FEF3C7;
+        border: 2px solid #D97706;
       }
       .highlight-card.rank-3::before {
         content: "🥉";
         position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 16px;
+        top: 6px;
+        right: 6px;
+        font-size: 18px;
+        opacity: 0.8;
+      }
+      .highlight-card.rank-3 .text-gray-900 {
+        color: #1F2937 !important;
+        font-weight: 600 !important;
       }
 
       /* Enhanced page titles and subtitles */
@@ -157,6 +175,29 @@
       }
       .dark .page-subtitle {
         color: #D1D5DB !important;
+      }
+
+      /* Dark mode support for medal rankings */
+      .dark .highlight-card.rank-1 {
+        background-color: #451A03;
+        border-color: #A16207;
+      }
+      .dark .highlight-card.rank-1 .text-gray-900 {
+        color: #FBBF24 !important;
+      }
+      .dark .highlight-card.rank-2 {
+        background-color: #374151;
+        border-color: #6B7280;
+      }
+      .dark .highlight-card.rank-2 .text-gray-900 {
+        color: #F3F4F6 !important;
+      }
+      .dark .highlight-card.rank-3 {
+        background-color: #451A03;
+        border-color: #A16207;
+      }
+      .dark .highlight-card.rank-3 .text-gray-900 {
+        color: #FBBF24 !important;
       }
     </style>
   </head>
