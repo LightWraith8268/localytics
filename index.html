@@ -49,6 +49,33 @@
       .dark .bg-gray-50 {
         background-color: var(--hover-bg) !important;
       }
+
+      /* Active navigation link styling */
+      .nav-link.active {
+        background-color: #10B981 !important;
+        color: #ffffff !important;
+      }
+      .nav-link.active span {
+        color: #ffffff !important;
+      }
+
+      /* Print-specific styles */
+      @media print {
+        .no-print {
+          display: none !important;
+        }
+        .print-section {
+          page-break-inside: avoid;
+        }
+        /* Ensure only visible data tables are printed */
+        .view.hidden {
+          display: none !important;
+        }
+        /* Hide interactive elements during print */
+        button, .dropdown-menu, details summary {
+          display: none !important;
+        }
+      }
       /* Force sidebar background in dark mode with highest specificity */
       .dark nav[class*="lg:w-64"],
       .dark nav#mobileSidebar {
@@ -57,6 +84,79 @@
       .dark nav[class*="lg:w-64"] > *,
       .dark nav#mobileSidebar > * {
         background-color: var(--card-bg) !important;
+      }
+
+      /* Top 3 item highlighting with medal colors */
+      .highlight-card {
+        position: relative;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+      }
+      .highlight-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+      }
+
+      /* Gold - 1st place */
+      .highlight-card.rank-1 {
+        border-left: 4px solid #FFD700;
+        background: linear-gradient(135deg, #FFF9E6 0%, #FFFBF0 100%);
+      }
+      .highlight-card.rank-1::before {
+        content: "🥇";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 16px;
+      }
+
+      /* Silver - 2nd place */
+      .highlight-card.rank-2 {
+        border-left: 4px solid #C0C0C0;
+        background: linear-gradient(135deg, #F8F9FA 0%, #FFFFFF 100%);
+      }
+      .highlight-card.rank-2::before {
+        content: "🥈";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 16px;
+      }
+
+      /* Bronze - 3rd place */
+      .highlight-card.rank-3 {
+        border-left: 4px solid #CD7F32;
+        background: linear-gradient(135deg, #FDF6F0 0%, #FFFBF8 100%);
+      }
+      .highlight-card.rank-3::before {
+        content: "🥉";
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        font-size: 16px;
+      }
+
+      /* Enhanced page titles and subtitles */
+      .page-title {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        color: #1F2937 !important;
+        margin-bottom: 0.5rem !important;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+      .page-subtitle {
+        font-size: 1rem !important;
+        font-weight: 500 !important;
+        color: #6B7280 !important;
+        margin-bottom: 1rem !important;
+      }
+
+      /* Dark mode support for enhanced titles */
+      .dark .page-title {
+        color: #F9FAFB !important;
+      }
+      .dark .page-subtitle {
+        color: #D1D5DB !important;
       }
     </style>
   </head>
@@ -327,7 +427,7 @@
       <section id="view-dashboard" class="view hidden">
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print mb-4">
-            <h2 class="text-lg md:text-xl font-medium">Dashboard</h2>
+            <h2 class="page-title text-lg md:text-xl font-medium">Dashboard</h2>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div class="relative inline-block w-full sm:w-auto">
                 <button id="exportMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Export ▾</button>
@@ -353,13 +453,13 @@
           </div>
           <!-- Key Metrics Summary -->
           <div class="mt-6">
-            <h2 class="text-xl font-semibold text-gray-900 mb-4 print-section">📊 Performance Summary</h2>
+            <h2 class="page-title text-xl font-semibold text-gray-900 mb-4 print-section">📊 Performance Summary</h2>
             <div id="totals" class="grid grid-cols-1 sm:grid-cols-3 gap-4 print-section"></div>
           </div>
 
           <!-- Data Tables Section -->
           <div class="mt-8">
-            <h2 class="text-xl font-semibold text-gray-900 mb-6 print-section">📋 Data Analysis & Breakdowns</h2>
+            <h2 class="page-title text-xl font-semibold text-gray-900 mb-6 print-section">📋 Data Analysis & Breakdowns</h2>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 print-section">
               <details class="app-card border app-border rounded-lg p-4" open data-accordion>
                 <summary class="cursor-pointer select-none text-lg font-medium text-gray-800 mb-2">📦 Product Performance</summary>
@@ -396,8 +496,8 @@
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 class="text-xl font-semibold text-gray-900">Orders Overview</h2>
-              <p id="ordersSummary" class="text-sm text-gray-500">Upload data to view orders.</p>
+              <h2 class="page-title text-xl font-semibold text-gray-900">Orders Overview</h2>
+              <p id="ordersSummary" class="page-subtitle text-sm text-gray-500">Upload data to view orders.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div class="relative inline-block w-full sm:w-auto">
@@ -494,8 +594,8 @@
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 class="text-xl font-semibold text-gray-900">Client Tracking</h2>
-              <p id="clientsSummary" class="text-sm text-gray-500">Upload data to view client performance.</p>
+              <h2 class="page-title text-xl font-semibold text-gray-900">Client Tracking</h2>
+              <p id="clientsSummary" class="page-subtitle text-sm text-gray-500">Upload data to view client performance.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div class="relative inline-block w-full sm:w-auto">
@@ -593,8 +693,8 @@
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 class="text-xl font-semibold text-gray-900">Staff Tracking</h2>
-              <p id="staffSummary" class="text-sm text-gray-500">Upload data to view staff performance.</p>
+              <h2 class="page-title text-xl font-semibold text-gray-900">Staff Tracking</h2>
+              <p id="staffSummary" class="page-subtitle text-sm text-gray-500">Upload data to view staff performance.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div class="relative inline-block w-full sm:w-auto">
@@ -680,8 +780,8 @@
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 class="text-xl font-semibold text-gray-900">Item Tracking</h2>
-              <p id="itemsSummary" class="text-sm text-gray-500">Upload data to view item performance.</p>
+              <h2 class="page-title text-xl font-semibold text-gray-900">Item Tracking</h2>
+              <p id="itemsSummary" class="page-subtitle text-sm text-gray-500">Upload data to view item performance.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
               <div class="relative inline-block w-full sm:w-auto">
@@ -778,7 +878,7 @@
       <section id="view-trends" class="view hidden">
         <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 no-print mb-4">
-            <h2 class="text-lg md:text-xl font-medium">📈 Time-Based Trends</h2>
+            <h2 class="page-title text-lg md:text-xl font-medium">📈 Time-Based Trends</h2>
             <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button id="btnPrintTrends" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print Trends</button>
             </div>

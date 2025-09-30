@@ -1464,8 +1464,8 @@ function renderClientTrackingView() {
   summaryEl.textContent = summaryText;
 
   const topClients = clients.slice(0, 3);
-  highlightsEl.innerHTML = topClients.map(c => `
-    <div class="p-3 border app-border rounded-md">
+  highlightsEl.innerHTML = topClients.map((c, index) => `
+    <div class="highlight-card rank-${index + 1} p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(c.label || 'Unassigned')}</div>
       <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(c.revenue)}</div>
       <div class="text-xs text-gray-500">Orders ${(c.orders || 0).toFixed(0)} · Margin ${formatPercentShort(c.margin)}</div>
@@ -1508,8 +1508,8 @@ function renderStaffTrackingView() {
   const totalOrders = staff.reduce((sum, s) => sum + Number(s.orders || 0), 0);
   summaryEl.textContent = `${formatNumber(staff.length)} staff · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${(totalOrders / (staff.length || 1)).toFixed(0)}`;
   const topStaff = staff.slice(0, 3);
-  highlightsEl.innerHTML = topStaff.map(s => `
-    <div class="p-3 border app-border rounded-md">
+  highlightsEl.innerHTML = topStaff.map((s, index) => `
+    <div class="highlight-card rank-${index + 1} p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(s.label || 'Unassigned')}</div>
       <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(s.revenue)}</div>
       <div class="text-xs text-gray-500">Orders ${(s.orders || 0).toFixed(0)} · Margin ${formatPercentShort(s.margin)}</div>
@@ -1583,8 +1583,8 @@ function renderItemTrackingView() {
   summaryEl.textContent = summaryText;
 
   const topItems = items.slice(0, 3);
-  highlightsEl.innerHTML = topItems.map(item => `
-    <div class="p-3 border app-border rounded-md">
+  highlightsEl.innerHTML = topItems.map((item, index) => `
+    <div class="highlight-card rank-${index + 1} p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(item.item || 'Unassigned')}</div>
       <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(item.revenue)}</div>
       <div class="text-xs text-gray-500">Quantity ${formatNumber(item.quantity)} · Margin ${formatPercentShort(item.margin)}</div>
@@ -1633,9 +1633,11 @@ async function loadHistory() {
   });
 }
 
-// Expose for debugging
+// Expose for debugging and click handlers
 window.__appState = state;
 window.__testFirebaseSettings = testFirebaseSettings;
+window.showClientDetails = showClientDetails;
+window.showOrderDetails = showOrderDetails;
 
 function applyFilters(rows, mapping, filters) {
   const start = filters.start || '';
@@ -2917,10 +2919,18 @@ function renderSortableClickableTable(container, columns, rows, options = {}) {
 
     th.addEventListener('click', () => {
       if (sortState.column === column) {
-        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        // Cycle through: desc -> asc -> reset
+        if (sortState.direction === 'desc') {
+          sortState.direction = 'asc';
+        } else if (sortState.direction === 'asc') {
+          // Reset sorting
+          sortState.column = null;
+          sortState.direction = 'desc';
+        }
       } else {
+        // First click defaults to descending (largest to smallest)
         sortState.column = column;
-        sortState.direction = 'asc';
+        sortState.direction = 'desc';
       }
 
       // Save sort state to localStorage
