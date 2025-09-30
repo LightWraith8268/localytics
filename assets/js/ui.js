@@ -148,23 +148,80 @@ export function makeChart(canvas, labels, data, label='Series') {
   if (!canvas) { console.info('[ui] makeChart: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
   if (!ctx) { console.info('[ui] makeChart: unable to acquire 2d context (skipping)'); return null; }
+
+  // Create gradient for better visual appeal
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+  gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
+
   return new window.Chart(ctx, {
     type: 'line',
     data: {
       labels,
-      datasets: [{ label, data, tension: 0.2, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.15)', fill: true }],
+      datasets: [{
+        label,
+        data,
+        tension: 0.4,
+        borderColor: '#3B82F6',
+        backgroundColor: gradient,
+        fill: true,
+        borderWidth: 3,
+        pointBackgroundColor: '#3B82F6',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
       plugins: {
-        legend: { display: true },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` } }
+        legend: {
+          display: true,
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: { size: 12, weight: '500' }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#3B82F6',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` }
+        }
       },
       scales: {
+        x: {
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            color: '#6B7280',
+            font: { size: 11 }
+          }
+        },
         y: {
           beginAtZero: true,
-          ticks: { callback: (v) => formatNumberTwo(v) }
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: (v) => formatNumberTwo(v),
+            color: '#6B7280',
+            font: { size: 11 }
+          }
         }
       }
     }
@@ -176,23 +233,74 @@ export function makeBarChart(canvas, labels, data, label='Series') {
   if (!canvas) { console.info('[ui] makeBarChart: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
   if (!ctx) { console.info('[ui] makeBarChart: unable to acquire 2d context (skipping)'); return null; }
+
+  // Create gradient for bars
+  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  gradient.addColorStop(0, '#3B82F6');
+  gradient.addColorStop(1, '#1E40AF');
+
   return new window.Chart(ctx, {
     type: 'bar',
     data: {
       labels,
-      datasets: [{ label, data, backgroundColor: '#60a5fa' }]
+      datasets: [{
+        label,
+        data,
+        backgroundColor: gradient,
+        borderColor: '#1E40AF',
+        borderWidth: 1,
+        borderRadius: 6,
+        borderSkipped: false,
+      }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
       plugins: {
-        legend: { display: true },
-        tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` } }
+        legend: {
+          display: true,
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: { size: 12, weight: '500' }
+          }
+        },
+        tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#3B82F6',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` }
+        }
       },
       scales: {
+        x: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            color: '#6B7280',
+            font: { size: 11 }
+          }
+        },
         y: {
           beginAtZero: true,
-          ticks: { callback: (v) => formatNumberTwo(v) }
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: (v) => formatNumberTwo(v),
+            color: '#6B7280',
+            font: { size: 11 }
+          }
         }
       }
     }
@@ -204,18 +312,70 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
   if (!canvas) { console.info('[ui] makeChartTyped: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
   if (!ctx) { console.info('[ui] makeChartTyped: unable to acquire 2d context (skipping)'); return null; }
+
+  // Enhanced color palettes for different chart types
+  let backgroundColor, borderColor;
+
+  if (type === 'pie' || type === 'doughnut') {
+    // Beautiful color palette for pie/doughnut charts
+    backgroundColor = [
+      '#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6',
+      '#06B6D4', '#84CC16', '#F97316', '#EC4899', '#6366F1'
+    ];
+    borderColor = '#ffffff';
+  } else {
+    // Gradients for line/bar charts
+    const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+    gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
+    gradient.addColorStop(1, 'rgba(59, 130, 246, 0.1)');
+    backgroundColor = gradient;
+    borderColor = '#3B82F6';
+  }
+
   return new window.Chart(ctx, {
     type,
     data: {
       labels,
-      datasets: [{ label, data, tension: 0.2, borderColor: '#2563eb', backgroundColor: 'rgba(37,99,235,0.35)', fill: ['line','radar'].includes(type) }],
+      datasets: [{
+        label,
+        data,
+        tension: 0.4,
+        borderColor,
+        backgroundColor,
+        fill: ['line','radar'].includes(type),
+        borderWidth: type === 'doughnut' ? 3 : 2,
+        pointBackgroundColor: '#3B82F6',
+        pointBorderColor: '#ffffff',
+        pointBorderWidth: 2,
+        pointRadius: type === 'line' ? 5 : 0,
+        pointHoverRadius: type === 'line' ? 7 : 0
+      }],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      interaction: {
+        intersect: false,
+        mode: 'index'
+      },
       plugins: {
-        legend: { display: true },
+        legend: {
+          display: true,
+          position: (type === 'pie' || type === 'doughnut') ? 'bottom' : 'top',
+          labels: {
+            usePointStyle: true,
+            padding: 20,
+            font: { size: 12, weight: '500' }
+          }
+        },
         tooltip: {
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          borderColor: '#3B82F6',
+          borderWidth: 1,
+          cornerRadius: 8,
+          displayColors: type !== 'doughnut',
           callbacks: {
             label: (ctx) => {
               const val = (type === 'pie' || type === 'doughnut') ? ctx.parsed : ctx.parsed.y;
@@ -225,7 +385,28 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
         }
       },
       scales: (type === 'pie' || type === 'doughnut') ? undefined : {
-        y: { beginAtZero: true, ticks: { callback: (v) => formatNumberTwo(v) } }
+        x: {
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            color: '#6B7280',
+            font: { size: 11 }
+          }
+        },
+        y: {
+          beginAtZero: true,
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: (v) => formatNumberTwo(v),
+            color: '#6B7280',
+            font: { size: 11 }
+          }
+        }
       }
     }
   });

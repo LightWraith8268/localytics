@@ -70,6 +70,11 @@ const htmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (char) => htmlEscapeMap[char] || char);
 }
+
+// For text content display (doesn't escape quotes since textContent doesn't interpret HTML)
+function escapeForText(value) {
+  return String(value ?? '').replace(/[&<>]/g, (char) => htmlEscapeMap[char] || char);
+}
 const getWorkingRows = () => (state.filtered && state.filtered.length ? state.filtered : state.rows);
 
 
@@ -1574,7 +1579,7 @@ function renderItemTrackingView() {
 
   const summaryText = isFiltered
     ? `${formatNumber(items.length)} of ${formatNumber(totalItems)} items${searchTerm ? ` matching "${searchTerm}"` : ''} · Revenue ${formatCurrencyShort(totalRevenue)}`
-    : `${formatNumber(items.length)} items · Revenue ${formatCurrencyShort(totalRevenue)} · Top item ${escapeHtml(items[0]?.item || 'Unassigned')} (${formatCurrencyShort(items[0]?.revenue || 0)})`;
+    : `${formatNumber(items.length)} items · Revenue ${formatCurrencyShort(totalRevenue)} · Top item ${escapeForText(items[0]?.item || 'Unassigned')} (${formatCurrencyShort(items[0]?.revenue || 0)})`;
   summaryEl.textContent = summaryText;
 
   const topItems = items.slice(0, 3);
