@@ -50,12 +50,12 @@ This is a static web application with no build process dependencies. The codebas
 - **Dependencies**: Chart.js and Firebase loaded via CDN (see `index.html`)
 
 ### Version Management
-**CRITICAL**: CI automatically bumps versions on every deploy:
-- `APP_VERSION` in `assets/js/app.js` (currently 1.2.44)
-- `VERSION` in `service-worker.js` (currently wb-1.2.44)
-- Query strings in `index.html` for cache-busting
+**CRITICAL**: CI preserves manual versions and updates cache-busting:
+- `APP_VERSION` in `assets/js/app.js` (currently 1.2.52) - manually maintained
+- `VERSION` in `service-worker.js` (currently wb-1.2.52-20250930) - manually maintained
+- Query strings in `index.html` for cache-busting - automatically updated to match APP_VERSION
 
-When developing locally, you can manually bump versions, but CI will override them for deployed artifacts. The service worker excludes Firebase domains from caching to prevent API conflicts.
+**Manual Version Bumping Required**: Unlike documented previously, CI does NOT auto-bump versions. Developers must manually update APP_VERSION in app.js and VERSION in service-worker.js before deployment. CI will use the current manual version for cache-busting querystrings and stamp the service worker with build metadata. The service worker excludes Firebase domains from caching to prevent API conflicts.
 
 ### Firebase Configuration
 - **Optional**: App works without Firebase (uses localStorage)
