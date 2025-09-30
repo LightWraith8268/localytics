@@ -83,6 +83,9 @@ function showView(hash) {
     renderTrendsCharts();
   } else if (view === 'analytics' && state.report) {
     renderAnalyticsCharts();
+  } else if (view === 'dashboard') {
+    // Dashboard view (formerly reports)
+    renderDashboard();
   } else if (view === 'orders') {
     renderOrdersView();
   } else if (view === 'clients') {
@@ -446,7 +449,7 @@ window.addEventListener('DOMContentLoaded', () => {
     console.log('[app] Report computed, rendering...');
     renderReport();
     updateCategoryMapSummary();
-    location.hash = '#/report';
+    location.hash = '#/dashboard';
     qs('uploadStatus').textContent = `Parsed ${rows.length} rows.`;
     showProgress(false);
     if (btn) btn.disabled = false;
@@ -858,6 +861,10 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 });
 
+
+function renderDashboard() {
+  renderReport(); // Dashboard shows the main report view
+}
 
 function renderReport() {
   if (!state.report) return;
