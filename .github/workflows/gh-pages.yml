@@ -32,14 +32,17 @@ jobs:
             echo "export const firebaseConfig = {}; export default firebaseConfig;" > assets/js/firebase.js
           fi
 
-      - name: Auto-bump app and SW versions (per deploy)
+      - name: Auto-bump centralized version (per deploy)
         run: |
           set -euxo pipefail
           BUILD_VERSION="$(date -u +'%Y.%m.%d').${GITHUB_RUN_NUMBER}"
-          sed -i -E "s/^const APP_VERSION = '.+';/const APP_VERSION = '${BUILD_VERSION}';/" assets/js/app.js
-          sed -i -E "s/^const VERSION = 'wb-.+';/const VERSION = 'wb-${BUILD_VERSION}';/" service-worker.js
-          sed -i -E "s|(\./)?assets/css/styles\.css\?v=[0-9\.]+|./assets/css/styles.css?v=${BUILD_VERSION}|" index.html
-          sed -i -E "s|(\./)?assets/js/app\.js\?v=[0-9\.]+|./assets/js/app.js?v=${BUILD_VERSION}|" index.html
+          BUILD_TIMESTAMP="$(date -u +'%Y%m%d')"
+          # Update centralized version.json
+          echo "{ \"version\": \"${BUILD_VERSION}\", \"timestamp\": \"${BUILD_TIMESTAMP}\" }" > version.json
+          # Update cache-busting in index.html
+          sed -i -E "s|(\./)?assets/css/styles\.css(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/css/styles.css?v=${BUILD_VERSION}\&t=${BUILD_TIMESTAMP}|" index.html
+          sed -i -E "s|(\./)?assets/js/app\.js(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/js/app.js?v=${BUILD_VERSION}\&t=${BUILD_TIMESTAMP}|" index.html
+          echo "Updated to centralized version: ${BUILD_VERSION}"
 
       - name: Stamp SW with build id
         run: |
@@ -49,7 +52,7 @@ jobs:
         run: |
           rm -rf dist
           mkdir -p dist
-          cp -r index.html 404.html manifest.webmanifest service-worker.js assets dist/
+          cp -r index.html 404.html manifest.webmanifest service-worker.js version.json assets dist/
           [ -f .nojekyll ] && cp .nojekyll dist/.nojekyll || true
 
       - name: Deploy to gh-pages branch

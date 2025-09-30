@@ -37,7 +37,8 @@ try {
     let versionJsContent = fs.readFileSync(versionJsPath, 'utf8');
     versionJsContent = versionJsContent
       .replace(/version: '[^']+', timestamp: '[^']+'/g, `version: '${newVersion}', timestamp: '${timestamp}'`)
-      .replace(/\|\| '[^']+'/g, `|| '${newVersion}'`);
+      .replace(/return versionConfig\?.version \|\| '[^']+'/g, `return versionConfig?.version || '${newVersion}'`)
+      .replace(/return versionConfig\?.timestamp \|\| '[^']+'/g, `return versionConfig?.timestamp || '${timestamp}'`);
     fs.writeFileSync(versionJsPath, versionJsContent);
   }
 

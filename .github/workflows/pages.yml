@@ -46,15 +46,24 @@ jobs:
           mkdir -p assets/js
           node -e "const fs=require('fs'); let raw=process.env.FIREBASE_CONFIG_JSON||''; let cfg=null; function tryJSON(x){try{return JSON.parse(x)}catch(e){return null}} cfg=tryJSON(raw); if(!cfg){ const i=raw.indexOf('{'); const j=raw.lastIndexOf('}'); if(i>=0 && j>i){ const obj=raw.slice(i,j+1); try{ cfg=Function('return ('+obj+')')(); }catch(e){ const cleaned=obj.replace(/,\s*([}\]])/g,'$1'); cfg=tryJSON(cleaned); } } } if(!cfg||typeof cfg!=='object'){ console.error('Invalid FIREBASE_CONFIG_JSON. Provide a JSON object or snippet containing {...}.'); process.exit(1);} for (const k of ['apiKey','projectId','appId']){ if(!cfg[k]){ console.error('FIREBASE_CONFIG_JSON missing required field: '+k); process.exit(1);} } fs.writeFileSync('assets/js/firebase.js', 'export const firebaseConfig = '+JSON.stringify(cfg)+'; export default firebaseConfig;'); console.log('firebase.js written');"
 
-      - name: Update cache-busting query strings (preserve manual versions)
+      - name: Update cache-busting query strings (use centralized version)
         run: |
           set -euxo pipefail
-          # Get current version from app.js
-          CURRENT_VERSION=$(sed -n "s/^const APP_VERSION = '\([^']*\)';/\1/p" assets/js/app.js)
-          echo "Using current manual version: ${CURRENT_VERSION}"
+          # Get current version from centralized version.json
+          if [ -f version.json ]; then
+            CURRENT_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json')).version)")
+            CURRENT_TIMESTAMP=$(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json')).timestamp)")
+            echo "Using centralized version: ${CURRENT_VERSION} (${CURRENT_TIMESTAMP})"
+          else
+            # Fallback for legacy setups
+            CURRENT_VERSION="1.2.60"
+            CURRENT_TIMESTAMP="20250930"
+            echo "Using fallback version: ${CURRENT_VERSION}"
+          fi
+
           # Update query strings in index.html to current version for cache busting
-          sed -i -E "s|(\./)?assets/css/styles\.css\?v=[^'\"]*|./assets/css/styles.css?v=${CURRENT_VERSION}|" index.html
-          sed -i -E "s|(\./)?assets/js/app\.js\?v=[^'\"]*|./assets/js/app.js?v=${CURRENT_VERSION}|" index.html
+          sed -i -E "s|(\./)?assets/css/styles\.css(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/css/styles.css?v=${CURRENT_VERSION}\&t=${CURRENT_TIMESTAMP}|" index.html
+          sed -i -E "s|(\./)?assets/js/app\.js(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/js/app.js?v=${CURRENT_VERSION}\&t=${CURRENT_TIMESTAMP}|" index.html
 
       - name: Stamp Service Worker with build id (force update)
         run: |
@@ -66,10 +75,15 @@ jobs:
           set -euxo pipefail
           echo "HEAD=$(git rev-parse --short HEAD)"
           echo "Files at root:" && ls -la || true
-          APP_VERSION=$(sed -n "s/^const APP_VERSION = '\([^']*\)';/\1/p" assets/js/app.js || true)
-          SW_VERSION=$(sed -n "s/^const VERSION = 'wb-\([^']*\)';/\1/p" service-worker.js || true)
-          echo "Parsed versions: UI=$APP_VERSION SW=$SW_VERSION"
-          echo "Manual versioning preserved - versions should match"
+          if [ -f version.json ]; then
+            CENTRALIZED_VERSION=$(node -e "console.log(JSON.parse(require('fs').readFileSync('version.json')).version)" || echo "unknown")
+            echo "Centralized version: $CENTRALIZED_VERSION"
+          else
+            echo "No version.json found - using legacy version detection"
+          fi
+          SW_VERSION=$(sed -n "s/^let VERSION = 'wb-\([^']*\)';/\1/p" service-worker.js || echo "unknown")
+          echo "Service Worker version: $SW_VERSION"
+          echo "Centralized versioning system active"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -78,7 +92,7 @@ jobs:
         run: |
           rm -rf dist
           mkdir -p dist
-          cp -r index.html 404.html manifest.webmanifest service-worker.js assets dist/
+          cp -r index.html 404.html manifest.webmanifest service-worker.js version.json assets dist/
           if [ -f .nojekyll ]; then cp .nojekyll dist/.nojekyll; fi
           echo "Dist contents:" && find dist -maxdepth 2 -type f -printf "%p\n" 2>/dev/null || true
 
