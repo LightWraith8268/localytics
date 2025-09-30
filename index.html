@@ -28,6 +28,36 @@
         width: 0; /* WebKit */
         height: 0;
       }
+      /* Dark mode hover states for sidebar navigation */
+      .dark .hover\:bg-gray-50:hover {
+        background-color: var(--hover-bg) !important;
+      }
+      .dark .hover\:bg-gray-100:hover {
+        background-color: var(--hover-bg) !important;
+      }
+      /* Ensure sidebar background fills completely in dark mode */
+      .dark nav.app-card {
+        background-color: var(--card-bg) !important;
+      }
+      .dark nav .app-card {
+        background-color: var(--card-bg) !important;
+      }
+      /* Override any hardcoded white backgrounds in dark mode */
+      .dark .bg-white {
+        background-color: var(--card-bg) !important;
+      }
+      .dark .bg-gray-50 {
+        background-color: var(--hover-bg) !important;
+      }
+      /* Force sidebar background in dark mode with highest specificity */
+      .dark nav[class*="lg:w-64"],
+      .dark nav#mobileSidebar {
+        background-color: var(--card-bg) !important;
+      }
+      .dark nav[class*="lg:w-64"] > *,
+      .dark nav#mobileSidebar > * {
+        background-color: var(--card-bg) !important;
+      }
     </style>
   </head>
   <body class="overflow-x-hidden">
@@ -138,22 +168,23 @@
     </nav>
 
     <!-- Desktop Layout Container -->
-    <div class="lg:flex h-screen">
+    <div class="lg:flex h-screen overflow-hidden">
       <!-- Desktop Sidebar -->
-      <nav class="hidden lg:flex lg:flex-col lg:w-64 h-screen bg-white app-card border-r app-border">
-        <!-- Sidebar Header -->
-        <div class="flex items-center gap-3 p-6 border-b app-border flex-shrink-0">
+      <nav class="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 h-screen app-card border-r app-border">
+        <!-- Sidebar Header - Fixed -->
+        <div class="flex items-center gap-3 p-6 border-b app-border flex-shrink-0 app-card">
           <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
             <span class="text-white font-bold text-lg">L</span>
           </div>
           <div>
             <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-            <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.49</p>
+            <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.50</p>
           </div>
         </div>
 
-        <!-- Navigation Links - Scrollable -->
-        <div class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2">
+        <!-- Navigation Links - Scrollable Area -->
+        <div class="flex-1 overflow-y-auto sidebar-scroll app-card">
+          <div class="p-4 space-y-2">
             <!-- Data Management -->
             <a href="#/upload" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group">
               <span class="text-2xl group-hover:scale-110 transition-transform">📤</span>
@@ -208,10 +239,11 @@
               <span class="text-2xl group-hover:scale-110 transition-transform">⚙️</span>
               <span>Settings</span>
             </a>
+          </div>
         </div>
 
-        <!-- Dark Mode Toggle -->
-        <div class="p-4 border-t app-border flex-shrink-0">
+        <!-- Dark Mode Toggle - Fixed -->
+        <div class="p-4 border-t app-border flex-shrink-0 app-card">
           <button id="darkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
             <span class="text-xl group-hover:scale-110 transition-transform">🌙</span>
             <span>Toggle Dark Mode</span>
