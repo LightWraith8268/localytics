@@ -18,6 +18,17 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./assets/icons/icon.svg">
     <link rel="icon" href="data:,">
+    <style>
+      /* Hide scrollbar in sidebar navigation while maintaining scroll functionality */
+      .sidebar-scroll {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Internet Explorer 10+ */
+      }
+      .sidebar-scroll::-webkit-scrollbar {
+        width: 0; /* WebKit */
+        height: 0;
+      }
+    </style>
   </head>
   <body class="overflow-x-hidden">
     <!-- Mobile Header -->
@@ -129,21 +140,20 @@
     <!-- Desktop Layout Container -->
     <div class="lg:flex h-screen">
       <!-- Desktop Sidebar -->
-      <nav class="hidden lg:flex lg:flex-col lg:w-64 h-full app-card border-r app-border">
-        <div class="flex flex-col h-full">
-          <!-- Sidebar Header -->
-          <div class="flex items-center gap-3 p-6 border-b app-border">
-            <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
-              <span class="text-white font-bold text-lg">L</span>
-            </div>
-            <div>
-              <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.47</p>
-            </div>
+      <nav class="hidden lg:flex lg:flex-col lg:w-64 h-screen app-card border-r app-border">
+        <!-- Sidebar Header -->
+        <div class="flex items-center gap-3 p-6 border-b app-border flex-shrink-0">
+          <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+            <span class="text-white font-bold text-lg">L</span>
           </div>
+          <div>
+            <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
+            <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.48</p>
+          </div>
+        </div>
 
-          <!-- Navigation Links -->
-          <div class="flex-1 p-4 space-y-2">
+        <!-- Navigation Links - Scrollable -->
+        <div class="flex-1 overflow-y-auto sidebar-scroll p-4 space-y-2">
             <!-- Data Management -->
             <a href="#/upload" class="nav-link flex items-center gap-4 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-blue-50 hover:text-blue-700 group">
               <span class="text-2xl group-hover:scale-110 transition-transform">📤</span>
@@ -198,15 +208,14 @@
               <span class="text-2xl group-hover:scale-110 transition-transform">⚙️</span>
               <span>Settings</span>
             </a>
-          </div>
+        </div>
 
-          <!-- Dark Mode Toggle -->
-          <div class="p-4 border-t app-border">
-            <button id="darkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
-              <span class="text-xl group-hover:scale-110 transition-transform">🌙</span>
-              <span>Toggle Dark Mode</span>
-            </button>
-          </div>
+        <!-- Dark Mode Toggle -->
+        <div class="p-4 border-t app-border flex-shrink-0">
+          <button id="darkModeToggle" class="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 group">
+            <span class="text-xl group-hover:scale-110 transition-transform">🌙</span>
+            <span>Toggle Dark Mode</span>
+          </button>
         </div>
       </nav>
 
@@ -1173,7 +1182,7 @@
     </script>
 
     <!-- App scripts -->
-    <script type="module" src="./assets/js/app.js?v=1.2.45&t=20250929"></script>
+    <script type="module" src="./assets/js/app.js?v=1.2.48&t=20250929"></script>
     <!-- Workbox update flow -->
     <div id="sw-update" class="hidden fixed top-4 right-4 app-card border app-border rounded-md shadow-lg px-3 py-2 z-50">
       <div class="flex items-center gap-3">
