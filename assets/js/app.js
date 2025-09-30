@@ -2983,10 +2983,13 @@ function renderSortableClickableTable(container, columns, rows, options = {}) {
       if (options.clickableColumns && options.clickableColumns[column]) {
         const span = document.createElement('span');
         span.className = 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline';
-        span.textContent = formattedValue;
+        span.innerHTML = formattedValue;  // Use innerHTML for formatted display
         span.addEventListener('click', () => {
+          console.log('Click detected on:', column, 'value:', value, 'function:', options.clickableColumns[column]);
           if (typeof window[options.clickableColumns[column]] === 'function') {
-            window[options.clickableColumns[column]](value);
+            window[options.clickableColumns[column]](value);  // Pass original value
+          } else {
+            console.error('Function not found:', options.clickableColumns[column]);
           }
         });
         td.appendChild(span);
