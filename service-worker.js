@@ -2,23 +2,9 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.53-20250930';
-const PRECACHE = [
-  './index.html',
-  './404.html',
-  './manifest.webmanifest',
-  './assets/icons/icon.svg',
-  './assets/js/app.js',
-  './assets/js/csv.js',
-  './assets/js/reports.js',
-  './assets/js/ui.js',
-  './assets/js/storage.js',
-  './assets/js/firebase-init.js',
-  './assets/js/sample-data.js'
-].map(url => ({ url, revision: VERSION }));
+const VERSION = 'wb-1.2.54-20250930';
 
-// Precache core assets
-workbox.precaching.precacheAndRoute(PRECACHE);
+// No precaching - always fetch fresh content from network
 
 // Ensure the SW file itself is never cached by the SW (always fetch network)
 workbox.routing.registerRoute(
@@ -26,10 +12,18 @@ workbox.routing.registerRoute(
   new workbox.strategies.NetworkOnly()
 );
 
-// Runtime caching for same-origin scripts/styles/images (excluding the SW file)
+// Always fetch latest version of app assets (network-first)
 workbox.routing.registerRoute(
   ({request, url}) => url.origin === self.location.origin && !url.pathname.endsWith('service-worker.js') && ['script','style','image','font'].includes(request.destination),
-  new workbox.strategies.StaleWhileRevalidate({ cacheName: 'assets' })
+  new workbox.strategies.NetworkFirst({
+    cacheName: 'assets',
+    networkTimeoutSeconds: 5,
+    plugins: [
+      new workbox.cacheableResponse.CacheableResponsePlugin({
+        statuses: [0, 200]
+      })
+    ]
+  })
 );
 
 // Runtime caching for cross-origin (CDNs): network-first with fallback
@@ -50,16 +44,18 @@ workbox.routing.registerRoute(
   })
 );
 
-// Navigation requests: try network first, fall back to cached index
+// Navigation requests: always try network first for latest content
 workbox.routing.registerRoute(
   ({request}) => request.mode === 'navigate',
-  async ({event}) => {
-    try {
-      return await workbox.strategies.networkFirst({ cacheName: 'pages' }).handle({event});
-    } catch (e) {
-      return await caches.match('./index.html');
-    }
-  }
+  new workbox.strategies.NetworkFirst({
+    cacheName: 'pages',
+    networkTimeoutSeconds: 10,
+    plugins: [
+      new workbox.cacheableResponse.CacheableResponsePlugin({
+        statuses: [0, 200]
+      })
+    ]
+  })
 );
 
 // Allow the page to trigger skipWaiting (used by update button)
