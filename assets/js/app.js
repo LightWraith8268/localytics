@@ -2312,11 +2312,6 @@ function formatPercent(num) {
   return `${(Number(num) || 0).toFixed(2)}%`;
 }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.textContent = text || '';
-  return div.innerHTML;
-}
 
 // Client and Order Detail Modal Functions
 function showClientDetails(clientName) {
