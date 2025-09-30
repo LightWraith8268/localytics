@@ -1472,6 +1472,8 @@ function renderClientTrackingView() {
     </div>
   `).join('');
 
+  console.log('Rendering client table with clickable columns:', { client: 'showClientDetails' });
+
   renderSortableClickableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
     client: c.label || 'Unassigned',
     orders: c.orders,
@@ -1486,6 +1488,8 @@ function renderClientTrackingView() {
       client: 'showClientDetails'  // Make client column clickable
     }
   });
+
+  console.log('Client table rendered successfully');
 }
 
 function renderStaffTrackingView() {
@@ -2518,6 +2522,7 @@ function showClientDetails(clientName) {
   if (!clientTransactions.length) {
     content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
     title.textContent = `Client Details: ${clientName}`;
+    console.log('Showing modal for no transactions');
     modal.classList.remove('hidden');
     return;
   }
@@ -2628,7 +2633,9 @@ function showClientDetails(clientName) {
 
   content.innerHTML = summaryHtml + tableHtml;
   title.textContent = `Client Details: ${clientName}`;
+  console.log('About to show modal, current classes:', modal.className);
   modal.classList.remove('hidden');
+  console.log('Modal should now be visible, classes after:', modal.className);
 }
 
 function showOrderDetails(orderNumber) {
