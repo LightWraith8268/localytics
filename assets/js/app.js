@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.55';
+const APP_VERSION = '1.2.56';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const DEFAULT_FILTERS = {
@@ -1316,7 +1316,7 @@ function renderOrdersView() {
   const ordersWithDates = orders.map(order => ({
     ...order,
     latestDate: getLatestDate(order.order),
-    displayDate: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : '-',
+    displayDate: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : 'No Date',
     margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
   }));
 
