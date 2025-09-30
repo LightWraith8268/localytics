@@ -2,7 +2,7 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.56-20250930';
+const VERSION = 'wb-1.2.57-20250930';
 
 // No precaching - always fetch fresh content from network
 

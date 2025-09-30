@@ -504,8 +504,11 @@ window.addEventListener('DOMContentLoaded', () => {
       revMin: fRevMin?.value || '', revMax: fRevMax?.value || '', qtyMin: fQtyMin?.value || '', qtyMax: fQtyMax?.value || '',
       noZero: !!(fNoZero && fNoZero.checked)
     };
-    // Save filters for persistence
-    try { await saveUserSettings('filters', state.filters); } catch {}
+    // Save filters for persistence (both user settings and localStorage)
+    try {
+      await saveUserSettings('filters', state.filters);
+      saveFilterState('dashboard', state.filters);
+    } catch {}
     if (!state.rows.length || !state.mapping.date) return;
     const filtered = applyFilters(state.rows, state.mapping, state.filters);
     state.report = computeReport(filtered, state.mapping);
@@ -527,8 +530,11 @@ window.addEventListener('DOMContentLoaded', () => {
     if (fQtyMax) fQtyMax.value = '';
     if (fNoZero) fNoZero.checked = false;
     state.filters = { ...DEFAULT_FILTERS };
-    // Save cleared filters for persistence
-    try { await saveUserSettings('filters', state.filters); } catch {}
+    // Save cleared filters for persistence (both user settings and localStorage)
+    try {
+      await saveUserSettings('filters', state.filters);
+      saveFilterState('dashboard', state.filters);
+    } catch {}
     if (!state.rows.length || !state.mapping.date) return;
     state.filtered = state.rows;
     state.report = computeReport(state.rows, state.mapping);
@@ -1260,11 +1266,54 @@ function renderReport() {
   renderItemTrackingView();
 }
 
+// Filter and search state persistence functions
+function saveFilterState(pageKey, filters) {
+  try {
+    localStorage.setItem(`filters_${pageKey}`, JSON.stringify(filters));
+  } catch {}
+}
+
+function loadFilterState(pageKey) {
+  try {
+    const saved = localStorage.getItem(`filters_${pageKey}`);
+    return saved ? JSON.parse(saved) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveSearchState(pageKey, searchTerm) {
+  try {
+    localStorage.setItem(`search_${pageKey}`, searchTerm);
+  } catch {}
+}
+
+function loadSearchState(pageKey) {
+  try {
+    return localStorage.getItem(`search_${pageKey}`) || '';
+  } catch {
+    return '';
+  }
+}
+
 function renderOrdersView() {
   const summaryEl = qs('ordersSummary');
   const tableEl = qs('ordersTrackingTable');
   const searchInput = qs('ordersSearch');
   if (!summaryEl || !tableEl) return;
+
+  // Restore search state and add persistence
+  if (searchInput) {
+    const savedSearch = loadSearchState('orders');
+    if (savedSearch && !searchInput.value) {
+      searchInput.value = savedSearch;
+    }
+
+    // Save search state on input
+    searchInput.addEventListener('input', () => {
+      saveSearchState('orders', searchInput.value);
+    });
+  }
 
   if (!state.report || !state.byOrder || !state.byOrder.length) {
     summaryEl.textContent = state.report ? 'No orders available for the current filters.' : 'Upload data to view orders.';
@@ -1333,7 +1382,7 @@ function renderOrdersView() {
     : `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
   summaryEl.textContent = summaryText;
 
-  renderClickableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
+  renderSortableClickableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
     order: order.order,
     date: order.displayDate,
     client: order.client || 'Unassigned',
@@ -1342,8 +1391,11 @@ function renderOrdersView() {
     profit: order.profit,
     margin: order.margin
   })), {
-    order: 'showOrderDetails',  // Make order column clickable
-    client: 'showClientDetails' // Make client column clickable
+    defaultSort: { column: 'date', direction: 'desc' },
+    clickableColumns: {
+      order: 'showOrderDetails',  // Make order column clickable
+      client: 'showClientDetails' // Make client column clickable
+    }
   });
 }
 
@@ -1361,10 +1413,22 @@ function renderClientTrackingView() {
     return;
   }
 
-  // Set up search event listener
+  // Restore search state from localStorage
+  if (searchInput && !searchInput.hasAttribute('data-state-restored')) {
+    searchInput.setAttribute('data-state-restored', 'true');
+    const savedState = loadSearchState('clients');
+    if (savedState && savedState.search) {
+      searchInput.value = savedState.search;
+    }
+  }
+
+  // Set up search event listener with state persistence
   if (searchInput && !searchInput.hasAttribute('data-listener')) {
     searchInput.setAttribute('data-listener', 'true');
-    searchInput.addEventListener('input', () => renderClientTrackingView());
+    searchInput.addEventListener('input', () => {
+      saveSearchState('clients', { search: searchInput.value });
+      renderClientTrackingView();
+    });
   }
 
   // Filter clients based on search term
@@ -1396,7 +1460,7 @@ function renderClientTrackingView() {
     </div>
   `).join('');
 
-  renderClickableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
+  renderSortableClickableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
     client: c.label || 'Unassigned',
     orders: c.orders,
     quantity: c.quantity,
@@ -1405,7 +1469,10 @@ function renderClientTrackingView() {
     profit: c.profit,
     margin: c.margin
   })), {
-    client: 'showClientDetails'  // Make client column clickable
+    defaultSort: { column: 'revenue', direction: 'desc' },
+    clickableColumns: {
+      client: 'showClientDetails'  // Make client column clickable
+    }
   });
 }
 
@@ -1459,10 +1526,22 @@ function renderItemTrackingView() {
     return;
   }
 
-  // Set up search event listener
+  // Restore search state from localStorage
+  if (searchInput && !searchInput.hasAttribute('data-state-restored')) {
+    searchInput.setAttribute('data-state-restored', 'true');
+    const savedState = loadSearchState('items');
+    if (savedState && savedState.search) {
+      searchInput.value = savedState.search;
+    }
+  }
+
+  // Set up search event listener with state persistence
   if (searchInput && !searchInput.hasAttribute('data-listener')) {
     searchInput.setAttribute('data-listener', 'true');
-    searchInput.addEventListener('input', () => renderItemTrackingView());
+    searchInput.addEventListener('input', () => {
+      saveSearchState('items', { search: searchInput.value });
+      renderItemTrackingView();
+    });
   }
 
   // Filter items based on search term
@@ -1579,7 +1658,14 @@ function applyFilters(rows, mapping, filters) {
 }
 
 function restoreFilterUI() {
-  const fs = state.filters;
+  // Try to load from localStorage first (more recent state)
+  const localFilters = loadFilterState('dashboard');
+  const fs = localFilters || state.filters;
+
+  // Update state.filters if we loaded from localStorage
+  if (localFilters) {
+    state.filters = { ...state.filters, ...localFilters };
+  }
   const st = qs('filterStart'); if (st && fs.start) st.value = fs.start;
   const en = qs('filterEnd'); if (en && fs.end) en.value = fs.end;
   const it = qs('filterItem'); if (it && fs.item) it.value = fs.item;
@@ -2672,6 +2758,139 @@ function renderClickableTable(container, columns, rows, clickableColumns = {}) {
   table.appendChild(thead);
   table.appendChild(tbody);
   container.appendChild(table);
+}
+
+// Enhanced table rendering with both sorting and clickable functionality
+function renderSortableClickableTable(container, columns, rows, options = {}) {
+  if (!container) {
+    console.warn('renderSortableClickableTable: container element is null');
+    return;
+  }
+
+  const containerId = container.id || 'table_' + Math.random().toString(36).substr(2, 9);
+  if (!container.id) container.id = containerId;
+
+  // State management for sorting with persistence
+  const storageKey = `tableSort_${containerId}`;
+  let sortState = container._sortState;
+
+  // Try to restore from localStorage first
+  if (!sortState) {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      sortState = saved ? JSON.parse(saved) : { column: null, direction: 'asc' };
+    } catch {
+      sortState = { column: null, direction: 'asc' };
+    }
+  }
+
+  container._sortState = sortState;
+
+  // Apply default sorting if specified and no saved state
+  if (options.defaultSort && !sortState.column) {
+    sortState.column = options.defaultSort.column;
+    sortState.direction = options.defaultSort.direction || 'desc';
+  }
+
+  // Sort rows if a column is selected
+  let sortedRows = [...rows];
+  if (sortState.column) {
+    sortedRows.sort((a, b) => {
+      let aVal = a[sortState.column];
+      let bVal = b[sortState.column];
+
+      // Handle different data types
+      if (isNumeric(aVal) && isNumeric(bVal)) {
+        aVal = Number(aVal);
+        bVal = Number(bVal);
+      } else {
+        aVal = String(aVal || '').toLowerCase();
+        bVal = String(bVal || '').toLowerCase();
+      }
+
+      let result = 0;
+      if (aVal < bVal) result = -1;
+      else if (aVal > bVal) result = 1;
+
+      return sortState.direction === 'desc' ? -result : result;
+    });
+  }
+
+  container.innerHTML = '';
+
+  // Create table with sortable headers
+  const table = document.createElement('table');
+  table.className = 'w-full text-sm';
+
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  headerRow.className = 'app-card';
+
+  columns.forEach(column => {
+    const th = document.createElement('th');
+    th.className = 'text-left px-3 py-2 font-medium cursor-pointer hover:bg-gray-50 select-none';
+
+    const isCurrentSort = sortState.column === column;
+    const sortIcon = isCurrentSort
+      ? (sortState.direction === 'asc' ? '↑' : '↓')
+      : '↕';
+
+    th.innerHTML = `${escapeHtml(column)} <span class="text-gray-400 text-xs">${sortIcon}</span>`;
+
+    th.addEventListener('click', () => {
+      if (sortState.column === column) {
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.column = column;
+        sortState.direction = 'asc';
+      }
+
+      // Save sort state to localStorage
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(sortState));
+      } catch {}
+
+      renderSortableClickableTable(container, columns, rows, options);
+    });
+
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  // Create body with clickable cells
+  const tbody = document.createElement('tbody');
+  sortedRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-t hover:bg-gray-50';
+
+    columns.forEach(column => {
+      const td = document.createElement('td');
+      td.className = 'px-3 py-2';
+
+      const value = row[column];
+      const formattedValue = formatTableCell(column, value);
+
+      // Check if this column should be clickable
+      if (options.clickableColumns && options.clickableColumns[column]) {
+        td.innerHTML = `<span class="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline" onclick="${options.clickableColumns[column]}('${escapeHtml(value)}')">${formattedValue}</span>`;
+      } else {
+        td.innerHTML = formattedValue;
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+// Helper function to check if value is numeric (copied from ui.js)
+function isNumeric(v) {
+  return v !== null && v !== '' && !Array.isArray(v) && !isNaN(v);
 }
 
 // Enhanced table cell formatting with proper number formatting
