@@ -2366,19 +2366,51 @@ function renderTrendsCharts() {
 }
 
 function renderAnalyticsCharts() {
-  if (!state.report) return;
+  console.log('renderAnalyticsCharts called', { hasReport: !!state.report, reportKeys: state.report ? Object.keys(state.report) : [] });
+
+  if (!state.report) {
+    console.warn('No state.report available for analytics');
+    return;
+  }
+
+  // Ensure aggregated data is available by regenerating it if needed
+  if (!state.byClient || !state.byStaff || !state.byCategory) {
+    console.log('Regenerating aggregated data for analytics');
+    const base = state.filtered || state.rows;
+    state.byClient = aggregateByField(base, r => r.__client && r.__client !== 'undefined' ? r.__client : '');
+    state.byStaff = aggregateByField(base, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
+    state.byCategory = aggregateByField(base, r => r.__category && r.__category !== 'undefined' ? r.__category : '');
+    state.byOrder = aggregateByOrder(base);
+    console.log('Analytics data generated:', {
+      clientCount: state.byClient?.length || 0,
+      staffCount: state.byStaff?.length || 0,
+      categoryCount: state.byCategory?.length || 0
+    });
+  }
 
   // Top Rankings
   const topItems = state.report.byItem.slice(0, 10);
   const topClients = state.byClient ? state.byClient.slice(0, 10) : [];
 
+  console.log('Rendering analytics charts:', { topItemsCount: topItems.length, topClientsCount: topClients.length });
+
   if (state.chartTopItems) state.chartTopItems.destroy();
   if (state.chartTopClients) state.chartTopClients.destroy();
 
-  state.chartTopItems = makeBarChart(document.getElementById('analytics-chart-top-items'),
-    topItems.map(x => x.item), topItems.map(x => x.revenue), 'Top Items by Revenue');
-  state.chartTopClients = makeBarChart(document.getElementById('analytics-chart-top-clients'),
-    topClients.map(x => x.label), topClients.map(x => x.revenue), 'Top Clients by Revenue');
+  const topItemsCanvas = document.getElementById('analytics-chart-top-items');
+  const topClientsCanvas = document.getElementById('analytics-chart-top-clients');
+
+  console.log('Canvas elements:', { topItemsCanvas: !!topItemsCanvas, topClientsCanvas: !!topClientsCanvas });
+
+  if (topItemsCanvas && topItems.length > 0) {
+    state.chartTopItems = makeBarChart(topItemsCanvas,
+      topItems.map(x => x.item), topItems.map(x => x.revenue), 'Top Items by Revenue');
+  }
+
+  if (topClientsCanvas && topClients.length > 0) {
+    state.chartTopClients = makeBarChart(topClientsCanvas,
+      topClients.map(x => x.label), topClients.map(x => x.revenue), 'Top Clients by Revenue');
+  }
 
   // Profitability Analysis
   renderProfitabilityCharts();
@@ -2442,7 +2474,34 @@ function renderProfitabilityCharts() {
 }
 
 function renderSegmentAnalysisCharts() {
-  if (!state.byCategory || !state.byCategory.length) return;
+  if (!state.byCategory || !state.byCategory.length) {
+    // If no category data, show a placeholder or message
+    const categoryCanvas = document.getElementById('analytics-chart-category-share');
+    if (categoryCanvas) {
+      const ctx = categoryCanvas.getContext('2d');
+      if (state.chartCatShare) state.chartCatShare.destroy();
+      state.chartCatShare = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: ['No Category Data'],
+          datasets: [{
+            data: [1],
+            backgroundColor: ['#E5E7EB'],
+            borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            title: { display: true, text: 'Category Share - No Data Available' },
+            legend: { display: false }
+          }
+        }
+      });
+    }
+    return;
+  }
 
   const catLabels = state.byCategory.map(x => x.label);
   const catData = state.byCategory.map(x => x.revenue);
