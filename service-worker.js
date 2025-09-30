@@ -2,7 +2,7 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.50-20250929';
+const VERSION = 'wb-1.2.51-20250929';
 const PRECACHE = [
   './index.html',
   './404.html',

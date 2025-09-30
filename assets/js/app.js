@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.50';
+const APP_VERSION = '1.2.51';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const DEFAULT_FILTERS = {
@@ -1068,7 +1068,26 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 function renderDashboard() {
-  renderReport(); // Dashboard shows the main report view
+  // Dashboard shows ALL parsed data (unfiltered), not filtered data
+  if (!state.rows || !state.rows.length) return;
+
+  // Generate report from all rows for dashboard view
+  const dashboardReport = computeReport(state.rows, state.mapping);
+
+  // Temporarily store the current report and filtered data
+  const originalReport = state.report;
+  const originalFiltered = state.filtered;
+
+  // Set dashboard data
+  state.report = dashboardReport;
+  state.filtered = state.rows; // Use all rows instead of filtered
+
+  // Render with all data
+  renderReport();
+
+  // Restore original data (for other views that may use filtered data)
+  state.report = originalReport;
+  state.filtered = originalFiltered;
 }
 
 function renderReport() {
