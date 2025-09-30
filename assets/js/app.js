@@ -155,8 +155,8 @@ window.addEventListener('DOMContentLoaded', () => {
     loadUserSettingsAfterAuth();
   });
 
-  qs('btnSignIn').addEventListener('click', signInWithGoogle);
-  qs('btnSignOut').addEventListener('click', signOutUser);
+  qs('btnSignIn')?.addEventListener('click', signInWithGoogle);
+  qs('btnSignOut')?.addEventListener('click', signOutUser);
 
   // Note: CSV data and demo state now loaded in loadUserSettingsAfterAuth() after authentication
 
@@ -398,7 +398,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  qs('btnParse').addEventListener('click', async () => {
+  qs('btnParse')?.addEventListener('click', async () => {
     const files = fileInput.files;
     if (!files || !files.length) { alert('Choose at least one CSV.'); return; }
     // Read full files
@@ -495,7 +495,9 @@ window.addEventListener('DOMContentLoaded', () => {
   const st = qs('filterStart'); const en = qs('filterEnd'); const it = qs('filterItem');
   const fClient = qs('filterClient'); const fStaff = qs('filterStaff'); const fOrder = qs('filterOrder'); const fCat = qs('filterCategory');
   const fRevMin = qs('filterRevMin'); const fRevMax = qs('filterRevMax'); const fQtyMin = qs('filterQtyMin'); const fQtyMax = qs('filterQtyMax'); const fNoZero = qs('filterNoZero');
-  qs('btnApplyFilters').addEventListener('click', async () => {
+  const btnApplyFilters = qs('btnApplyFilters');
+  if (btnApplyFilters) {
+    btnApplyFilters.addEventListener('click', async () => {
     state.filters = {
       start: st.value, end: en.value, item: it.value,
       client: fClient?.value || '', staff: fStaff?.value || '', order: fOrder?.value || '', category: fCat?.value || '',
@@ -509,7 +511,11 @@ window.addEventListener('DOMContentLoaded', () => {
     state.report = computeReport(filtered, state.mapping);
     renderReport();
   });
-  qs('btnClearFilters').addEventListener('click', async () => {
+  }
+
+  const btnClearFilters = qs('btnClearFilters');
+  if (btnClearFilters) {
+    btnClearFilters.addEventListener('click', async () => {
     st.value = en.value = it.value = '';
     if (fClient) fClient.value = '';
     if (fStaff) fStaff.value = '';
@@ -528,7 +534,12 @@ window.addEventListener('DOMContentLoaded', () => {
     state.report = computeReport(state.rows, state.mapping);
     renderReport();
   });
-  qs('btnExportExcel').addEventListener('click', () => exportExcel(state.report));
+  }
+
+  const btnExportExcel = qs('btnExportExcel');
+  if (btnExportExcel) {
+    btnExportExcel.addEventListener('click', () => exportExcel(state.report));
+  }
   function exportExcel(report){
     if (!report) return;
     // Build extra sheets
