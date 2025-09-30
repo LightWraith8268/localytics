@@ -971,9 +971,27 @@ window.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('beforeprint', freezeChartsForPrint);
   window.addEventListener('afterprint', restoreChartsAfterPrint);
   // Category mapping UI
-  qs('btnOpenCategoryMapModal')?.addEventListener('click', openCategoryMapModal);
-  qs('btnCategoryModalClose')?.addEventListener('click', closeCategoryMapModal);
-  qs('categoryMapModalBackdrop')?.addEventListener('click', closeCategoryMapModal);
+  const btnOpenCategoryMapModal = qs('btnOpenCategoryMapModal');
+  const btnCategoryModalClose = qs('btnCategoryModalClose');
+  const categoryMapModalBackdrop = qs('categoryMapModalBackdrop');
+
+  if (btnOpenCategoryMapModal) {
+    btnOpenCategoryMapModal.addEventListener('click', openCategoryMapModal);
+  } else {
+    console.warn('[app] btnOpenCategoryMapModal not found in DOM');
+  }
+
+  if (btnCategoryModalClose) {
+    btnCategoryModalClose.addEventListener('click', closeCategoryMapModal);
+  } else {
+    console.warn('[app] btnCategoryModalClose not found in DOM');
+  }
+
+  if (categoryMapModalBackdrop) {
+    categoryMapModalBackdrop.addEventListener('click', closeCategoryMapModal);
+  } else {
+    console.warn('[app] categoryMapModalBackdrop not found in DOM');
+  }
 
   document.addEventListener('keydown', (evt) => {
     if (evt.key === 'Escape') {
@@ -984,12 +1002,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  qs('btnCategoryAddRow')?.addEventListener('click', () => {
-    const editor = document.getElementById('categoryMapList');
-    if (!editor) return;
-    appendCategoryMapRow(editor, '', '');
-    editor.scrollTop = editor.scrollHeight;
-  });
+  const btnCategoryAddRow = qs('btnCategoryAddRow');
+  if (btnCategoryAddRow) {
+    btnCategoryAddRow.addEventListener('click', () => {
+      const editor = document.getElementById('categoryMapList');
+      if (!editor) return;
+      appendCategoryMapRow(editor, '', '');
+      editor.scrollTop = editor.scrollHeight;
+    });
+  } else {
+    console.warn('[app] btnCategoryAddRow not found in DOM');
+  }
 
   qs('btnLoadItemsMapping')?.addEventListener('click', () => {
     const current = collectCategoryMapDraft('categoryMapList');
@@ -1060,35 +1083,50 @@ window.addEventListener('DOMContentLoaded', () => {
     if (textarea) textarea.value = '';
   });
 
-  qs('btnSaveCategoryMap')?.addEventListener('click', async () => {
-    const map = collectCategoryMapDraft('categoryMapList', { includeEmpty: false });
-    state.categoryMap = map;
-    await saveUserSettings('categoryMap', map);
-    await reapplyCategoryMap();
-    updateCategoryMapSummary();
-    closeCategoryMapModal();
-    alert('Category mapping saved.');
-  });
+  const btnSaveCategoryMap = qs('btnSaveCategoryMap');
+  if (btnSaveCategoryMap) {
+    btnSaveCategoryMap.addEventListener('click', async () => {
+      const map = collectCategoryMapDraft('categoryMapList', { includeEmpty: false });
+      state.categoryMap = map;
+      await saveUserSettings('categoryMap', map);
+      await reapplyCategoryMap();
+      updateCategoryMapSummary();
+      closeCategoryMapModal();
+      alert('Category mapping saved.');
+    });
+  } else {
+    console.warn('[app] btnSaveCategoryMap not found in DOM');
+  }
 
-  qs('btnClearCategoryMap')?.addEventListener('click', async () => {
-    if (!window.confirm('Clear all category mappings?')) return;
-    categoryMapDraft = {};
-    setCategoryMapDraft({});
-    state.categoryMap = {};
-    await saveUserSettings('categoryMap', {});
-    await reapplyCategoryMap();
-    updateCategoryMapSummary();
-  });
+  const btnClearCategoryMap = qs('btnClearCategoryMap');
+  if (btnClearCategoryMap) {
+    btnClearCategoryMap.addEventListener('click', async () => {
+      if (!window.confirm('Clear all category mappings?')) return;
+      categoryMapDraft = {};
+      setCategoryMapDraft({});
+      state.categoryMap = {};
+      await saveUserSettings('categoryMap', {});
+      await reapplyCategoryMap();
+      updateCategoryMapSummary();
+    });
+  } else {
+    console.warn('[app] btnClearCategoryMap not found in DOM');
+  }
 
-  qs('btnExportCategoryMapCsv')?.addEventListener('click', () => {
-    const entries = Object.entries(state.categoryMap || {});
-    if (!entries.length) {
-      alert('No category mappings to export.');
-      return;
-    }
-    const rows = entries.map(([item, category]) => ({ item, category }));
-    downloadCsv('category_mapping.csv', ['item','category'], rows);
-  });
+  const btnExportCategoryMapCsv = qs('btnExportCategoryMapCsv');
+  if (btnExportCategoryMapCsv) {
+    btnExportCategoryMapCsv.addEventListener('click', () => {
+      const entries = Object.entries(state.categoryMap || {});
+      if (!entries.length) {
+        alert('No category mappings to export.');
+        return;
+      }
+      const rows = entries.map(([item, category]) => ({ item, category }));
+      downloadCsv('category_mapping.csv', ['item','category'], rows);
+    });
+  } else {
+    console.warn('[app] btnExportCategoryMapCsv not found in DOM');
+  }
 
   // Initialize modals for client and order details
   initializeModals();
@@ -1144,35 +1182,12 @@ function renderReport() {
   // Additional aggregates (based on filtered rows)
   const base = state.filtered || state.rows;
 
-  // Debug staff data
-  console.log('[DEBUG] Staff column mapping:', state.mapping.staff);
-  console.log('[DEBUG] Current filters:', state.filters);
-  console.log('[DEBUG] Total raw rows:', state.rows.length);
-  console.log('[DEBUG] Total filtered rows for aggregation:', base.length);
-  console.log('[DEBUG] Are filters applied?', base !== state.rows);
-
-  const allStaffValues = state.rows.map(r => r.__staff);
-  const uniqueAllStaff = [...new Set(allStaffValues.filter(s => s && s !== 'undefined'))];
-  console.log('[DEBUG] All unique staff in raw data:', uniqueAllStaff);
-  console.log('[DEBUG] Raw staff counts:', allStaffValues.reduce((acc, staff) => {
-    acc[staff] = (acc[staff] || 0) + 1;
-    return acc;
-  }, {}));
-
-  const staffValues = base.map(r => r.__staff).filter(s => s && s !== 'undefined');
-  const uniqueStaff = [...new Set(staffValues)];
-  console.log('[DEBUG] Unique staff values in filtered data:', uniqueStaff);
-  console.log('[DEBUG] Staff value counts in filtered data:', staffValues.reduce((acc, staff) => {
-    acc[staff] = (acc[staff] || 0) + 1;
-    return acc;
-  }, {}));
+  // Staff aggregation uses filtered data
 
   state.byClient = aggregateByField(base, r => r.__client && r.__client !== 'undefined' ? r.__client : '');
   state.byStaff = aggregateByField(base, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
   state.byCategory = aggregateByField(base, r => r.__category && r.__category !== 'undefined' ? r.__category : '');
   state.byOrder = aggregateByOrder(base);
-
-  console.log('[DEBUG] Aggregated staff results:', state.byStaff);
 
   // Items data comes from the report
   state.byItem = state.report.byItem;
