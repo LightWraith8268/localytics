@@ -5,7 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.48';
+const APP_VERSION = '1.2.49';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const DEFAULT_FILTERS = {
@@ -639,7 +639,7 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   // Printing
-  qs('btnPrintReport').addEventListener('click', () => window.print());
+  qs('btnPrintReport').addEventListener('click', () => printCurrentView());
   qs('btnPrintAll').addEventListener('click', () => printAllViews());
 
   // Custom view
@@ -661,10 +661,10 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnBuildChart').addEventListener('click', () => {
     buildCustomChart({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, type: elType.value, topN: elTopN.value, stackCat: elStack?.checked });
   });
-  qs('btnPrintChart').addEventListener('click', () => window.print());
+  qs('btnPrintChart').addEventListener('click', () => printCurrentView());
   qs('btnBuildTable').addEventListener('click', () => buildCustomTable({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, topN: elTopN.value }));
   qs('btnExportCustomCsv').addEventListener('click', () => exportCustomCsv());
-  qs('btnPrintTable').addEventListener('click', () => window.print());
+  qs('btnPrintTable').addEventListener('click', () => printCurrentView());
 
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
@@ -741,7 +741,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }));
     exportExcelBook('orders.xlsx', report, { Orders: ordersData });
   });
-  qs('btnOrdersPrint')?.addEventListener('click', () => window.print());
+  qs('btnOrdersPrint')?.addEventListener('click', () => printCurrentView());
 
   // Clients page export/print
   qs('btnClientsExportCSV')?.addEventListener('click', () => {
@@ -771,7 +771,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }));
     exportExcelBook('clients.xlsx', report, { Clients: clientsData });
   });
-  qs('btnClientsPrint')?.addEventListener('click', () => window.print());
+  qs('btnClientsPrint')?.addEventListener('click', () => printCurrentView());
 
   // Staff page export/print
   qs('btnStaffExportCSV')?.addEventListener('click', () => {
@@ -801,7 +801,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }));
     exportExcelBook('staff.xlsx', report, { Staff: staffData });
   });
-  qs('btnStaffPrint')?.addEventListener('click', () => window.print());
+  qs('btnStaffPrint')?.addEventListener('click', () => printCurrentView());
 
   // Items page export/print
   qs('btnItemsExportCSV')?.addEventListener('click', () => {
@@ -829,7 +829,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }));
     exportExcelBook('items.xlsx', report, { Items: itemsData });
   });
-  qs('btnItemsPrint')?.addEventListener('click', () => window.print());
+  qs('btnItemsPrint')?.addEventListener('click', () => printCurrentView());
 
   // Note: Branding now loaded in loadUserSettingsAfterAuth() after authentication
   qs('btnSaveBrand').addEventListener('click', saveBranding);
@@ -1573,17 +1573,46 @@ async function saveLastMapping(mapping) {
   } catch {}
 }
 
-function printAllViews() {
-  const views = Array.from(document.querySelectorAll('.view'));
-  const prev = views.map(v => v.classList.contains('hidden'));
-  views.forEach(v => v.classList.remove('hidden'));
-  preparePrintCover();
+function printCurrentView() {
+  // Hide all navigation and non-essential elements for printing
+  const elementsToHide = document.querySelectorAll('.no-print, nav, header, .sidebar-scroll');
+  const originalDisplay = Array.from(elementsToHide).map(el => el.style.display);
+
+  // Hide elements
+  elementsToHide.forEach(el => el.style.display = 'none');
+
+  // Find the current active view (the one that's not hidden)
+  const currentView = document.querySelector('.view:not(.hidden)');
+
+  // If there's an active view, hide all other views temporarily
+  const allViews = document.querySelectorAll('.view');
+  const originalViewStates = Array.from(allViews).map(v => v.classList.contains('hidden'));
+
+  if (currentView) {
+    allViews.forEach(view => {
+      if (view !== currentView) {
+        view.style.display = 'none';
+      }
+    });
+  }
+
   const done = () => {
     window.removeEventListener('afterprint', done);
-    views.forEach((v,i) => { if (prev[i]) v.classList.add('hidden'); });
+    // Restore original display states
+    elementsToHide.forEach((el, i) => el.style.display = originalDisplay[i]);
+    allViews.forEach((view, i) => {
+      view.style.display = '';
+      if (originalViewStates[i]) view.classList.add('hidden');
+    });
   };
+
   window.addEventListener('afterprint', done);
   window.print();
+}
+
+function printAllViews() {
+  // This function now calls printCurrentView for consistency
+  printCurrentView();
 }
 
 function buildCustomChart(opts) {
