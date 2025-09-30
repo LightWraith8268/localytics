@@ -62,8 +62,8 @@ jobs:
           fi
 
           # Update query strings in index.html to current version for cache busting
-          sed -i -E "s|(\./)?assets/css/styles\.css(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/css/styles.css?v=${CURRENT_VERSION}\&t=${CURRENT_TIMESTAMP}|" index.html
-          sed -i -E "s|(\./)?assets/js/app\.js(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/js/app.js?v=${CURRENT_VERSION}\&t=${CURRENT_TIMESTAMP}|" index.html
+          sed -i -E "s|(\./)?assets/css/styles\.css(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/css/styles.css?v=${CURRENT_VERSION}&t=${CURRENT_TIMESTAMP}|g" index.html
+          sed -i -E "s|(\./)?assets/js/app\.js(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/js/app.js?v=${CURRENT_VERSION}&t=${CURRENT_TIMESTAMP}|g" index.html
 
       - name: Stamp Service Worker with build id (force update)
         run: |

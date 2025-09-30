@@ -1196,13 +1196,13 @@
           // Update CSS cache-bust
           const styleLink = document.getElementById('appStyles');
           if (styleLink) {
-            styleLink.href = './assets/css/styles.css?v=' + version + '&t=' + timestamp;
+            styleLink.href = 'assets/css/styles.css?v=' + version + '&t=' + timestamp;
           }
 
           // Update JS cache-bust
           const appScript = document.getElementById('appScript');
           if (appScript) {
-            appScript.src = './assets/js/app.js?v=' + version + '&t=' + timestamp;
+            appScript.src = 'assets/js/app.js?v=' + version + '&t=' + timestamp;
           }
         } catch (error) {
           console.warn('Failed to update cache-busting URLs:', error);

@@ -40,8 +40,8 @@ jobs:
           # Update centralized version.json
           echo "{ \"version\": \"${BUILD_VERSION}\", \"timestamp\": \"${BUILD_TIMESTAMP}\" }" > version.json
           # Update cache-busting in index.html
-          sed -i -E "s|(\./)?assets/css/styles\.css(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/css/styles.css?v=${BUILD_VERSION}\&t=${BUILD_TIMESTAMP}|" index.html
-          sed -i -E "s|(\./)?assets/js/app\.js(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/js/app.js?v=${BUILD_VERSION}\&t=${BUILD_TIMESTAMP}|" index.html
+          sed -i -E "s|(\./)?assets/css/styles\.css(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/css/styles.css?v=${BUILD_VERSION}&t=${BUILD_TIMESTAMP}|g" index.html
+          sed -i -E "s|(\./)?assets/js/app\.js(\?v=[^'\"&]*)?(&t=[^'\"]*)?|./assets/js/app.js?v=${BUILD_VERSION}&t=${BUILD_TIMESTAMP}|g" index.html
           echo "Updated to centralized version: ${BUILD_VERSION}"
 
       - name: Stamp SW with build id
