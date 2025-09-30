@@ -1143,10 +1143,31 @@ function renderReport() {
 
   // Additional aggregates (based on filtered rows)
   const base = state.filtered || state.rows;
+
+  // Debug staff data
+  console.log('[DEBUG] Staff column mapping:', state.mapping.staff);
+  console.log('[DEBUG] Total raw rows:', state.rows.length);
+  console.log('[DEBUG] Total filtered rows for aggregation:', base.length);
+  console.log('[DEBUG] Are filters applied?', base !== state.rows);
+
+  const allStaffValues = state.rows.map(r => r.__staff);
+  const uniqueAllStaff = [...new Set(allStaffValues.filter(s => s && s !== 'undefined'))];
+  console.log('[DEBUG] All unique staff in raw data:', uniqueAllStaff);
+
+  const staffValues = base.map(r => r.__staff).filter(s => s && s !== 'undefined');
+  const uniqueStaff = [...new Set(staffValues)];
+  console.log('[DEBUG] Unique staff values in filtered data:', uniqueStaff);
+  console.log('[DEBUG] Staff value counts in filtered data:', staffValues.reduce((acc, staff) => {
+    acc[staff] = (acc[staff] || 0) + 1;
+    return acc;
+  }, {}));
+
   state.byClient = aggregateByField(base, r => r.__client || '');
   state.byStaff = aggregateByField(base, r => r.__staff || '');
   state.byCategory = aggregateByField(base, r => r.__category || '');
   state.byOrder = aggregateByOrder(base);
+
+  console.log('[DEBUG] Aggregated staff results:', state.byStaff);
 
   // Items data comes from the report
   state.byItem = state.report.byItem;
