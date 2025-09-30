@@ -2824,7 +2824,15 @@ function renderClickableTable(container, columns, rows, clickableColumns = {}) {
 
       // Check if this column should be clickable
       if (clickableColumns[column]) {
-        td.innerHTML = `<span class="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline" onclick="${clickableColumns[column]}('${escapeHtml(value)}')">${formattedValue}</span>`;
+        const span = document.createElement('span');
+        span.className = 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline';
+        span.textContent = formattedValue;
+        span.addEventListener('click', () => {
+          if (typeof window[clickableColumns[column]] === 'function') {
+            window[clickableColumns[column]](value);
+          }
+        });
+        td.appendChild(span);
       } else {
         td.innerHTML = formattedValue;
       }
@@ -2960,7 +2968,15 @@ function renderSortableClickableTable(container, columns, rows, options = {}) {
 
       // Check if this column should be clickable
       if (options.clickableColumns && options.clickableColumns[column]) {
-        td.innerHTML = `<span class="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline" onclick="${options.clickableColumns[column]}('${escapeHtml(value)}')">${formattedValue}</span>`;
+        const span = document.createElement('span');
+        span.className = 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline';
+        span.textContent = formattedValue;
+        span.addEventListener('click', () => {
+          if (typeof window[options.clickableColumns[column]] === 'function') {
+            window[options.clickableColumns[column]](value);
+          }
+        });
+        td.appendChild(span);
       } else {
         td.innerHTML = formattedValue;
       }
