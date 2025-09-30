@@ -87,8 +87,17 @@ function showView(hash) {
   // Populate charts for trends and analytics views
   if (view === 'trends' && state.report) {
     renderTrendsCharts();
-  } else if (view === 'analytics' && state.report) {
-    renderAnalyticsCharts();
+  } else if (view === 'analytics') {
+    console.log('Analytics view accessed', { hasReport: !!state.report, hasRows: !!state.rows?.length });
+    if (!state.report && state.rows?.length) {
+      console.log('No report exists, generating one for analytics');
+      state.report = computeReport(state.rows, state.mapping);
+    }
+    if (state.report) {
+      renderAnalyticsCharts();
+    } else {
+      console.warn('Cannot render analytics: no report and no data');
+    }
   } else if (view === 'dashboard') {
     // Dashboard view (formerly reports)
     renderDashboard();
@@ -487,70 +496,11 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnRefreshHistory').addEventListener('click', loadHistory);
   loadHistory();
 
-  // Filters
-  const st = qs('filterStart'); const en = qs('filterEnd'); const it = qs('filterItem');
-  const fClient = qs('filterClient'); const fStaff = qs('filterStaff'); const fOrder = qs('filterOrder'); const fCat = qs('filterCategory');
-  const fRevMin = qs('filterRevMin'); const fRevMax = qs('filterRevMax'); const fQtyMin = qs('filterQtyMin'); const fQtyMax = qs('filterQtyMax'); const fNoZero = qs('filterNoZero');
+  // NOTE: Main dashboard filters removed - they don't exist in the HTML
+  // Individual pages have their own filter systems that work correctly
+  console.log('Main dashboard loaded without central filters (individual pages have their own filters)');
 
-  // Live filter function to apply changes immediately
-  async function applyLiveFilters() {
-    state.filters = {
-      start: st?.value || '', end: en?.value || '', item: it?.value || '',
-      client: fClient?.value || '', staff: fStaff?.value || '', order: fOrder?.value || '', category: fCat?.value || '',
-      revMin: fRevMin?.value || '', revMax: fRevMax?.value || '', qtyMin: fQtyMin?.value || '', qtyMax: fQtyMax?.value || '',
-      noZero: !!(fNoZero && fNoZero.checked)
-    };
-    // Save filters for persistence (both user settings and localStorage)
-    try {
-      await saveUserSettings('filters', state.filters);
-      saveFilterState('dashboard', state.filters);
-    } catch {}
-    if (!state.rows.length || !state.mapping.date) return;
-    const filtered = applyFilters(state.rows, state.mapping, state.filters);
-    state.report = computeReport(filtered, state.mapping);
-    renderReport();
-  }
-
-  // Add live filtering event listeners to all filter inputs
-  const filterInputs = [st, en, it, fClient, fStaff, fOrder, fCat, fRevMin, fRevMax, fQtyMin, fQtyMax];
-  filterInputs.forEach(input => {
-    if (input) {
-      // Use 'input' event for real-time typing, 'change' for dropdowns
-      input.addEventListener('input', applyLiveFilters);
-      input.addEventListener('change', applyLiveFilters);
-    }
-  });
-
-  // Special handling for checkbox
-  if (fNoZero) {
-    fNoZero.addEventListener('change', applyLiveFilters);
-  }
-
-  const btnApplyFilters = qs('btnApplyFilters');
-  if (btnApplyFilters) {
-    btnApplyFilters.addEventListener('click', applyLiveFilters);
-  }
-
-  const btnClearFilters = qs('btnClearFilters');
-  if (btnClearFilters) {
-    btnClearFilters.addEventListener('click', async () => {
-    if (st) st.value = '';
-    if (en) en.value = '';
-    if (it) it.value = '';
-    if (fClient) fClient.value = '';
-    if (fStaff) fStaff.value = '';
-    if (fOrder) fOrder.value = '';
-    if (fCat) fCat.value = '';
-    if (fRevMin) fRevMin.value = '';
-    if (fRevMax) fRevMax.value = '';
-    if (fQtyMin) fQtyMin.value = '';
-    if (fQtyMax) fQtyMax.value = '';
-    if (fNoZero) fNoZero.checked = false;
-
-    // Apply the cleared filters immediately using live filter function
-    await applyLiveFilters();
-  });
-  }
+  // NOTE: btnClearFilters and applyLiveFilters removed - no main dashboard filters exist
 
   const btnExportExcel = qs('btnExportExcel');
   if (btnExportExcel) {
@@ -3054,42 +3004,52 @@ function populateDropdownFilters() {
   const items = [...new Set(base.map(row => row[state.mapping.item]).filter(Boolean))].sort();
   const orders = [...new Set(base.map(row => row.__order).filter(Boolean))].sort();
 
-  // Populate client filter dropdown
-  const clientFilter = document.querySelector('select[name="client"]');
-  if (clientFilter) {
-    clientFilter.innerHTML = '<option value="">All Clients</option>' +
-      clients.map(client => `<option value="${escapeHtml(client)}">${escapeHtml(client)}</option>`).join('');
+  console.log('Populating dropdowns with data:', { clients: clients.length, staff: staff.length, categories: categories.length, items: items.length, orders: orders.length });
+
+  // Helper function to populate a dropdown
+  function populateDropdown(selector, options, defaultText) {
+    const dropdown = document.querySelector(selector) || document.getElementById(selector.replace('#', ''));
+    if (dropdown) {
+      dropdown.innerHTML = `<option value="">${defaultText}</option>` +
+        options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
+      console.log(`Populated ${selector} with ${options.length} options`);
+    } else {
+      console.warn(`Dropdown not found: ${selector}`);
+    }
   }
 
-  // Populate staff filter dropdown
-  const staffFilter = document.querySelector('select[name="staff"]');
-  if (staffFilter) {
-    staffFilter.innerHTML = '<option value="">All Staff</option>' +
-      staff.map(member => `<option value="${escapeHtml(member)}">${escapeHtml(member)}</option>`).join('');
-  }
+  // Populate dropdowns by name attribute (legacy)
+  populateDropdown('select[name="client"]', clients, 'All Clients');
+  populateDropdown('select[name="staff"]', staff, 'All Staff');
+  populateDropdown('select[name="category"]', categories, 'All Categories');
+  populateDropdown('select[name="item"]', items.slice(0, 100), 'All Items');
+  populateDropdown('select[name="order"]', orders.slice(0, 100), 'All Orders');
 
-  // Populate category filter dropdown
-  const categoryFilter = document.querySelector('select[name="category"]');
-  if (categoryFilter) {
-    categoryFilter.innerHTML = '<option value="">All Categories</option>' +
-      categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
-  }
+  // Populate page-specific dropdowns by ID
+  // Orders page filters
+  populateDropdown('#ordersFilterClient', clients, 'All Clients');
+  populateDropdown('#ordersFilterStaff', staff, 'All Staff');
+  populateDropdown('#ordersFilterItem', items.slice(0, 100), 'All Items');
+  populateDropdown('#ordersFilterOrder', orders.slice(0, 100), 'All Orders');
+  populateDropdown('#ordersFilterCategory', categories, 'All Categories');
 
-  // Populate item filter dropdown (limit to top 100 for performance)
-  const itemFilter = document.querySelector('select[name="item"]');
-  if (itemFilter) {
-    const topItems = items.slice(0, 100);
-    itemFilter.innerHTML = '<option value="">All Items</option>' +
-      topItems.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('');
-  }
+  // Clients page filters
+  populateDropdown('#clientsFilterStaff', staff, 'All Staff');
+  populateDropdown('#clientsFilterItem', items.slice(0, 100), 'All Items');
+  populateDropdown('#clientsFilterOrder', orders.slice(0, 100), 'All Orders');
+  populateDropdown('#clientsFilterCategory', categories, 'All Categories');
 
-  // Populate order filter dropdown (limit to top 100 for performance)
-  const orderFilter = document.querySelector('select[name="order"]');
-  if (orderFilter) {
-    const topOrders = orders.slice(0, 100);
-    orderFilter.innerHTML = '<option value="">All Orders</option>' +
-      topOrders.map(order => `<option value="${escapeHtml(order)}">${escapeHtml(order)}</option>`).join('');
-  }
+  // Staff page filters
+  populateDropdown('#staffFilterClient', clients, 'All Clients');
+  populateDropdown('#staffFilterItem', items.slice(0, 100), 'All Items');
+  populateDropdown('#staffFilterOrder', orders.slice(0, 100), 'All Orders');
+  populateDropdown('#staffFilterCategory', categories, 'All Categories');
+
+  // Items page filters
+  populateDropdown('#itemsFilterClient', clients, 'All Clients');
+  populateDropdown('#itemsFilterStaff', staff, 'All Staff');
+  populateDropdown('#itemsFilterOrder', orders.slice(0, 100), 'All Orders');
+  populateDropdown('#itemsFilterCategory', categories, 'All Categories');
 }
 
 // ================================

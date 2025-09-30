@@ -15,7 +15,8 @@
       "Bash(gh run:*)",
       "Bash(curl:*)",
       "WebFetch(domain:mxhub.github.io)",
-      "WebFetch(domain:lightwraith8268.github.io)"
+      "WebFetch(domain:lightwraith8268.github.io)",
+      "Bash(find:*)"
     ]
   },
   "outputStyle": "Explanatory"
