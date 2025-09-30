@@ -129,7 +129,7 @@
     <!-- Desktop Layout Container -->
     <div class="lg:flex h-screen">
       <!-- Desktop Sidebar -->
-      <nav class="hidden lg:flex lg:flex-col lg:w-64 app-card border-r app-border">
+      <nav class="hidden lg:flex lg:flex-col lg:w-64 h-full app-card border-r app-border">
         <div class="flex flex-col h-full">
           <!-- Sidebar Header -->
           <div class="flex items-center gap-3 p-6 border-b app-border">
@@ -138,7 +138,7 @@
             </div>
             <div>
               <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.46</p>
+              <p class="text-xs text-gray-500" id="sidebarVersion">v1.2.47</p>
             </div>
           </div>
 
@@ -407,130 +407,7 @@
               </details>
             </div>
           </div>
-          <details class="app-card border app-border rounded-md p-3 mt-6" data-accordion open>
-            <summary class="cursor-pointer select-none text-sm font-semibold">Trends & Charts</summary>
-            <!-- Core Time Series Section -->
-            <div class="mt-3">
-              <h4 class="text-base font-medium text-blue-800 mb-4 border-b border-blue-200 pb-2">📊 Core Time Series</h4>
-              <div>
-                <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
-                <div class="h-64"><canvas id="chart-revenue" data-zoom="1"></canvas></div>
-              </div>
-              <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
-                  <div class="h-64"><canvas id="chart-qty" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
-                  <div class="h-64"><canvas id="chart-orders" data-zoom="1"></canvas></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Top Rankings Section -->
-            <div class="mt-8">
-              <h4 class="text-base font-medium text-green-800 mb-4 border-b border-green-200 pb-2">🏆 Top Rankings</h4>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
-                  <div class="h-64"><canvas id="chart-top-items" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
-                  <div class="h-64"><canvas id="chart-top-clients" data-zoom="1"></canvas></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Profitability Analysis Section -->
-            <div class="mt-8">
-              <h4 class="text-base font-medium text-purple-800 mb-4 border-b border-purple-200 pb-2">💰 Profitability Analysis</h4>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
-                  <div class="h-64"><canvas id="chart-profit" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
-                  <div class="h-64"><canvas id="chart-margin" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
-                  <div class="h-64"><canvas id="chart-aov" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
-                  <div class="h-64"><canvas id="chart-ipo" data-zoom="1"></canvas></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Trend Analysis Section -->
-            <div class="mt-8">
-              <h4 class="text-base font-medium text-orange-800 mb-4 border-b border-orange-200 pb-2">📈 Trend Analysis</h4>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
-                  <div class="h-64"><canvas id="chart-rev-rolling" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
-                  <div class="h-64"><canvas id="chart-qty-rolling" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
-                  <div class="h-64"><canvas id="chart-rev-rolling-30" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
-                  <div class="h-64"><canvas id="chart-rev-mom" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
-                  <div class="h-64"><canvas id="chart-rev-yoy" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
-                  <div class="h-64"><canvas id="chart-cat-trend" data-zoom="1"></canvas></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Time Pattern Analysis Section -->
-            <div class="mt-8">
-              <h4 class="text-base font-medium text-indigo-800 mb-4 border-b border-indigo-200 pb-2">⏰ Time Pattern Analysis</h4>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
-                  <div class="h-64"><canvas id="chart-dow-revenue" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
-                  <div class="h-64"><canvas id="chart-hour-revenue" data-zoom="1"></canvas></div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Segment Analysis Section -->
-            <div class="mt-8">
-              <h4 class="text-base font-medium text-red-800 mb-4 border-b border-red-200 pb-2">👥 Segment Analysis</h4>
-              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Revenue by Client</h3>
-                  <div class="h-64"><canvas id="chart-by-client" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Revenue by Staff</h3>
-                  <div class="h-64"><canvas id="chart-by-staff" data-zoom="1"></canvas></div>
-                </div>
-                <div>
-                  <h3 class="text-sm font-semibold mb-2">Revenue by Order</h3>
-                  <div class="h-64"><canvas id="chart-by-order" data-zoom="1"></canvas></div>
-                </div>
-              </div>
-            </div>
-          </details>
+          </div>
         </div>
       </section>
 
@@ -542,9 +419,19 @@
               <h2 class="text-xl font-semibold text-gray-900">Orders Overview</h2>
               <p id="ordersSummary" class="text-sm text-gray-500">Upload data to view orders.</p>
             </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div class="relative inline-block w-full sm:w-auto">
+                <button id="ordersExportMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Export ▾</button>
+                <div id="ordersExportMenu" class="dropdown-menu hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20 min-w-40">
+                  <button id="btnOrdersExportCSV" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Orders CSV</button>
+                  <button id="btnOrdersExportExcel" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Excel File</button>
+                </div>
+              </div>
+              <button id="btnOrdersPrint" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print</button>
+            </div>
           </div>
 
-          <!-- Search and Filter Controls -->
+          <!-- Search Controls -->
           <div class="mt-4 flex flex-col sm:flex-row gap-3">
             <div class="flex-1">
               <input
@@ -554,17 +441,63 @@
                 class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
             </div>
-            <select id="ordersSort" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
-              <option value="date-desc">Newest First</option>
-              <option value="date-asc">Oldest First</option>
-              <option value="revenue-desc">Highest Revenue</option>
-              <option value="revenue-asc">Lowest Revenue</option>
-              <option value="order-asc">Order ID A-Z</option>
-              <option value="order-desc">Order ID Z-A</option>
-            </select>
           </div>
 
-          <div id="ordersList" class="mt-4 space-y-3"></div>
+          <!-- Advanced Filters (Collapsed) -->
+          <details class="mt-4 app-card border app-border rounded-lg p-4">
+            <summary class="cursor-pointer select-none text-sm font-medium text-gray-700 mb-2">🔍 Advanced Filters</summary>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" id="ordersFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" id="ordersFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Item contains</label>
+                <input type="text" id="ordersFilterItem" placeholder="e.g., Widget" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Client contains</label>
+                <input type="text" id="ordersFilterClient" placeholder="e.g., Acme" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Staff contains</label>
+                <input type="text" id="ordersFilterStaff" placeholder="e.g., Jane" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Order contains</label>
+                <input type="text" id="ordersFilterOrder" placeholder="e.g., 1234" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Min revenue</label>
+                <input type="number" id="ordersFilterRevMin" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Max revenue</label>
+                <input type="number" id="ordersFilterRevMax" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div class="flex items-end">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" id="ordersFilterNoZero" class="h-4 w-4"> Exclude zero revenue
+                </label>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-2">
+              <button id="ordersApplyFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Apply Filters</button>
+              <button id="ordersClearFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Clear</button>
+            </div>
+          </details>
+
+          <div class="mt-4">
+            <div id="ordersTrackingTable"></div>
+          </div>
         </div>
       </section>
 
@@ -576,7 +509,82 @@
               <h2 class="text-xl font-semibold text-gray-900">Client Tracking</h2>
               <p id="clientsSummary" class="text-sm text-gray-500">Upload data to view client performance.</p>
             </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div class="relative inline-block w-full sm:w-auto">
+                <button id="clientsExportMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Export ▾</button>
+                <div id="clientsExportMenu" class="dropdown-menu hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20 min-w-40">
+                  <button id="btnClientsExportCSV" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Clients CSV</button>
+                  <button id="btnClientsExportExcel" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Excel File</button>
+                </div>
+              </div>
+              <button id="btnClientsPrint" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print</button>
+            </div>
           </div>
+
+          <!-- Search Controls -->
+          <div class="mt-4 flex flex-col sm:flex-row gap-3">
+            <div class="flex-1">
+              <input
+                type="text"
+                id="clientsSearch"
+                placeholder="Search clients by name..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+            </div>
+          </div>
+
+          <!-- Advanced Filters (Collapsed) -->
+          <details class="mt-4 app-card border app-border rounded-lg p-4">
+            <summary class="cursor-pointer select-none text-sm font-medium text-gray-700 mb-2">🔍 Advanced Filters</summary>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" id="clientsFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" id="clientsFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Item contains</label>
+                <input type="text" id="clientsFilterItem" placeholder="e.g., Widget" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Staff contains</label>
+                <input type="text" id="clientsFilterStaff" placeholder="e.g., Jane" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Order contains</label>
+                <input type="text" id="clientsFilterOrder" placeholder="e.g., 1234" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Category contains</label>
+                <input type="text" id="clientsFilterCategory" placeholder="e.g., Services" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Min revenue</label>
+                <input type="number" id="clientsFilterRevMin" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Max revenue</label>
+                <input type="number" id="clientsFilterRevMax" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div class="flex items-end">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" id="clientsFilterNoZero" class="h-4 w-4"> Exclude zero revenue
+                </label>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-2">
+              <button id="clientsApplyFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Apply Filters</button>
+              <button id="clientsClearFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Clear</button>
+            </div>
+          </details>
+
           <div id="clientsHighlights" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
           <div class="mt-4">
             <div id="clientTrackingTable"></div>
@@ -592,7 +600,70 @@
               <h2 class="text-xl font-semibold text-gray-900">Staff Tracking</h2>
               <p id="staffSummary" class="text-sm text-gray-500">Upload data to view staff performance.</p>
             </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div class="relative inline-block w-full sm:w-auto">
+                <button id="staffExportMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Export ▾</button>
+                <div id="staffExportMenu" class="dropdown-menu hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20 min-w-40">
+                  <button id="btnStaffExportCSV" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Staff CSV</button>
+                  <button id="btnStaffExportExcel" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Excel File</button>
+                </div>
+              </div>
+              <button id="btnStaffPrint" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print</button>
+            </div>
           </div>
+
+          <!-- Advanced Filters (Collapsed) -->
+          <details class="mt-4 app-card border app-border rounded-lg p-4">
+            <summary class="cursor-pointer select-none text-sm font-medium text-gray-700 mb-2">🔍 Advanced Filters</summary>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" id="staffFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" id="staffFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Item contains</label>
+                <input type="text" id="staffFilterItem" placeholder="e.g., Widget" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Client contains</label>
+                <input type="text" id="staffFilterClient" placeholder="e.g., Acme" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Order contains</label>
+                <input type="text" id="staffFilterOrder" placeholder="e.g., 1234" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Category contains</label>
+                <input type="text" id="staffFilterCategory" placeholder="e.g., Services" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Min revenue</label>
+                <input type="number" id="staffFilterRevMin" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Max revenue</label>
+                <input type="number" id="staffFilterRevMax" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div class="flex items-end">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" id="staffFilterNoZero" class="h-4 w-4"> Exclude zero revenue
+                </label>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-2">
+              <button id="staffApplyFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Apply Filters</button>
+              <button id="staffClearFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Clear</button>
+            </div>
+          </details>
+
           <div id="staffHighlights" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
           <div class="mt-4">
             <div id="staffTrackingTable"></div>
@@ -608,7 +679,82 @@
               <h2 class="text-xl font-semibold text-gray-900">Item Tracking</h2>
               <p id="itemsSummary" class="text-sm text-gray-500">Upload data to view item performance.</p>
             </div>
+            <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              <div class="relative inline-block w-full sm:w-auto">
+                <button id="itemsExportMenuBtn" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Export ▾</button>
+                <div id="itemsExportMenu" class="dropdown-menu hidden absolute right-0 mt-2 app-card border app-border rounded-md shadow p-2 z-20 min-w-40">
+                  <button id="btnItemsExportCSV" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Items CSV</button>
+                  <button id="btnItemsExportExcel" class="block w-full text-left px-3 py-2 rounded-md text-sm hover:bg-gray-50">Excel File</button>
+                </div>
+              </div>
+              <button id="btnItemsPrint" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print</button>
+            </div>
           </div>
+
+          <!-- Search Controls -->
+          <div class="mt-4 flex flex-col sm:flex-row gap-3">
+            <div class="flex-1">
+              <input
+                type="text"
+                id="itemsSearch"
+                placeholder="Search items by name..."
+                class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+            </div>
+          </div>
+
+          <!-- Advanced Filters (Collapsed) -->
+          <details class="mt-4 app-card border app-border rounded-lg p-4">
+            <summary class="cursor-pointer select-none text-sm font-medium text-gray-700 mb-2">🔍 Advanced Filters</summary>
+            <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" id="itemsFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" id="itemsFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Category contains</label>
+                <input type="text" id="itemsFilterCategory" placeholder="e.g., Services" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Client contains</label>
+                <input type="text" id="itemsFilterClient" placeholder="e.g., Acme" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Staff contains</label>
+                <input type="text" id="itemsFilterStaff" placeholder="e.g., Jane" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Order contains</label>
+                <input type="text" id="itemsFilterOrder" placeholder="e.g., 1234" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+            </div>
+            <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Min revenue</label>
+                <input type="number" id="itemsFilterRevMin" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Max revenue</label>
+                <input type="number" id="itemsFilterRevMax" step="0.01" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div class="flex items-end">
+                <label class="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" id="itemsFilterNoZero" class="h-4 w-4"> Exclude zero revenue
+                </label>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-col sm:flex-row gap-2">
+              <button id="itemsApplyFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Apply Filters</button>
+              <button id="itemsClearFilters" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 w-full sm:w-auto">Clear</button>
+            </div>
+          </details>
+
           <div id="itemsHighlights" class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
           <div class="mt-4">
             <div id="itemTrackingTable"></div>

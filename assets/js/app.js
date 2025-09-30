@@ -1,11 +1,11 @@
 import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
 import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime, aggregateByField, aggregateByOrder } from './reports.js';
-import { renderTotals, renderTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
+import { renderTotals, renderTable, renderSortableTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings, saveCsvData, loadCsvData, deleteCsvData, deleteAllUserData, testFirebaseSettings } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.46';
+const APP_VERSION = '1.2.47';
 // Expose version for SW registration cache-busting
 try { window.APP_VERSION = APP_VERSION; } catch {}
 const DEFAULT_FILTERS = {
@@ -574,10 +574,68 @@ window.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Tracking pages export dropdown toggles
+  const ordersExportMenuBtn = qs('ordersExportMenuBtn');
+  const ordersExportMenu = qs('ordersExportMenu');
+  const clientsExportMenuBtn = qs('clientsExportMenuBtn');
+  const clientsExportMenu = qs('clientsExportMenu');
+  const staffExportMenuBtn = qs('staffExportMenuBtn');
+  const staffExportMenu = qs('staffExportMenu');
+  const itemsExportMenuBtn = qs('itemsExportMenuBtn');
+  const itemsExportMenu = qs('itemsExportMenu');
+
+  // Orders export dropdown
+  if (ordersExportMenuBtn && ordersExportMenu) {
+    ordersExportMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      ordersExportMenu.classList.toggle('hidden');
+      clientsExportMenu?.classList.add('hidden');
+      staffExportMenu?.classList.add('hidden');
+      itemsExportMenu?.classList.add('hidden');
+    });
+  }
+
+  // Clients export dropdown
+  if (clientsExportMenuBtn && clientsExportMenu) {
+    clientsExportMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clientsExportMenu.classList.toggle('hidden');
+      ordersExportMenu?.classList.add('hidden');
+      staffExportMenu?.classList.add('hidden');
+      itemsExportMenu?.classList.add('hidden');
+    });
+  }
+
+  // Staff export dropdown
+  if (staffExportMenuBtn && staffExportMenu) {
+    staffExportMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      staffExportMenu.classList.toggle('hidden');
+      ordersExportMenu?.classList.add('hidden');
+      clientsExportMenu?.classList.add('hidden');
+      itemsExportMenu?.classList.add('hidden');
+    });
+  }
+
+  // Items export dropdown
+  if (itemsExportMenuBtn && itemsExportMenu) {
+    itemsExportMenuBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      itemsExportMenu.classList.toggle('hidden');
+      ordersExportMenu?.classList.add('hidden');
+      clientsExportMenu?.classList.add('hidden');
+      staffExportMenu?.classList.add('hidden');
+    });
+  }
+
   // Close dropdowns when clicking outside
   document.addEventListener('click', () => {
     exportMenu?.classList.add('hidden');
     printMenu?.classList.add('hidden');
+    ordersExportMenu?.classList.add('hidden');
+    clientsExportMenu?.classList.add('hidden');
+    staffExportMenu?.classList.add('hidden');
+    itemsExportMenu?.classList.add('hidden');
   });
 
   // Printing
@@ -625,6 +683,153 @@ window.addEventListener('DOMContentLoaded', () => {
     if (!state.byCategory) return; const cols = ['category','orders','quantity','revenue','cost','profit','margin'];
     downloadCsv('report_by_category.csv', cols, state.byCategory.map(x => ({ category:x.label, orders:x.orders, quantity:x.quantity, revenue:x.revenue, cost:x.cost, profit:x.profit, margin:x.margin })));
   });
+
+  // Orders page export/print
+  qs('btnOrdersExportCSV')?.addEventListener('click', () => {
+    if (!state.byOrder) return;
+    const cols = ['order','date','client','staff','revenue','profit','margin'];
+    const workingRows = getWorkingRows();
+    const rowsByOrder = new Map();
+    workingRows.forEach(row => {
+      const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
+      if (!rowsByOrder.has(key)) rowsByOrder.set(key, []);
+      rowsByOrder.get(key).push(row);
+    });
+    const getLatestDate = (orderId) => {
+      const rows = rowsByOrder.get(orderId) || [];
+      return rows.reduce((latest, row) => {
+        const iso = row.__dateIso || '';
+        return iso && (!latest || iso > latest) ? iso : latest;
+      }, '');
+    };
+    const ordersData = state.byOrder.map(order => ({
+      order: order.order,
+      date: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : '-',
+      client: order.client || 'Unassigned',
+      staff: order.staff || 'Unassigned',
+      revenue: order.revenue,
+      profit: order.profit,
+      margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
+    }));
+    downloadCsv('orders.csv', cols, ordersData);
+  });
+  qs('btnOrdersExportExcel')?.addEventListener('click', () => {
+    if (!state.byOrder) return;
+    const report = { byItem: [], byDate: [], totals: {} };
+    const workingRows = getWorkingRows();
+    const rowsByOrder = new Map();
+    workingRows.forEach(row => {
+      const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
+      if (!rowsByOrder.has(key)) rowsByOrder.set(key, []);
+      rowsByOrder.get(key).push(row);
+    });
+    const getLatestDate = (orderId) => {
+      const rows = rowsByOrder.get(orderId) || [];
+      return rows.reduce((latest, row) => {
+        const iso = row.__dateIso || '';
+        return iso && (!latest || iso > latest) ? iso : latest;
+      }, '');
+    };
+    const ordersData = state.byOrder.map(order => ({
+      order: order.order,
+      date: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : '-',
+      client: order.client || 'Unassigned',
+      staff: order.staff || 'Unassigned',
+      revenue: order.revenue,
+      profit: order.profit,
+      margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
+    }));
+    exportExcelBook('orders.xlsx', report, { Orders: ordersData });
+  });
+  qs('btnOrdersPrint')?.addEventListener('click', () => window.print());
+
+  // Clients page export/print
+  qs('btnClientsExportCSV')?.addEventListener('click', () => {
+    if (!state.byClient) return;
+    const cols = ['client','orders','quantity','revenue','cost','profit','margin'];
+    downloadCsv('clients.csv', cols, state.byClient.map(c => ({
+      client: c.label || 'Unassigned',
+      orders: c.orders,
+      quantity: c.quantity,
+      revenue: c.revenue,
+      cost: c.cost,
+      profit: c.profit,
+      margin: c.margin
+    })));
+  });
+  qs('btnClientsExportExcel')?.addEventListener('click', () => {
+    if (!state.byClient) return;
+    const report = { byItem: [], byDate: [], totals: {} };
+    const clientsData = state.byClient.map(c => ({
+      client: c.label || 'Unassigned',
+      orders: c.orders,
+      quantity: c.quantity,
+      revenue: c.revenue,
+      cost: c.cost,
+      profit: c.profit,
+      margin: c.margin
+    }));
+    exportExcelBook('clients.xlsx', report, { Clients: clientsData });
+  });
+  qs('btnClientsPrint')?.addEventListener('click', () => window.print());
+
+  // Staff page export/print
+  qs('btnStaffExportCSV')?.addEventListener('click', () => {
+    if (!state.byStaff) return;
+    const cols = ['staff','orders','quantity','revenue','cost','profit','margin'];
+    downloadCsv('staff.csv', cols, state.byStaff.map(s => ({
+      staff: s.label || 'Unassigned',
+      orders: s.orders,
+      quantity: s.quantity,
+      revenue: s.revenue,
+      cost: s.cost,
+      profit: s.profit,
+      margin: s.margin
+    })));
+  });
+  qs('btnStaffExportExcel')?.addEventListener('click', () => {
+    if (!state.byStaff) return;
+    const report = { byItem: [], byDate: [], totals: {} };
+    const staffData = state.byStaff.map(s => ({
+      staff: s.label || 'Unassigned',
+      orders: s.orders,
+      quantity: s.quantity,
+      revenue: s.revenue,
+      cost: s.cost,
+      profit: s.profit,
+      margin: s.margin
+    }));
+    exportExcelBook('staff.xlsx', report, { Staff: staffData });
+  });
+  qs('btnStaffPrint')?.addEventListener('click', () => window.print());
+
+  // Items page export/print
+  qs('btnItemsExportCSV')?.addEventListener('click', () => {
+    if (!state.byItem) return;
+    const cols = ['item','quantity','revenue','cost','profit','margin'];
+    downloadCsv('items.csv', cols, state.byItem.map(item => ({
+      item: item.item || 'Unassigned',
+      quantity: item.quantity,
+      revenue: item.revenue,
+      cost: item.cost,
+      profit: item.profit,
+      margin: item.margin
+    })));
+  });
+  qs('btnItemsExportExcel')?.addEventListener('click', () => {
+    if (!state.byItem) return;
+    const report = { byItem: [], byDate: [], totals: {} };
+    const itemsData = state.byItem.map(item => ({
+      item: item.item || 'Unassigned',
+      quantity: item.quantity,
+      revenue: item.revenue,
+      cost: item.cost,
+      profit: item.profit,
+      margin: item.margin
+    }));
+    exportExcelBook('items.xlsx', report, { Items: itemsData });
+  });
+  qs('btnItemsPrint')?.addEventListener('click', () => window.print());
 
   // Note: Branding now loaded in loadUserSettingsAfterAuth() after authentication
   qs('btnSaveBrand').addEventListener('click', saveBranding);
@@ -1005,24 +1210,20 @@ function renderReport() {
 
 function renderOrdersView() {
   const summaryEl = qs('ordersSummary');
-  const listEl = qs('ordersList');
-  if (!summaryEl || !listEl) return;
+  const tableEl = qs('ordersTrackingTable');
+  const searchInput = qs('ordersSearch');
+  if (!summaryEl || !tableEl) return;
+
   if (!state.report || !state.byOrder || !state.byOrder.length) {
     summaryEl.textContent = state.report ? 'No orders available for the current filters.' : 'Upload data to view orders.';
-    listEl.innerHTML = '<div class="text-sm text-gray-500">No orders available.</div>';
+    tableEl.innerHTML = '<div class="text-sm text-gray-500">No orders available.</div>';
     return;
   }
 
-  // Set up search and sort event listeners
-  const searchInput = qs('ordersSearch');
-  const sortSelect = qs('ordersSort');
+  // Set up search event listener
   if (searchInput && !searchInput.hasAttribute('data-listener')) {
     searchInput.setAttribute('data-listener', 'true');
     searchInput.addEventListener('input', () => renderOrdersView());
-  }
-  if (sortSelect && !sortSelect.hasAttribute('data-listener')) {
-    sortSelect.setAttribute('data-listener', 'true');
-    sortSelect.addEventListener('change', () => renderOrdersView());
   }
 
   const workingRows = getWorkingRows();
@@ -1041,11 +1242,8 @@ function renderOrdersView() {
     }, '');
   };
 
-  // Get search term and sort option
-  const searchTerm = (searchInput?.value || '').toLowerCase().trim();
-  const sortOption = sortSelect?.value || 'date-desc';
-
   // Filter orders based on search term
+  const searchTerm = (searchInput?.value || '').toLowerCase().trim();
   let orders = [...state.byOrder];
   if (searchTerm) {
     orders = orders.filter(order => {
@@ -1062,38 +1260,20 @@ function renderOrdersView() {
     });
   }
 
-  // Sort orders based on selected option
-  orders.sort((a, b) => {
-    switch (sortOption) {
-      case 'date-asc':
-        const dateA = getLatestDate(a.order) || a.date || '';
-        const dateB = getLatestDate(b.order) || b.date || '';
-        return dateA.localeCompare(dateB);
-      case 'date-desc':
-        const dateA2 = getLatestDate(a.order) || a.date || '';
-        const dateB2 = getLatestDate(b.order) || b.date || '';
-        return dateB2.localeCompare(dateA2);
-      case 'revenue-desc':
-        return b.revenue - a.revenue;
-      case 'revenue-asc':
-        return a.revenue - b.revenue;
-      case 'order-asc':
-        return a.order.localeCompare(b.order);
-      case 'order-desc':
-        return b.order.localeCompare(a.order);
-      default:
-        const dateA3 = getLatestDate(a.order) || a.date || '';
-        const dateB3 = getLatestDate(b.order) || b.date || '';
-        if (dateA3 === dateB3) return b.revenue - a.revenue;
-        return dateB3.localeCompare(dateA3);
-    }
-  });
+  // Add latest date to each order for sorting and display
+  const ordersWithDates = orders.map(order => ({
+    ...order,
+    latestDate: getLatestDate(order.order),
+    displayDate: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : '-',
+    margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
+  }));
 
   const totals = orders.reduce((acc, order) => {
     acc.revenue += Number(order.revenue || 0);
     acc.profit += Number(order.profit || 0);
     return acc;
   }, { revenue: 0, profit: 0 });
+
   const totalOrdersCount = state.byOrder.length;
   const isFiltered = orders.length !== totalOrdersCount || searchTerm;
   const summaryText = isFiltered
@@ -1101,59 +1281,59 @@ function renderOrdersView() {
     : `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
   summaryEl.textContent = summaryText;
 
-  listEl.innerHTML = orders.map(order => {
-    const orderRows = rowsByOrder.get(order.order) || [];
-    const latestIso = getLatestDate(order.order);
-    const displayDate = latestIso ? toPrettyDate(latestIso) : '-';
-    const marginDisplay = order.revenue ? formatPercentShort((order.profit / order.revenue) * 100) : formatPercentShort(0);
-    const itemsTable = orderRows.map(row => {
-      const itemName = escapeHtml(String(row[state.mapping.item] ?? row.item ?? 'Item'));
-      const qtyDisplay = formatNumber(row.__quantity || row[state.mapping.qty] || 0);
-      const revenueDisplay = formatCurrencyShort(row.__revenue || 0);
-      const costDisplay = formatCurrencyShort(row.__cost || 0);
-      const profitValue = (row.__revenue || 0) - (row.__cost || 0);
-      const marginValue = (row.__revenue || 0) ? (profitValue / row.__revenue) * 100 : 0;
-      return `<tr class="border-t">` +
-        `<td class="px-3 py-2">${itemName}</td>` +
-        `<td class="px-3 py-2 text-right">${qtyDisplay}</td>` +
-        `<td class="px-3 py-2 text-right">${revenueDisplay}</td>` +
-        `<td class="px-3 py-2 text-right">${costDisplay}</td>` +
-        `<td class="px-3 py-2 text-right">${formatCurrencyShort(profitValue)}</td>` +
-        `<td class="px-3 py-2 text-right">${formatPercentShort(marginValue)}</td>` +
-        '</tr>';
-    }).join('');
-
-    const itemsTableHtml = itemsTable ? `<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="bg-gray-50"><th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-right">Quantity</th><th class="px-3 py-2 text-right">Revenue</th><th class="px-3 py-2 text-right">Cost</th><th class="px-3 py-2 text-right">Profit</th><th class="px-3 py-2 text-right">Margin</th></tr></thead><tbody>${itemsTable}</tbody></table></div>` : '<div class="text-sm text-gray-500">No line items recorded.</div>';
-
-    return `<details class="app-card border app-border rounded-lg overflow-hidden">` +
-      `<summary class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 cursor-pointer">` +
-      `<span class="font-medium text-gray-900">Order ${escapeHtml(order.order)}</span>` +
-      `<span class="text-sm text-gray-500">${escapeHtml(displayDate)}</span>` +
-      `<span class="text-sm text-gray-500">Client: ${escapeHtml(order.client || 'Unassigned')}</span>` +
-      `<span class="text-sm text-gray-500">Staff: ${escapeHtml(order.staff || 'Unassigned')}</span>` +
-      `<span class="text-sm text-gray-900">${formatCurrencyShort(order.revenue)}</span>` +
-      `<span class="text-sm text-gray-500">Margin ${marginDisplay}</span>` +
-      '</summary>' +
-      `<div class="px-4 pb-4">${itemsTableHtml}</div>` +
-      '</details>';
-  }).join('');
+  renderSortableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
+    order: order.order,
+    date: order.displayDate,
+    client: order.client || 'Unassigned',
+    staff: order.staff || 'Unassigned',
+    revenue: order.revenue,
+    profit: order.profit,
+    margin: order.margin
+  })), {
+    defaultSort: { column: 'date', direction: 'desc' }
+  });
 }
 
 function renderClientTrackingView() {
   const summaryEl = qs('clientsSummary');
   const highlightsEl = qs('clientsHighlights');
   const tableEl = qs('clientTrackingTable');
+  const searchInput = qs('clientsSearch');
   if (!summaryEl || !highlightsEl || !tableEl) return;
+
   if (!state.report || !state.byClient || !state.byClient.length) {
     summaryEl.textContent = state.report ? 'No client activity for the current filters.' : 'Upload data to view client performance.';
     highlightsEl.innerHTML = '';
     tableEl.innerHTML = '<div class="text-sm text-gray-500">No client data available.</div>';
     return;
   }
-  const clients = state.byClient;
+
+  // Set up search event listener
+  if (searchInput && !searchInput.hasAttribute('data-listener')) {
+    searchInput.setAttribute('data-listener', 'true');
+    searchInput.addEventListener('input', () => renderClientTrackingView());
+  }
+
+  // Filter clients based on search term
+  const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+  let clients = [...state.byClient];
+  if (searchTerm) {
+    clients = clients.filter(client => {
+      const clientName = String(client.label || 'Unassigned').toLowerCase();
+      return clientName.includes(searchTerm);
+    });
+  }
+
   const totalRevenue = clients.reduce((sum, c) => sum + Number(c.revenue || 0), 0);
   const totalOrders = clients.reduce((sum, c) => sum + Number(c.orders || 0), 0);
-  summaryEl.textContent = `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${formatNumber(totalOrders / (clients.length || 1))}`;
+  const totalClients = state.byClient.length;
+  const isFiltered = clients.length !== totalClients || searchTerm;
+
+  const summaryText = isFiltered
+    ? `${formatNumber(clients.length)} of ${formatNumber(totalClients)} clients${searchTerm ? ` matching "${searchTerm}"` : ''} · Revenue ${formatCurrencyShort(totalRevenue)}`
+    : `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${formatNumber(totalOrders / (clients.length || 1))}`;
+  summaryEl.textContent = summaryText;
+
   const topClients = clients.slice(0, 3);
   highlightsEl.innerHTML = topClients.map(c => `
     <div class="p-3 border app-border rounded-md">
@@ -1162,7 +1342,8 @@ function renderClientTrackingView() {
       <div class="text-xs text-gray-500">Orders ${formatNumber(c.orders)} · Margin ${formatPercentShort(c.margin)}</div>
     </div>
   `).join('');
-  renderTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
+
+  renderSortableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
     client: c.label || 'Unassigned',
     orders: c.orders,
     quantity: c.quantity,
@@ -1170,7 +1351,9 @@ function renderClientTrackingView() {
     cost: c.cost,
     profit: c.profit,
     margin: c.margin
-  })));
+  })), {
+    defaultSort: { column: 'revenue', direction: 'desc' }
+  });
 }
 
 function renderStaffTrackingView() {
@@ -1196,7 +1379,7 @@ function renderStaffTrackingView() {
       <div class="text-xs text-gray-500">Orders ${formatNumber(s.orders)} · Margin ${formatPercentShort(s.margin)}</div>
     </div>
   `).join('');
-  renderTable(tableEl, ['staff','orders','quantity','revenue','cost','profit','margin'], staff.map(s => ({
+  renderSortableTable(tableEl, ['staff','orders','quantity','revenue','cost','profit','margin'], staff.map(s => ({
     staff: s.label || 'Unassigned',
     orders: s.orders,
     quantity: s.quantity,
@@ -1204,23 +1387,50 @@ function renderStaffTrackingView() {
     cost: s.cost,
     profit: s.profit,
     margin: s.margin
-  })));
+  })), {
+    defaultSort: { column: 'revenue', direction: 'desc' }
+  });
 }
 
 function renderItemTrackingView() {
   const summaryEl = qs('itemsSummary');
   const highlightsEl = qs('itemsHighlights');
   const tableEl = qs('itemTrackingTable');
+  const searchInput = qs('itemsSearch');
   if (!summaryEl || !highlightsEl || !tableEl) return;
+
   if (!state.report || !state.byItem || !state.byItem.length) {
     summaryEl.textContent = state.report ? 'No item performance data for the current filters.' : 'Upload data to view item trends.';
     highlightsEl.innerHTML = '';
     tableEl.innerHTML = '<div class="text-sm text-gray-500">No item data available.</div>';
     return;
   }
-  const items = state.byItem;
+
+  // Set up search event listener
+  if (searchInput && !searchInput.hasAttribute('data-listener')) {
+    searchInput.setAttribute('data-listener', 'true');
+    searchInput.addEventListener('input', () => renderItemTrackingView());
+  }
+
+  // Filter items based on search term
+  const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+  let items = [...state.byItem];
+  if (searchTerm) {
+    items = items.filter(item => {
+      const itemName = String(item.item || 'Unassigned').toLowerCase();
+      return itemName.includes(searchTerm);
+    });
+  }
+
   const totalRevenue = items.reduce((sum, item) => sum + Number(item.revenue || 0), 0);
-  summaryEl.textContent = `${formatNumber(items.length)} items · Revenue ${formatCurrencyShort(totalRevenue)} · Top item ${escapeHtml(items[0].item || 'Unassigned')} (${formatCurrencyShort(items[0].revenue)})`;
+  const totalItems = state.byItem.length;
+  const isFiltered = items.length !== totalItems || searchTerm;
+
+  const summaryText = isFiltered
+    ? `${formatNumber(items.length)} of ${formatNumber(totalItems)} items${searchTerm ? ` matching "${searchTerm}"` : ''} · Revenue ${formatCurrencyShort(totalRevenue)}`
+    : `${formatNumber(items.length)} items · Revenue ${formatCurrencyShort(totalRevenue)} · Top item ${escapeHtml(items[0]?.item || 'Unassigned')} (${formatCurrencyShort(items[0]?.revenue || 0)})`;
+  summaryEl.textContent = summaryText;
+
   const topItems = items.slice(0, 3);
   highlightsEl.innerHTML = topItems.map(item => `
     <div class="p-3 border app-border rounded-md">
@@ -1229,14 +1439,17 @@ function renderItemTrackingView() {
       <div class="text-xs text-gray-500">Quantity ${formatNumber(item.quantity)} · Margin ${formatPercentShort(item.margin)}</div>
     </div>
   `).join('');
-  renderTable(tableEl, ['item','quantity','revenue','cost','profit','margin'], items.map(item => ({
+
+  renderSortableTable(tableEl, ['item','quantity','revenue','cost','profit','margin'], items.map(item => ({
     item: item.item || 'Unassigned',
     quantity: item.quantity,
     revenue: item.revenue,
     cost: item.cost,
     profit: item.profit,
     margin: item.margin
-  })));
+  })), {
+    defaultSort: { column: 'revenue', direction: 'desc' }
+  });
 }
 
 

@@ -45,6 +45,104 @@ export function renderTable(container, columns, rows) {
   container.appendChild(table);
 }
 
+export function renderSortableTable(container, columns, rows, options = {}) {
+  if (!container) {
+    console.warn('renderSortableTable: container element is null');
+    return;
+  }
+
+  const containerId = container.id || 'table_' + Math.random().toString(36).substr(2, 9);
+  if (!container.id) container.id = containerId;
+
+  // State management for sorting
+  const sortState = container._sortState || { column: null, direction: 'asc' };
+  container._sortState = sortState;
+
+  // Apply default sorting if specified
+  if (options.defaultSort && !sortState.column) {
+    sortState.column = options.defaultSort.column;
+    sortState.direction = options.defaultSort.direction || 'desc';
+  }
+
+  // Sort rows if a column is selected
+  let sortedRows = [...rows];
+  if (sortState.column) {
+    sortedRows.sort((a, b) => {
+      let aVal = a[sortState.column];
+      let bVal = b[sortState.column];
+
+      // Handle different data types
+      if (isNumeric(aVal) && isNumeric(bVal)) {
+        aVal = Number(aVal);
+        bVal = Number(bVal);
+      } else {
+        aVal = String(aVal || '').toLowerCase();
+        bVal = String(bVal || '').toLowerCase();
+      }
+
+      let result = 0;
+      if (aVal < bVal) result = -1;
+      else if (aVal > bVal) result = 1;
+
+      return sortState.direction === 'desc' ? -result : result;
+    });
+  }
+
+  container.innerHTML = '';
+
+  // Create table with sortable headers
+  const table = document.createElement('table');
+  table.className = 'w-full text-sm';
+
+  const thead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  headerRow.className = 'app-card';
+
+  columns.forEach(column => {
+    const th = document.createElement('th');
+    th.className = 'text-left px-3 py-2 font-medium cursor-pointer hover:bg-gray-50 select-none';
+
+    const isCurrentSort = sortState.column === column;
+    const sortIcon = isCurrentSort
+      ? (sortState.direction === 'asc' ? '↑' : '↓')
+      : '↕';
+
+    th.innerHTML = `${escapeHtml(column)} <span class="text-gray-400 text-xs">${sortIcon}</span>`;
+
+    th.addEventListener('click', () => {
+      if (sortState.column === column) {
+        sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortState.column = column;
+        sortState.direction = 'asc';
+      }
+      renderSortableTable(container, columns, rows, options);
+    });
+
+    headerRow.appendChild(th);
+  });
+  thead.appendChild(headerRow);
+
+  const tbody = document.createElement('tbody');
+  sortedRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-t hover:bg-gray-50';
+
+    columns.forEach(column => {
+      const td = document.createElement('td');
+      td.className = 'px-3 py-2';
+      td.innerHTML = formatCell(column, row[column]);
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
 export function makeChart(canvas, labels, data, label='Series') {
   if (!window.Chart) return null;
   if (!canvas) { console.info('[ui] makeChart: canvas element not found (skipping)'); return null; }
