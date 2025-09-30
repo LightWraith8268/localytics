@@ -57,8 +57,16 @@ let previousBodyOverflow = '';
 
 
 
-const formatNumber = (value) => Number(value || 0).toFixed(2);
-const formatCurrencyShort = (value) => `$${formatNumber(value)}`;
+const formatNumber = (value) => new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+}).format(Number(value) || 0);
+const formatCurrencyShort = (value) => new Intl.NumberFormat(undefined, {
+  style: 'currency',
+  currency: 'USD',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+}).format(Number(value) || 0);
 const formatPercentShort = (value) => `${formatNumber(value)}%`;
 const htmlEscapeMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 function escapeHtml(value) {
@@ -1064,6 +1072,14 @@ window.addEventListener('DOMContentLoaded', () => {
     const rows = entries.map(([item, category]) => ({ item, category }));
     downloadCsv('category_mapping.csv', ['item','category'], rows);
   });
+
+  // Initialize modals for client and order details
+  initializeModals();
+
+  // Initialize dropdown filters when data is available
+  if (state.rows && state.rows.length) {
+    populateDropdownFilters();
+  }
 });
 
 
@@ -1114,6 +1130,12 @@ function renderReport() {
   state.byStaff = aggregateByField(base, r => r.__staff || '');
   state.byCategory = aggregateByField(base, r => r.__category || '');
   state.byOrder = aggregateByOrder(base);
+
+  // Items data comes from the report
+  state.byItem = state.report.byItem;
+
+  // Populate dropdown filters with current data
+  populateDropdownFilters();
 
   const clientRows = state.byClient.map(x => ({ client: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
   const staffRows = state.byStaff.map(x => ({ staff: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
@@ -1300,7 +1322,7 @@ function renderOrdersView() {
     : `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
   summaryEl.textContent = summaryText;
 
-  renderSortableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
+  renderClickableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
     order: order.order,
     date: order.displayDate,
     client: order.client || 'Unassigned',
@@ -1309,7 +1331,8 @@ function renderOrdersView() {
     profit: order.profit,
     margin: order.margin
   })), {
-    defaultSort: { column: 'date', direction: 'desc' }
+    order: 'showOrderDetails',  // Make order column clickable
+    client: 'showClientDetails' // Make client column clickable
   });
 }
 
@@ -1362,7 +1385,7 @@ function renderClientTrackingView() {
     </div>
   `).join('');
 
-  renderSortableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
+  renderClickableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
     client: c.label || 'Unassigned',
     orders: c.orders,
     quantity: c.quantity,
@@ -1371,7 +1394,7 @@ function renderClientTrackingView() {
     profit: c.profit,
     margin: c.margin
   })), {
-    defaultSort: { column: 'revenue', direction: 'desc' }
+    client: 'showClientDetails'  // Make client column clickable
   });
 }
 
@@ -2273,4 +2296,457 @@ function calculateRollingAverage(data, window) {
     const slice = data.slice(start, index + 1);
     return slice.reduce((sum, v) => sum + v, 0) / slice.length;
   });
+}
+
+// Enhanced number formatting functions with proper 2 decimal places and commas
+function formatCurrency(amount) {
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(amount) || 0);
+}
+
+function formatNumber(num) {
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(num) || 0);
+}
+
+function formatPercent(num) {
+  return `${(Number(num) || 0).toFixed(2)}%`;
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text || '';
+  return div.innerHTML;
+}
+
+// Client and Order Detail Modal Functions
+function showClientDetails(clientName) {
+  const modal = document.getElementById('clientDetailsModal');
+  const content = document.getElementById('clientDetailsContent');
+  const title = document.getElementById('clientDetailsModalTitle');
+
+  if (!modal || !content || !title) return;
+
+  // Get all transactions for this client
+  const base = state.filtered || state.rows;
+  const clientTransactions = base.filter(row => (row.__client || '').toLowerCase() === clientName.toLowerCase());
+
+  if (!clientTransactions.length) {
+    content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
+    title.textContent = `Client Details: ${clientName}`;
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  // Aggregate products by item name with quantities
+  const productMap = new Map();
+  let totalRevenue = 0;
+  let totalQuantity = 0;
+  let totalCost = 0;
+  let totalOrders = new Set();
+
+  clientTransactions.forEach(row => {
+    const itemName = row[state.mapping.item] || 'Unknown Item';
+    const quantity = row.__quantity || 0;
+    const revenue = row.__revenue || 0;
+    const cost = row.__cost || 0;
+    const order = row.__order || '';
+
+    if (order) totalOrders.add(order);
+    totalRevenue += revenue;
+    totalQuantity += quantity;
+    totalCost += cost;
+
+    if (productMap.has(itemName)) {
+      const existing = productMap.get(itemName);
+      existing.quantity += quantity;
+      existing.revenue += revenue;
+      existing.cost += cost;
+      existing.orders.add(order);
+    } else {
+      productMap.set(itemName, {
+        item: itemName,
+        quantity: quantity,
+        revenue: revenue,
+        cost: cost,
+        orders: new Set([order])
+      });
+    }
+  });
+
+  // Convert to array and sort by revenue
+  const products = Array.from(productMap.values())
+    .map(p => ({
+      ...p,
+      profit: p.revenue - p.cost,
+      margin: p.revenue > 0 ? ((p.revenue - p.cost) / p.revenue * 100) : 0,
+      orders: p.orders.size,
+      ordersList: Array.from(p.orders).filter(o => o)
+    }))
+    .sort((a, b) => b.revenue - a.revenue);
+
+  const totalProfit = totalRevenue - totalCost;
+  const totalMargin = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100) : 0;
+
+  // Build summary and table
+  const summaryHtml = `
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Total Revenue</div>
+        <div class="text-lg font-semibold text-gray-900">${formatCurrency(totalRevenue)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Total Quantity</div>
+        <div class="text-lg font-semibold text-gray-900">${formatNumber(totalQuantity)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Total Orders</div>
+        <div class="text-lg font-semibold text-gray-900">${totalOrders.size.toFixed(0)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Profit Margin</div>
+        <div class="text-lg font-semibold text-gray-900">${formatPercent(totalMargin)}</div>
+      </div>
+    </div>
+    <h4 class="text-lg font-medium text-gray-900 mb-4">Product Breakdown (${products.length} items)</h4>
+  `;
+
+  const tableHtml = `
+    <div class="overflow-x-auto border app-border rounded-md">
+      <table class="w-full text-sm">
+        <thead class="app-card">
+          <tr>
+            <th class="text-left px-3 py-2 font-medium">Product</th>
+            <th class="text-left px-3 py-2 font-medium">Quantity</th>
+            <th class="text-left px-3 py-2 font-medium">Revenue</th>
+            <th class="text-left px-3 py-2 font-medium">Cost</th>
+            <th class="text-left px-3 py-2 font-medium">Profit</th>
+            <th class="text-left px-3 py-2 font-medium">Margin</th>
+            <th class="text-left px-3 py-2 font-medium">Orders</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${products.map(product => `
+            <tr class="border-t hover:bg-gray-50">
+              <td class="px-3 py-2">${escapeHtml(product.item)}</td>
+              <td class="px-3 py-2">${formatNumber(product.quantity)}</td>
+              <td class="px-3 py-2">${formatCurrency(product.revenue)}</td>
+              <td class="px-3 py-2">${formatCurrency(product.cost)}</td>
+              <td class="px-3 py-2">${formatCurrency(product.profit)}</td>
+              <td class="px-3 py-2">${formatPercent(product.margin)}</td>
+              <td class="px-3 py-2">${product.orders.toFixed(0)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  content.innerHTML = summaryHtml + tableHtml;
+  title.textContent = `Client Details: ${clientName}`;
+  modal.classList.remove('hidden');
+}
+
+function showOrderDetails(orderNumber) {
+  const modal = document.getElementById('orderDetailsModal');
+  const content = document.getElementById('orderDetailsContent');
+  const title = document.getElementById('orderDetailsModalTitle');
+
+  if (!modal || !content || !title) return;
+
+  // Get all transactions for this order
+  const base = state.filtered || state.rows;
+  const orderTransactions = base.filter(row => (row.__order || '').toLowerCase() === orderNumber.toLowerCase());
+
+  if (!orderTransactions.length) {
+    content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this order.</div>';
+    title.textContent = `Order Details: ${orderNumber}`;
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  // Get order summary info
+  const firstTransaction = orderTransactions[0];
+  const orderDate = firstTransaction[state.mapping.date] || 'Unknown Date';
+  const clientName = firstTransaction.__client || 'Unknown Client';
+  const staffName = firstTransaction.__staff || 'Unknown Staff';
+
+  let totalRevenue = 0;
+  let totalQuantity = 0;
+  let totalCost = 0;
+
+  const items = orderTransactions.map(row => {
+    const quantity = row.__quantity || 0;
+    const revenue = row.__revenue || 0;
+    const cost = row.__cost || 0;
+    const price = row.__price || 0;
+
+    totalRevenue += revenue;
+    totalQuantity += quantity;
+    totalCost += cost;
+
+    return {
+      item: row[state.mapping.item] || 'Unknown Item',
+      quantity: quantity,
+      price: price,
+      revenue: revenue,
+      cost: cost,
+      profit: revenue - cost,
+      margin: revenue > 0 ? ((revenue - cost) / revenue * 100) : 0
+    };
+  });
+
+  const totalProfit = totalRevenue - totalCost;
+  const marginPct = totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100) : 0;
+
+  // Build summary and table
+  const summaryHtml = `
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Order Date</div>
+        <div class="text-lg font-semibold text-gray-900">${escapeHtml(orderDate)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Client</div>
+        <div class="text-lg font-semibold text-gray-900 cursor-pointer text-blue-600 hover:text-blue-800" onclick="showClientDetails('${escapeHtml(clientName)}')">${escapeHtml(clientName)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Staff</div>
+        <div class="text-lg font-semibold text-gray-900">${escapeHtml(staffName)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Total Items</div>
+        <div class="text-lg font-semibold text-gray-900">${items.length.toFixed(0)}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Total Revenue</div>
+        <div class="text-lg font-semibold text-gray-900">${formatCurrency(totalRevenue)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Total Quantity</div>
+        <div class="text-lg font-semibold text-gray-900">${formatNumber(totalQuantity)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Profit</div>
+        <div class="text-lg font-semibold text-gray-900">${formatCurrency(totalProfit)}</div>
+      </div>
+      <div class="app-card border app-border rounded-lg p-4">
+        <div class="text-sm text-gray-500">Margin</div>
+        <div class="text-lg font-semibold text-gray-900">${formatPercent(marginPct)}</div>
+      </div>
+    </div>
+    <h4 class="text-lg font-medium text-gray-900 mb-4">Order Items (${items.length} items)</h4>
+  `;
+
+  const tableHtml = `
+    <div class="overflow-x-auto border app-border rounded-md">
+      <table class="w-full text-sm">
+        <thead class="app-card">
+          <tr>
+            <th class="text-left px-3 py-2 font-medium">Item</th>
+            <th class="text-left px-3 py-2 font-medium">Quantity</th>
+            <th class="text-left px-3 py-2 font-medium">Unit Price</th>
+            <th class="text-left px-3 py-2 font-medium">Revenue</th>
+            <th class="text-left px-3 py-2 font-medium">Cost</th>
+            <th class="text-left px-3 py-2 font-medium">Profit</th>
+            <th class="text-left px-3 py-2 font-medium">Margin</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(item => `
+            <tr class="border-t hover:bg-gray-50">
+              <td class="px-3 py-2">${escapeHtml(item.item)}</td>
+              <td class="px-3 py-2">${formatNumber(item.quantity)}</td>
+              <td class="px-3 py-2">${formatCurrency(item.price)}</td>
+              <td class="px-3 py-2">${formatCurrency(item.revenue)}</td>
+              <td class="px-3 py-2">${formatCurrency(item.cost)}</td>
+              <td class="px-3 py-2">${formatCurrency(item.profit)}</td>
+              <td class="px-3 py-2">${formatPercent(item.margin)}</td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+
+  content.innerHTML = summaryHtml + tableHtml;
+  title.textContent = `Order Details: ${orderNumber}`;
+  modal.classList.remove('hidden');
+}
+
+// Modal event handlers and initialization
+function initializeModals() {
+  // Client details modal
+  const clientModal = document.getElementById('clientDetailsModal');
+  const clientCloseBtn = document.getElementById('clientDetailsModalClose');
+
+  if (clientCloseBtn) {
+    clientCloseBtn.addEventListener('click', () => {
+      clientModal?.classList.add('hidden');
+    });
+  }
+
+  if (clientModal) {
+    clientModal.addEventListener('click', (e) => {
+      if (e.target === clientModal) {
+        clientModal.classList.add('hidden');
+      }
+    });
+  }
+
+  // Order details modal
+  const orderModal = document.getElementById('orderDetailsModal');
+  const orderCloseBtn = document.getElementById('orderDetailsModalClose');
+
+  if (orderCloseBtn) {
+    orderCloseBtn.addEventListener('click', () => {
+      orderModal?.classList.add('hidden');
+    });
+  }
+
+  if (orderModal) {
+    orderModal.addEventListener('click', (e) => {
+      if (e.target === orderModal) {
+        orderModal.classList.add('hidden');
+      }
+    });
+  }
+
+  // Escape key handler
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      clientModal?.classList.add('hidden');
+      orderModal?.classList.add('hidden');
+    }
+  });
+}
+
+// Enhanced table rendering with clickable cells
+function renderClickableTable(container, columns, rows, clickableColumns = {}) {
+  if (!container) {
+    console.warn('renderClickableTable: container element is null');
+    return;
+  }
+
+  container.innerHTML = '';
+  const table = document.createElement('table');
+  table.className = 'w-full text-sm';
+
+  // Create header
+  const thead = document.createElement('thead');
+  thead.innerHTML = `<tr class="app-card">${columns.map(c => `<th class="text-left px-3 py-2 font-medium">${escapeHtml(c)}</th>`).join('')}</tr>`;
+
+  // Create body with clickable cells
+  const tbody = document.createElement('tbody');
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.className = 'border-t hover:bg-gray-50';
+
+    columns.forEach(column => {
+      const td = document.createElement('td');
+      td.className = 'px-3 py-2';
+
+      const value = row[column];
+      const formattedValue = formatTableCell(column, value);
+
+      // Check if this column should be clickable
+      if (clickableColumns[column]) {
+        td.innerHTML = `<span class="cursor-pointer text-blue-600 hover:text-blue-800 hover:underline" onclick="${clickableColumns[column]}('${escapeHtml(value)}')">${formattedValue}</span>`;
+      } else {
+        td.innerHTML = formattedValue;
+      }
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(thead);
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+// Enhanced table cell formatting with proper number formatting
+function formatTableCell(column, value) {
+  const columnLower = column.toLowerCase();
+
+  if (columnLower.includes('revenue') || columnLower.includes('cost') || columnLower.includes('profit') || columnLower.includes('price')) {
+    return formatCurrency(value);
+  }
+
+  if (columnLower.includes('margin')) {
+    return formatPercent(value);
+  }
+
+  if (columnLower.includes('quantity') || columnLower.includes('orders')) {
+    // For quantities and counts, show as integers
+    return Number(value || 0).toFixed(0);
+  }
+
+  // For other numeric values, show with 2 decimal places
+  if (typeof value === 'number' || (!isNaN(value) && value !== null && value !== '')) {
+    return formatNumber(value);
+  }
+
+  return escapeHtml(String(value || ''));
+}
+
+// Populate dropdown filters from data
+function populateDropdownFilters() {
+  if (!state.rows || !state.rows.length) return;
+
+  const base = state.rows; // Use all data for filter options
+
+  // Get unique values for each filter type
+  const clients = [...new Set(base.map(row => row.__client).filter(Boolean))].sort();
+  const staff = [...new Set(base.map(row => row.__staff).filter(Boolean))].sort();
+  const categories = [...new Set(base.map(row => row.__category).filter(Boolean))].sort();
+  const items = [...new Set(base.map(row => row[state.mapping.item]).filter(Boolean))].sort();
+  const orders = [...new Set(base.map(row => row.__order).filter(Boolean))].sort();
+
+  // Populate client filter dropdown
+  const clientFilter = document.querySelector('select[name="client"]');
+  if (clientFilter) {
+    clientFilter.innerHTML = '<option value="">All Clients</option>' +
+      clients.map(client => `<option value="${escapeHtml(client)}">${escapeHtml(client)}</option>`).join('');
+  }
+
+  // Populate staff filter dropdown
+  const staffFilter = document.querySelector('select[name="staff"]');
+  if (staffFilter) {
+    staffFilter.innerHTML = '<option value="">All Staff</option>' +
+      staff.map(member => `<option value="${escapeHtml(member)}">${escapeHtml(member)}</option>`).join('');
+  }
+
+  // Populate category filter dropdown
+  const categoryFilter = document.querySelector('select[name="category"]');
+  if (categoryFilter) {
+    categoryFilter.innerHTML = '<option value="">All Categories</option>' +
+      categories.map(cat => `<option value="${escapeHtml(cat)}">${escapeHtml(cat)}</option>`).join('');
+  }
+
+  // Populate item filter dropdown (limit to top 100 for performance)
+  const itemFilter = document.querySelector('select[name="item"]');
+  if (itemFilter) {
+    const topItems = items.slice(0, 100);
+    itemFilter.innerHTML = '<option value="">All Items</option>' +
+      topItems.map(item => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('');
+  }
+
+  // Populate order filter dropdown (limit to top 100 for performance)
+  const orderFilter = document.querySelector('select[name="order"]');
+  if (orderFilter) {
+    const topOrders = orders.slice(0, 100);
+    orderFilter.innerHTML = '<option value="">All Orders</option>' +
+      topOrders.map(order => `<option value="${escapeHtml(order)}">${escapeHtml(order)}</option>`).join('');
+  }
 }

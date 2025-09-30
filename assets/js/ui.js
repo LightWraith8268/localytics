@@ -321,7 +321,12 @@ function formatCell(col, val) {
   if (isNumeric(val)) return escapeHtml(formatNumberTwo(val));
   return escapeHtml(String(val ?? ''));
 }
-function formatPercent(n) { const v = Number(n||0); return `${v.toFixed(2)}%`; }
+function formatPercent(n) {
+  return `${new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(n) || 0)}%`;
+}
 function escapeHtml(s) { return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[c])); }
 function csvEscape(v) {
   const s = String(v ?? '');
@@ -329,6 +334,11 @@ function csvEscape(v) {
   return s;
 }
 function isNumeric(v){ return v !== null && v !== '' && !Array.isArray(v) && !isNaN(v); }
-function formatNumberTwo(v){ const num = Number(v||0); return (Number.isFinite(num)? num : 0).toFixed(2); }
+function formatNumberTwo(v){
+  return new Intl.NumberFormat(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  }).format(Number(v) || 0);
+}
 function formatCsvValue(v){ if (isNumeric(v)) return formatNumberTwo(v); const s=String(v??''); return s; }
 
