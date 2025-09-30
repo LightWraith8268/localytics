@@ -2308,13 +2308,6 @@ function formatCurrency(amount) {
   }).format(Number(amount) || 0);
 }
 
-function formatNumber(num) {
-  return new Intl.NumberFormat(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  }).format(Number(num) || 0);
-}
-
 function formatPercent(num) {
   return `${(Number(num) || 0).toFixed(2)}%`;
 }
