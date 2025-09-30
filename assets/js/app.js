@@ -2492,15 +2492,28 @@ function formatPercent(num) {
 
 // Client and Order Detail Modal Functions
 function showClientDetails(clientName) {
+  console.log('showClientDetails called with:', clientName);
+
   const modal = document.getElementById('clientDetailsModal');
   const content = document.getElementById('clientDetailsContent');
   const title = document.getElementById('clientDetailsModalTitle');
 
-  if (!modal || !content || !title) return;
+  if (!modal || !content || !title) {
+    console.error('Modal elements not found:', { modal: !!modal, content: !!content, title: !!title });
+    return;
+  }
 
   // Get all transactions for this client
   const base = state.filtered || state.rows;
-  const clientTransactions = base.filter(row => (row.__client || '').toLowerCase() === clientName.toLowerCase());
+  console.log('Base data length:', base?.length);
+
+  // Try multiple matching strategies
+  const clientTransactions = base.filter(row => {
+    const rowClient = row.__client || row[state.mapping?.client] || '';
+    return rowClient.toLowerCase() === clientName.toLowerCase();
+  });
+
+  console.log('Found transactions:', clientTransactions.length);
 
   if (!clientTransactions.length) {
     content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
