@@ -491,11 +491,11 @@ window.addEventListener('DOMContentLoaded', () => {
   const st = qs('filterStart'); const en = qs('filterEnd'); const it = qs('filterItem');
   const fClient = qs('filterClient'); const fStaff = qs('filterStaff'); const fOrder = qs('filterOrder'); const fCat = qs('filterCategory');
   const fRevMin = qs('filterRevMin'); const fRevMax = qs('filterRevMax'); const fQtyMin = qs('filterQtyMin'); const fQtyMax = qs('filterQtyMax'); const fNoZero = qs('filterNoZero');
-  const btnApplyFilters = qs('btnApplyFilters');
-  if (btnApplyFilters) {
-    btnApplyFilters.addEventListener('click', async () => {
+
+  // Live filter function to apply changes immediately
+  async function applyLiveFilters() {
     state.filters = {
-      start: st.value, end: en.value, item: it.value,
+      start: st?.value || '', end: en?.value || '', item: it?.value || '',
       client: fClient?.value || '', staff: fStaff?.value || '', order: fOrder?.value || '', category: fCat?.value || '',
       revMin: fRevMin?.value || '', revMax: fRevMax?.value || '', qtyMin: fQtyMin?.value || '', qtyMax: fQtyMax?.value || '',
       noZero: !!(fNoZero && fNoZero.checked)
@@ -509,13 +509,34 @@ window.addEventListener('DOMContentLoaded', () => {
     const filtered = applyFilters(state.rows, state.mapping, state.filters);
     state.report = computeReport(filtered, state.mapping);
     renderReport();
+  }
+
+  // Add live filtering event listeners to all filter inputs
+  const filterInputs = [st, en, it, fClient, fStaff, fOrder, fCat, fRevMin, fRevMax, fQtyMin, fQtyMax];
+  filterInputs.forEach(input => {
+    if (input) {
+      // Use 'input' event for real-time typing, 'change' for dropdowns
+      input.addEventListener('input', applyLiveFilters);
+      input.addEventListener('change', applyLiveFilters);
+    }
   });
+
+  // Special handling for checkbox
+  if (fNoZero) {
+    fNoZero.addEventListener('change', applyLiveFilters);
+  }
+
+  const btnApplyFilters = qs('btnApplyFilters');
+  if (btnApplyFilters) {
+    btnApplyFilters.addEventListener('click', applyLiveFilters);
   }
 
   const btnClearFilters = qs('btnClearFilters');
   if (btnClearFilters) {
     btnClearFilters.addEventListener('click', async () => {
-    st.value = en.value = it.value = '';
+    if (st) st.value = '';
+    if (en) en.value = '';
+    if (it) it.value = '';
     if (fClient) fClient.value = '';
     if (fStaff) fStaff.value = '';
     if (fOrder) fOrder.value = '';
@@ -525,16 +546,9 @@ window.addEventListener('DOMContentLoaded', () => {
     if (fQtyMin) fQtyMin.value = '';
     if (fQtyMax) fQtyMax.value = '';
     if (fNoZero) fNoZero.checked = false;
-    state.filters = { ...DEFAULT_FILTERS };
-    // Save cleared filters for persistence (both user settings and localStorage)
-    try {
-      await saveUserSettings('filters', state.filters);
-      saveFilterState('dashboard', state.filters);
-    } catch {}
-    if (!state.rows.length || !state.mapping.date) return;
-    state.filtered = state.rows;
-    state.report = computeReport(state.rows, state.mapping);
-    renderReport();
+
+    // Apply the cleared filters immediately using live filter function
+    await applyLiveFilters();
   });
   }
 
@@ -1352,6 +1366,9 @@ function renderOrdersView() {
     });
   }
 
+  // Setup live filtering for orders advanced filters
+  setupOrdersLiveFilters();
+
   if (!state.report || !state.byOrder || !state.byOrder.length) {
     summaryEl.textContent = state.report ? 'No orders available for the current filters.' : 'Upload data to view orders.';
     tableEl.innerHTML = '<div class="text-sm text-gray-500">No orders available.</div>';
@@ -1443,6 +1460,9 @@ function renderClientTrackingView() {
   const searchInput = qs('clientsSearch');
   if (!summaryEl || !highlightsEl || !tableEl) return;
 
+  // Setup live filtering for clients advanced filters (if any exist)
+  setupClientsLiveFilters();
+
   if (!state.report || !state.byClient || !state.byClient.length) {
     summaryEl.textContent = state.report ? 'No client activity for the current filters.' : 'Upload data to view client performance.';
     highlightsEl.innerHTML = '';
@@ -1518,6 +1538,10 @@ function renderStaffTrackingView() {
   const highlightsEl = qs('staffHighlights');
   const tableEl = qs('staffTrackingTable');
   if (!summaryEl || !highlightsEl || !tableEl) return;
+
+  // Setup live filtering for staff advanced filters (if any exist)
+  setupStaffLiveFilters();
+
   if (!state.report || !state.byStaff || !state.byStaff.length) {
     summaryEl.textContent = state.report ? 'No staff activity for the current filters.' : 'Upload data to view staff performance.';
     highlightsEl.innerHTML = '';
@@ -1555,6 +1579,9 @@ function renderItemTrackingView() {
   const tableEl = qs('itemTrackingTable');
   const searchInput = qs('itemsSearch');
   if (!summaryEl || !highlightsEl || !tableEl) return;
+
+  // Setup live filtering for items advanced filters (if any exist)
+  setupItemsLiveFilters();
 
   if (!state.report || !state.byItem || !state.byItem.length) {
     summaryEl.textContent = state.report ? 'No item performance data for the current filters.' : 'Upload data to view item trends.';
@@ -3004,4 +3031,420 @@ function populateDropdownFilters() {
     orderFilter.innerHTML = '<option value="">All Orders</option>' +
       topOrders.map(order => `<option value="${escapeHtml(order)}">${escapeHtml(order)}</option>`).join('');
   }
+}
+
+// ================================
+// Live Filtering Functions
+// ================================
+
+function setupOrdersLiveFilters() {
+  const filterInputs = [
+    qs('ordersFilterStart'),
+    qs('ordersFilterEnd'),
+    qs('ordersFilterItem'),
+    qs('ordersFilterClient'),
+    qs('ordersFilterStaff'),
+    qs('ordersFilterOrder'),
+    qs('ordersFilterCategory')
+  ];
+
+  // Add live filtering event listeners
+  filterInputs.forEach(input => {
+    if (input && !input.hasAttribute('data-live-filter')) {
+      input.setAttribute('data-live-filter', 'true');
+      input.addEventListener('input', applyOrdersFilters);
+      input.addEventListener('change', applyOrdersFilters);
+    }
+  });
+}
+
+function applyOrdersFilters() {
+  // Get filter values
+  const startDate = qs('ordersFilterStart')?.value || '';
+  const endDate = qs('ordersFilterEnd')?.value || '';
+  const item = qs('ordersFilterItem')?.value || '';
+  const client = qs('ordersFilterClient')?.value || '';
+  const staff = qs('ordersFilterStaff')?.value || '';
+  const order = qs('ordersFilterOrder')?.value || '';
+  const category = qs('ordersFilterCategory')?.value || '';
+
+  // Apply filters to working rows
+  let filteredRows = getWorkingRows();
+
+  // Date filtering
+  if (startDate || endDate) {
+    filteredRows = filteredRows.filter(row => {
+      const iso = row.__dateIso || '';
+      if (!iso) return false;
+      if (startDate && iso < startDate) return false;
+      if (endDate && iso > endDate) return false;
+      return true;
+    });
+  }
+
+  // Text-based filtering
+  if (item) {
+    filteredRows = filteredRows.filter(row => {
+      const itemValue = (row[state.mapping.item] || '').toString().toLowerCase();
+      return itemValue.includes(item.toLowerCase());
+    });
+  }
+
+  if (client) {
+    filteredRows = filteredRows.filter(row => {
+      const clientValue = (row.__client || '').toString().toLowerCase();
+      return clientValue.includes(client.toLowerCase());
+    });
+  }
+
+  if (staff) {
+    filteredRows = filteredRows.filter(row => {
+      const staffValue = (row.__staff || '').toString().toLowerCase();
+      return staffValue.includes(staff.toLowerCase());
+    });
+  }
+
+  if (order) {
+    filteredRows = filteredRows.filter(row => {
+      const orderValue = (row.__order || '').toString().toLowerCase();
+      return orderValue.includes(order.toLowerCase());
+    });
+  }
+
+  if (category) {
+    filteredRows = filteredRows.filter(row => {
+      const categoryValue = (row.__category || '').toString().toLowerCase();
+      return categoryValue.includes(category.toLowerCase());
+    });
+  }
+
+  // Update orders aggregation with filtered data
+  state.byOrder = aggregateByOrder(filteredRows);
+
+  // Re-render the view with filtered data
+  renderOrdersTableOnly();
+}
+
+function renderOrdersTableOnly() {
+  const summaryEl = qs('ordersSummary');
+  const tableEl = qs('ordersTrackingTable');
+  const searchInput = qs('ordersSearch');
+
+  if (!summaryEl || !tableEl) return;
+
+  if (!state.byOrder || !state.byOrder.length) {
+    summaryEl.textContent = 'No orders match the current filters.';
+    tableEl.innerHTML = '<div class="text-sm text-gray-500">No orders available.</div>';
+    return;
+  }
+
+  // Continue with existing orders rendering logic but with filtered data
+  const workingRows = getWorkingRows();
+  const rowsByOrder = new Map();
+  workingRows.forEach(row => {
+    const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
+    if (!rowsByOrder.has(key)) rowsByOrder.set(key, []);
+    rowsByOrder.get(key).push(row);
+  });
+
+  const getLatestDate = (orderId) => {
+    const rows = rowsByOrder.get(orderId) || [];
+    return rows.reduce((latest, row) => {
+      const iso = row.__dateIso || '';
+      return iso && (!latest || iso > latest) ? iso : latest;
+    }, '');
+  };
+
+  // Apply search filter
+  const searchTerm = (searchInput?.value || '').toLowerCase().trim();
+  let orders = [...state.byOrder];
+  if (searchTerm) {
+    orders = orders.filter(order => {
+      const clientRows = rowsByOrder.get(order.label) || [];
+      return (order.label || '').toLowerCase().includes(searchTerm) ||
+             clientRows.some(row => {
+               const client = (row.__client || '').toLowerCase();
+               const staff = (row.__staff || '').toLowerCase();
+               const item = (row[state.mapping.item] || '').toLowerCase();
+               return client.includes(searchTerm) || staff.includes(searchTerm) || item.includes(searchTerm);
+             });
+    });
+  }
+
+  // Update summary
+  const totalRevenue = orders.reduce((sum, o) => sum + Number(o.revenue || 0), 0);
+  const totalOrders = orders.length;
+  summaryEl.textContent = `${formatNumber(totalOrders)} orders · Revenue ${formatCurrencyShort(totalRevenue)}`;
+
+  // Add date to orders and render table
+  const ordersWithDates = orders.map(order => ({
+    ...order,
+    date: getLatestDate(order.label) || '-'
+  }));
+
+  renderSortableClickableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
+    order: order.label || 'Untitled',
+    date: order.date,
+    client: order.client || '-',
+    staff: order.staff || '-',
+    revenue: order.revenue,
+    profit: order.profit,
+    margin: order.margin
+  })), {
+    defaultSort: { column: 'revenue', direction: 'desc' },
+    clickHandlers: {
+      order: 'showOrderDetails'
+    }
+  });
+}
+
+function setupClientsLiveFilters() {
+  const filterInputs = [
+    qs('clientsFilterStart'),
+    qs('clientsFilterEnd'),
+    qs('clientsFilterItem'),
+    qs('clientsFilterStaff'),
+    qs('clientsFilterOrder'),
+    qs('clientsFilterCategory')
+  ];
+
+  // Add live filtering event listeners
+  filterInputs.forEach(input => {
+    if (input && !input.hasAttribute('data-live-filter')) {
+      input.setAttribute('data-live-filter', 'true');
+      input.addEventListener('input', applyClientsFilters);
+      input.addEventListener('change', applyClientsFilters);
+    }
+  });
+
+  // Search input already has live filtering via renderClientTrackingView call
+  const searchInput = qs('clientsSearch');
+  if (searchInput && !searchInput.hasAttribute('data-live-filter')) {
+    searchInput.setAttribute('data-live-filter', 'true');
+  }
+}
+
+function setupStaffLiveFilters() {
+  const filterInputs = [
+    qs('staffFilterStart'),
+    qs('staffFilterEnd'),
+    qs('staffFilterItem'),
+    qs('staffFilterClient'),
+    qs('staffFilterOrder'),
+    qs('staffFilterCategory')
+  ];
+
+  // Add live filtering event listeners
+  filterInputs.forEach(input => {
+    if (input && !input.hasAttribute('data-live-filter')) {
+      input.setAttribute('data-live-filter', 'true');
+      input.addEventListener('input', applyStaffFilters);
+      input.addEventListener('change', applyStaffFilters);
+    }
+  });
+}
+
+function setupItemsLiveFilters() {
+  const filterInputs = [
+    qs('itemsFilterStart'),
+    qs('itemsFilterEnd'),
+    qs('itemsFilterCategory'),
+    qs('itemsFilterClient'),
+    qs('itemsFilterStaff'),
+    qs('itemsFilterOrder')
+  ];
+
+  // Add live filtering event listeners
+  filterInputs.forEach(input => {
+    if (input && !input.hasAttribute('data-live-filter')) {
+      input.setAttribute('data-live-filter', 'true');
+      input.addEventListener('input', applyItemsFilters);
+      input.addEventListener('change', applyItemsFilters);
+    }
+  });
+
+  // Search input already has live filtering via renderItemTrackingView call
+  const searchInput = qs('itemsSearch');
+  if (searchInput && !searchInput.hasAttribute('data-live-filter')) {
+    searchInput.setAttribute('data-live-filter', 'true');
+  }
+}
+
+// Filter application functions for each page
+function applyClientsFilters() {
+  // Get filter values
+  const startDate = qs('clientsFilterStart')?.value || '';
+  const endDate = qs('clientsFilterEnd')?.value || '';
+  const item = qs('clientsFilterItem')?.value || '';
+  const staff = qs('clientsFilterStaff')?.value || '';
+  const order = qs('clientsFilterOrder')?.value || '';
+  const category = qs('clientsFilterCategory')?.value || '';
+
+  // Apply filters to base rows and regenerate client aggregation
+  let filteredRows = state.rows || [];
+
+  // Date filtering
+  if (startDate || endDate) {
+    filteredRows = filteredRows.filter(row => {
+      const iso = row.__dateIso || '';
+      if (!iso) return false;
+      if (startDate && iso < startDate) return false;
+      if (endDate && iso > endDate) return false;
+      return true;
+    });
+  }
+
+  // Text-based filtering
+  if (item) {
+    filteredRows = filteredRows.filter(row => {
+      const itemValue = (row[state.mapping.item] || '').toString().toLowerCase();
+      return itemValue.includes(item.toLowerCase());
+    });
+  }
+
+  if (staff) {
+    filteredRows = filteredRows.filter(row => {
+      const staffValue = (row.__staff || '').toString().toLowerCase();
+      return staffValue.includes(staff.toLowerCase());
+    });
+  }
+
+  if (order) {
+    filteredRows = filteredRows.filter(row => {
+      const orderValue = (row.__order || '').toString().toLowerCase();
+      return orderValue.includes(order.toLowerCase());
+    });
+  }
+
+  if (category) {
+    filteredRows = filteredRows.filter(row => {
+      const categoryValue = (row.__category || '').toString().toLowerCase();
+      return categoryValue.includes(category.toLowerCase());
+    });
+  }
+
+  // Update client aggregation with filtered data
+  state.byClient = aggregateByField(filteredRows, r => r.__client && r.__client !== 'undefined' ? r.__client : '');
+
+  // Re-render the clients view
+  renderClientTrackingView();
+}
+
+function applyStaffFilters() {
+  // Get filter values
+  const startDate = qs('staffFilterStart')?.value || '';
+  const endDate = qs('staffFilterEnd')?.value || '';
+  const item = qs('staffFilterItem')?.value || '';
+  const client = qs('staffFilterClient')?.value || '';
+  const order = qs('staffFilterOrder')?.value || '';
+  const category = qs('staffFilterCategory')?.value || '';
+
+  // Apply filters to base rows and regenerate staff aggregation
+  let filteredRows = state.rows || [];
+
+  // Date filtering
+  if (startDate || endDate) {
+    filteredRows = filteredRows.filter(row => {
+      const iso = row.__dateIso || '';
+      if (!iso) return false;
+      if (startDate && iso < startDate) return false;
+      if (endDate && iso > endDate) return false;
+      return true;
+    });
+  }
+
+  // Text-based filtering
+  if (item) {
+    filteredRows = filteredRows.filter(row => {
+      const itemValue = (row[state.mapping.item] || '').toString().toLowerCase();
+      return itemValue.includes(item.toLowerCase());
+    });
+  }
+
+  if (client) {
+    filteredRows = filteredRows.filter(row => {
+      const clientValue = (row.__client || '').toString().toLowerCase();
+      return clientValue.includes(client.toLowerCase());
+    });
+  }
+
+  if (order) {
+    filteredRows = filteredRows.filter(row => {
+      const orderValue = (row.__order || '').toString().toLowerCase();
+      return orderValue.includes(order.toLowerCase());
+    });
+  }
+
+  if (category) {
+    filteredRows = filteredRows.filter(row => {
+      const categoryValue = (row.__category || '').toString().toLowerCase();
+      return categoryValue.includes(category.toLowerCase());
+    });
+  }
+
+  // Update staff aggregation with filtered data
+  state.byStaff = aggregateByField(filteredRows, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
+
+  // Re-render the staff view
+  renderStaffTrackingView();
+}
+
+function applyItemsFilters() {
+  // Get filter values
+  const startDate = qs('itemsFilterStart')?.value || '';
+  const endDate = qs('itemsFilterEnd')?.value || '';
+  const category = qs('itemsFilterCategory')?.value || '';
+  const client = qs('itemsFilterClient')?.value || '';
+  const staff = qs('itemsFilterStaff')?.value || '';
+  const order = qs('itemsFilterOrder')?.value || '';
+
+  // Apply filters to base rows and regenerate item report
+  let filteredRows = state.rows || [];
+
+  // Date filtering
+  if (startDate || endDate) {
+    filteredRows = filteredRows.filter(row => {
+      const iso = row.__dateIso || '';
+      if (!iso) return false;
+      if (startDate && iso < startDate) return false;
+      if (endDate && iso > endDate) return false;
+      return true;
+    });
+  }
+
+  // Text-based filtering
+  if (category) {
+    filteredRows = filteredRows.filter(row => {
+      const categoryValue = (row.__category || '').toString().toLowerCase();
+      return categoryValue.includes(category.toLowerCase());
+    });
+  }
+
+  if (client) {
+    filteredRows = filteredRows.filter(row => {
+      const clientValue = (row.__client || '').toString().toLowerCase();
+      return clientValue.includes(client.toLowerCase());
+    });
+  }
+
+  if (staff) {
+    filteredRows = filteredRows.filter(row => {
+      const staffValue = (row.__staff || '').toString().toLowerCase();
+      return staffValue.includes(staff.toLowerCase());
+    });
+  }
+
+  if (order) {
+    filteredRows = filteredRows.filter(row => {
+      const orderValue = (row.__order || '').toString().toLowerCase();
+      return orderValue.includes(order.toLowerCase());
+    });
+  }
+
+  // Regenerate item report with filtered data
+  const filteredReport = computeReport(filteredRows, state.mapping);
+  state.byItem = filteredReport.byItem;
+
+  // Re-render the items view
+  renderItemTrackingView();
 }
