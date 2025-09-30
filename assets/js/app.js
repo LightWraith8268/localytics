@@ -1373,7 +1373,7 @@ function renderClientTrackingView() {
 
   const summaryText = isFiltered
     ? `${formatNumber(clients.length)} of ${formatNumber(totalClients)} clients${searchTerm ? ` matching "${searchTerm}"` : ''} · Revenue ${formatCurrencyShort(totalRevenue)}`
-    : `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${formatNumber(totalOrders / (clients.length || 1))}`;
+    : `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${(totalOrders / (clients.length || 1)).toFixed(0)}`;
   summaryEl.textContent = summaryText;
 
   const topClients = clients.slice(0, 3);
@@ -1381,7 +1381,7 @@ function renderClientTrackingView() {
     <div class="p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(c.label || 'Unassigned')}</div>
       <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(c.revenue)}</div>
-      <div class="text-xs text-gray-500">Orders ${formatNumber(c.orders)} · Margin ${formatPercentShort(c.margin)}</div>
+      <div class="text-xs text-gray-500">Orders ${(c.orders || 0).toFixed(0)} · Margin ${formatPercentShort(c.margin)}</div>
     </div>
   `).join('');
 
@@ -1412,13 +1412,13 @@ function renderStaffTrackingView() {
   const staff = state.byStaff;
   const totalRevenue = staff.reduce((sum, s) => sum + Number(s.revenue || 0), 0);
   const totalOrders = staff.reduce((sum, s) => sum + Number(s.orders || 0), 0);
-  summaryEl.textContent = `${formatNumber(staff.length)} staff · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${formatNumber(totalOrders / (staff.length || 1))}`;
+  summaryEl.textContent = `${formatNumber(staff.length)} staff · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${(totalOrders / (staff.length || 1)).toFixed(0)}`;
   const topStaff = staff.slice(0, 3);
   highlightsEl.innerHTML = topStaff.map(s => `
     <div class="p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(s.label || 'Unassigned')}</div>
       <div class="text-sm font-semibold text-gray-900">${formatCurrencyShort(s.revenue)}</div>
-      <div class="text-xs text-gray-500">Orders ${formatNumber(s.orders)} · Margin ${formatPercentShort(s.margin)}</div>
+      <div class="text-xs text-gray-500">Orders ${(s.orders || 0).toFixed(0)} · Margin ${formatPercentShort(s.margin)}</div>
     </div>
   `).join('');
   renderSortableTable(tableEl, ['staff','orders','quantity','revenue','cost','profit','margin'], staff.map(s => ({

@@ -13,8 +13,8 @@ export function renderTotals(container, totals) {
     { label: 'Total Profit', value: formatCurrency(totals.totalProfit || 0) },
     { label: 'Margin', value: formatPercent(totals.marginPct) },
     { label: 'Total Quantity', value: formatNumberTwo(totals.totalQuantity) },
-    { label: 'Total Orders', value: String(totals.totalOrders || 0) },
-    { label: 'Distinct Items', value: String(totals.distinctItems) },
+    { label: 'Total Orders', value: (totals.totalOrders || 0).toFixed(0) },
+    { label: 'Distinct Items', value: (totals.distinctItems || 0).toFixed(0) },
   ];
   cards.forEach(c => {
     const d = document.createElement('div');
@@ -317,6 +317,7 @@ function guessCurrency() { try { return (Intl.NumberFormat().resolvedOptions().c
 function formatCell(col, val) {
   if (/revenue|price|total|cost|profit/i.test(col)) return formatCurrency(val);
   if (/margin/i.test(col)) return formatPercent(val);
+  if (/orders|quantity/i.test(col)) return escapeHtml((Number(val) || 0).toFixed(0));
   // For any other numeric values, show exactly two decimals
   if (isNumeric(val)) return escapeHtml(formatNumberTwo(val));
   return escapeHtml(String(val ?? ''));
