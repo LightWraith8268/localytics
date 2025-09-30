@@ -2,7 +2,18 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.57-20250930';
+// Load version from centralized config
+let VERSION = 'wb-1.2.57-20250930'; // fallback
+
+// Load version from JSON config
+fetch('./version.json')
+  .then(response => response.json())
+  .then(config => {
+    VERSION = `wb-${config.version}-${config.timestamp}`;
+  })
+  .catch(() => {
+    // Keep fallback version if fetch fails
+  });
 
 // No precaching - always fetch fresh content from network
 

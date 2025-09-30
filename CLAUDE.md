@@ -50,12 +50,22 @@ This is a static web application with no build process dependencies. The codebas
 - **Dependencies**: Chart.js and Firebase loaded via CDN (see `index.html`)
 
 ### Version Management
-**CRITICAL**: CI preserves manual versions and updates cache-busting:
-- `APP_VERSION` in `assets/js/app.js` (currently 1.2.52) - manually maintained
-- `VERSION` in `service-worker.js` (currently wb-1.2.52-20250930) - manually maintained
-- Query strings in `index.html` for cache-busting - automatically updated to match APP_VERSION
+**CENTRALIZED VERSIONING**: Single source of truth for all version references:
+- **Central Config**: `version.json` contains version and timestamp
+- **Automatic Distribution**: All version references pull from this single source
+- **Cache-busting**: CSS/JS automatically use version from central config
+- **Service Worker**: Fetches version from central config on startup
 
-**Manual Version Bumping Required**: Unlike documented previously, CI does NOT auto-bump versions. Developers must manually update APP_VERSION in app.js and VERSION in service-worker.js before deployment. CI will use the current manual version for cache-busting querystrings and stamp the service worker with build metadata. The service worker excludes Firebase domains from caching to prevent API conflicts.
+**Version Update Process**:
+1. Update version in ONE place: `node update-version.js 1.2.58`
+2. Commit and push: The script updates `version.json` with new version and timestamp
+3. All other references (sidebar, service worker, cache-busting) automatically use the central version
+
+**Files Using Central Version**:
+- `version.json` - Single source of truth
+- `assets/js/version.js` - Version loader and distributor
+- `index.html` - Sidebar version, CSS/JS cache-busting
+- `service-worker.js` - SW version for update detection
 
 ### Firebase Configuration
 - **Optional**: App works without Firebase (uses localStorage)
