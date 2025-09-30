@@ -1146,6 +1146,7 @@ function renderReport() {
 
   // Debug staff data
   console.log('[DEBUG] Staff column mapping:', state.mapping.staff);
+  console.log('[DEBUG] Current filters:', state.filters);
   console.log('[DEBUG] Total raw rows:', state.rows.length);
   console.log('[DEBUG] Total filtered rows for aggregation:', base.length);
   console.log('[DEBUG] Are filters applied?', base !== state.rows);
@@ -1153,6 +1154,10 @@ function renderReport() {
   const allStaffValues = state.rows.map(r => r.__staff);
   const uniqueAllStaff = [...new Set(allStaffValues.filter(s => s && s !== 'undefined'))];
   console.log('[DEBUG] All unique staff in raw data:', uniqueAllStaff);
+  console.log('[DEBUG] Raw staff counts:', allStaffValues.reduce((acc, staff) => {
+    acc[staff] = (acc[staff] || 0) + 1;
+    return acc;
+  }, {}));
 
   const staffValues = base.map(r => r.__staff).filter(s => s && s !== 'undefined');
   const uniqueStaff = [...new Set(staffValues)];
@@ -1162,9 +1167,9 @@ function renderReport() {
     return acc;
   }, {}));
 
-  state.byClient = aggregateByField(base, r => r.__client || '');
-  state.byStaff = aggregateByField(base, r => r.__staff || '');
-  state.byCategory = aggregateByField(base, r => r.__category || '');
+  state.byClient = aggregateByField(base, r => r.__client && r.__client !== 'undefined' ? r.__client : '');
+  state.byStaff = aggregateByField(base, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
+  state.byCategory = aggregateByField(base, r => r.__category && r.__category !== 'undefined' ? r.__category : '');
   state.byOrder = aggregateByOrder(base);
 
   console.log('[DEBUG] Aggregated staff results:', state.byStaff);
@@ -2946,9 +2951,9 @@ function populateDropdownFilters() {
   const base = state.rows; // Use all data for filter options
 
   // Get unique values for each filter type
-  const clients = [...new Set(base.map(row => row.__client).filter(Boolean))].sort();
-  const staff = [...new Set(base.map(row => row.__staff).filter(Boolean))].sort();
-  const categories = [...new Set(base.map(row => row.__category).filter(Boolean))].sort();
+  const clients = [...new Set(base.map(row => row.__client).filter(val => val && val !== 'undefined'))].sort();
+  const staff = [...new Set(base.map(row => row.__staff).filter(val => val && val !== 'undefined'))].sort();
+  const categories = [...new Set(base.map(row => row.__category).filter(val => val && val !== 'undefined'))].sort();
   const items = [...new Set(base.map(row => row[state.mapping.item]).filter(Boolean))].sort();
   const orders = [...new Set(base.map(row => row.__order).filter(Boolean))].sort();
 
