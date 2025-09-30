@@ -28,16 +28,38 @@ const versionConfig = {
 };
 
 try {
+  // Update version.json
   fs.writeFileSync('./version.json', JSON.stringify(versionConfig, null, 2));
+
+  // Update fallback versions in version.js
+  const versionJsPath = './assets/js/version.js';
+  if (fs.existsSync(versionJsPath)) {
+    let versionJsContent = fs.readFileSync(versionJsPath, 'utf8');
+    versionJsContent = versionJsContent
+      .replace(/version: '[^']+', timestamp: '[^']+'/g, `version: '${newVersion}', timestamp: '${timestamp}'`)
+      .replace(/\|\| '[^']+'/g, `|| '${newVersion}'`);
+    fs.writeFileSync(versionJsPath, versionJsContent);
+  }
+
+  // Update fallback version in service-worker.js
+  const swPath = './service-worker.js';
+  if (fs.existsSync(swPath)) {
+    let swContent = fs.readFileSync(swPath, 'utf8');
+    swContent = swContent.replace(/VERSION = 'wb-[^']+'/g, `VERSION = 'wb-${newVersion}-${timestamp}'`);
+    fs.writeFileSync(swPath, swContent);
+  }
+
   console.log(`✅ Updated version to ${newVersion} with timestamp ${timestamp}`);
   console.log('📄 Updated files:');
   console.log('   - version.json');
+  console.log('   - assets/js/version.js (fallback values)');
+  console.log('   - service-worker.js (fallback value)');
   console.log('');
   console.log('🚀 Next steps:');
   console.log('   1. git add .');
   console.log(`   2. git commit -m "bump version to ${newVersion}"`);
   console.log('   3. git push origin main');
 } catch (error) {
-  console.error('Error updating version.json:', error);
+  console.error('Error updating version files:', error);
   process.exit(1);
 }

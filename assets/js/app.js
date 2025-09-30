@@ -5,9 +5,7 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
-const APP_VERSION = '1.2.56';
-// Expose version for SW registration cache-busting
-try { window.APP_VERSION = APP_VERSION; } catch {}
+// APP_VERSION is now set by the centralized version system in version.js
 const DEFAULT_FILTERS = {
   start: '',
   end: '',
