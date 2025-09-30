@@ -118,9 +118,7 @@ window.addEventListener('DOMContentLoaded', () => {
       mobileDarkModeToggle.addEventListener('click', toggleDarkMode);
     }
   } catch {}
-  // Update sidebar version
-  const sidebarVersionEl = document.getElementById('sidebarVersion');
-  if (sidebarVersionEl) sidebarVersionEl.textContent = `v${APP_VERSION}`;
+  // Update sidebar version (handled by version.js centralized system)
 
   // Navigation system ready
 
