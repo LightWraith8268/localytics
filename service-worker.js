@@ -2,7 +2,7 @@
 /* global workbox */
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
-const VERSION = 'wb-1.2.54-20250930';
+const VERSION = 'wb-1.2.55-20250930';
 
 // No precaching - always fetch fresh content from network
 
@@ -80,7 +80,23 @@ self.addEventListener('message', (event) => {
   }
 });
 
-// Take control as soon as activated
+// Force immediate activation and skip waiting
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+// Take control as soon as activated and clear all caches
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(
+    Promise.all([
+      // Clear all caches to ensure fresh content
+      caches.keys().then(cacheNames => {
+        return Promise.all(
+          cacheNames.map(cacheName => caches.delete(cacheName))
+        );
+      }),
+      // Take control of all clients
+      self.clients.claim()
+    ])
+  );
 });
