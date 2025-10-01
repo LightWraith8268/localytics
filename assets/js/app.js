@@ -1472,7 +1472,6 @@ function renderClientTrackingView() {
     </div>
   `).join('');
 
-  console.log('About to render client table with clickable columns');
   renderSortableClickableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
     client: c.label || 'Unassigned',
     orders: c.orders,
@@ -1487,7 +1486,6 @@ function renderClientTrackingView() {
       client: 'showClientDetails'  // Make client column clickable
     }
   });
-  console.log('Client table rendered');
 }
 
 function renderStaffTrackingView() {
@@ -2494,22 +2492,17 @@ function formatPercent(num) {
 
 // Client and Order Detail Modal Functions
 function showClientDetails(clientName) {
-  console.log('showClientDetails function called with:', clientName);
-
   const modal = document.getElementById('clientDetailsModal');
   const content = document.getElementById('clientDetailsContent');
   const title = document.getElementById('clientDetailsModalTitle');
 
-  console.log('Modal elements found:', { modal: !!modal, content: !!content, title: !!title });
-
   if (!modal || !content || !title) {
-    console.error('Modal elements not found - missing:', { modal: !modal, content: !content, title: !title });
+    console.error('Modal elements not found');
     return;
   }
 
   // Get all transactions for this client
   const base = state.filtered || state.rows;
-  console.log('Base data available:', base?.length, 'rows');
 
   // Try multiple matching strategies
   const clientTransactions = base.filter(row => {
@@ -2517,18 +2510,12 @@ function showClientDetails(clientName) {
     return rowClient.toLowerCase() === clientName.toLowerCase();
   });
 
-  console.log('Found client transactions:', clientTransactions.length);
-
   if (!clientTransactions.length) {
-    console.log('No transactions found, showing empty modal');
     content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
     title.textContent = `Client Details: ${clientName}`;
     modal.classList.remove('hidden');
     modal.style.display = 'block';
     modal.style.visibility = 'visible';
-    modal.style.opacity = '1';
-    modal.style.zIndex = '9999';
-    console.log('Empty modal should be visible now');
     return;
   }
 
@@ -2638,28 +2625,11 @@ function showClientDetails(clientName) {
 
   content.innerHTML = summaryHtml + tableHtml;
   title.textContent = `Client Details: ${clientName}`;
-  console.log('About to show modal with data');
   modal.classList.remove('hidden');
 
-  // Force multiple display properties
+  // Only force the minimal CSS needed for visibility
   modal.style.display = 'block';
   modal.style.visibility = 'visible';
-  modal.style.opacity = '1';
-  modal.style.zIndex = '9999';
-  modal.style.position = 'fixed';
-  modal.style.top = '0';
-  modal.style.left = '0';
-  modal.style.width = '100%';
-  modal.style.height = '100%';
-
-  console.log('Modal display set to block, classes:', modal.className);
-  console.log('Modal computed styles:', {
-    display: window.getComputedStyle(modal).display,
-    visibility: window.getComputedStyle(modal).visibility,
-    opacity: window.getComputedStyle(modal).opacity,
-    zIndex: window.getComputedStyle(modal).zIndex,
-    position: window.getComputedStyle(modal).position
-  });
 
   // Set up close button if not already done
   const closeBtn = document.getElementById('clientDetailsModalClose');
@@ -2915,7 +2885,6 @@ function renderClickableTable(container, columns, rows, clickableColumns = {}) {
 
 // Enhanced table rendering with both sorting and clickable functionality
 function renderSortableClickableTable(container, columns, rows, options = {}) {
-  console.log('renderSortableClickableTable called with options:', options);
   if (!container) {
     console.warn('renderSortableClickableTable: container element is null');
     return;
@@ -3034,21 +3003,15 @@ function renderSortableClickableTable(container, columns, rows, options = {}) {
 
       // Check if this column should be clickable
       if (options.clickableColumns && options.clickableColumns[column]) {
-        console.log('Creating clickable cell for:', column, 'with value:', value);
         const span = document.createElement('span');
         span.className = 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline';
-        span.innerHTML = formattedValue;  // Use innerHTML for formatted display
+        span.innerHTML = formattedValue;
         span.addEventListener('click', () => {
-          console.log('Click event fired for:', value);
           if (typeof window[options.clickableColumns[column]] === 'function') {
-            console.log('Calling function:', options.clickableColumns[column]);
             window[options.clickableColumns[column]](value);
-          } else {
-            console.error('Function not found:', options.clickableColumns[column]);
           }
         });
         td.appendChild(span);
-        console.log('Clickable span attached to td');
       } else {
         td.innerHTML = formattedValue;
       }
