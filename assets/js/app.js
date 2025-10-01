@@ -2646,6 +2646,28 @@ function showClientDetails(clientName) {
 
   console.log('Modal should be visible now');
 
+  // Debug modal visibility
+  console.log('Modal element:', modal);
+  console.log('Modal classes:', modal.className);
+  console.log('Modal computed styles after forcing:', {
+    display: window.getComputedStyle(modal).display,
+    visibility: window.getComputedStyle(modal).visibility,
+    opacity: window.getComputedStyle(modal).opacity,
+    zIndex: window.getComputedStyle(modal).zIndex,
+    position: window.getComputedStyle(modal).position,
+    transform: window.getComputedStyle(modal).transform,
+    overflow: window.getComputedStyle(modal).overflow
+  });
+
+  // Try to force the modal to be absolutely visible
+  modal.style.setProperty('display', 'block', 'important');
+  modal.style.setProperty('visibility', 'visible', 'important');
+  modal.style.setProperty('opacity', '1', 'important');
+  modal.style.setProperty('z-index', '99999', 'important');
+  modal.style.setProperty('background', 'rgba(255,0,0,0.8)', 'important'); // Red background for testing
+
+  console.log('Applied emergency visibility styles');
+
   // Set up close button if not already done
   const closeBtn = document.getElementById('clientDetailsModalClose');
   if (closeBtn && !closeBtn.hasAttribute('data-listener')) {
