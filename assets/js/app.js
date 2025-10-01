@@ -2518,6 +2518,13 @@ function showClientDetails(clientName) {
     modal.classList.remove('hidden');
     modal.style.display = 'block';
     modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '9999';
+    modal.style.position = 'fixed';
+    modal.style.top = '0';
+    modal.style.left = '0';
+    modal.style.right = '0';
+    modal.style.bottom = '0';
     return;
   }
 
@@ -2630,9 +2637,17 @@ function showClientDetails(clientName) {
   console.log('About to show modal');
   modal.classList.remove('hidden');
 
-  // Only force the minimal CSS needed for visibility
+  // Force comprehensive CSS properties to ensure visibility
   modal.style.display = 'block';
   modal.style.visibility = 'visible';
+  modal.style.opacity = '1';
+  modal.style.zIndex = '9999';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.right = '0';
+  modal.style.bottom = '0';
+
   console.log('Modal should be visible now');
 
   // Set up close button if not already done
