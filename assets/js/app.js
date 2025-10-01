@@ -2525,6 +2525,9 @@ function showClientDetails(clientName) {
     title.textContent = `Client Details: ${clientName}`;
     modal.classList.remove('hidden');
     modal.style.display = 'block';
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+    modal.style.zIndex = '9999';
     console.log('Empty modal should be visible now');
     return;
   }
@@ -2637,8 +2640,26 @@ function showClientDetails(clientName) {
   title.textContent = `Client Details: ${clientName}`;
   console.log('About to show modal with data');
   modal.classList.remove('hidden');
+
+  // Force multiple display properties
   modal.style.display = 'block';
+  modal.style.visibility = 'visible';
+  modal.style.opacity = '1';
+  modal.style.zIndex = '9999';
+  modal.style.position = 'fixed';
+  modal.style.top = '0';
+  modal.style.left = '0';
+  modal.style.width = '100%';
+  modal.style.height = '100%';
+
   console.log('Modal display set to block, classes:', modal.className);
+  console.log('Modal computed styles:', {
+    display: window.getComputedStyle(modal).display,
+    visibility: window.getComputedStyle(modal).visibility,
+    opacity: window.getComputedStyle(modal).opacity,
+    zIndex: window.getComputedStyle(modal).zIndex,
+    position: window.getComputedStyle(modal).position
+  });
 
   // Set up close button if not already done
   const closeBtn = document.getElementById('clientDetailsModalClose');
