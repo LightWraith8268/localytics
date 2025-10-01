@@ -1472,6 +1472,7 @@ function renderClientTrackingView() {
     </div>
   `).join('');
 
+  console.log('About to render client table with clickable columns');
   renderSortableClickableTable(tableEl, ['client','orders','quantity','revenue','cost','profit','margin'], clients.map(c => ({
     client: c.label || 'Unassigned',
     orders: c.orders,
@@ -1486,6 +1487,7 @@ function renderClientTrackingView() {
       client: 'showClientDetails'  // Make client column clickable
     }
   });
+  console.log('Client table rendered');
 }
 
 function renderStaffTrackingView() {
@@ -2881,6 +2883,7 @@ function renderClickableTable(container, columns, rows, clickableColumns = {}) {
 
 // Enhanced table rendering with both sorting and clickable functionality
 function renderSortableClickableTable(container, columns, rows, options = {}) {
+  console.log('renderSortableClickableTable called with options:', options);
   if (!container) {
     console.warn('renderSortableClickableTable: container element is null');
     return;
@@ -2999,15 +3002,21 @@ function renderSortableClickableTable(container, columns, rows, options = {}) {
 
       // Check if this column should be clickable
       if (options.clickableColumns && options.clickableColumns[column]) {
+        console.log('Creating clickable cell for:', column, 'with value:', value);
         const span = document.createElement('span');
         span.className = 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline';
         span.innerHTML = formattedValue;  // Use innerHTML for formatted display
         span.addEventListener('click', () => {
+          console.log('Click event fired for:', value);
           if (typeof window[options.clickableColumns[column]] === 'function') {
+            console.log('Calling function:', options.clickableColumns[column]);
             window[options.clickableColumns[column]](value);
+          } else {
+            console.error('Function not found:', options.clickableColumns[column]);
           }
         });
         td.appendChild(span);
+        console.log('Clickable span attached to td');
       } else {
         td.innerHTML = formattedValue;
       }
