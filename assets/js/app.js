@@ -2494,17 +2494,22 @@ function formatPercent(num) {
 
 // Client and Order Detail Modal Functions
 function showClientDetails(clientName) {
+  console.log('showClientDetails function called with:', clientName);
+
   const modal = document.getElementById('clientDetailsModal');
   const content = document.getElementById('clientDetailsContent');
   const title = document.getElementById('clientDetailsModalTitle');
 
+  console.log('Modal elements found:', { modal: !!modal, content: !!content, title: !!title });
+
   if (!modal || !content || !title) {
-    console.error('Modal elements not found');
+    console.error('Modal elements not found - missing:', { modal: !modal, content: !content, title: !title });
     return;
   }
 
   // Get all transactions for this client
   const base = state.filtered || state.rows;
+  console.log('Base data available:', base?.length, 'rows');
 
   // Try multiple matching strategies
   const clientTransactions = base.filter(row => {
@@ -2512,11 +2517,15 @@ function showClientDetails(clientName) {
     return rowClient.toLowerCase() === clientName.toLowerCase();
   });
 
+  console.log('Found client transactions:', clientTransactions.length);
+
   if (!clientTransactions.length) {
+    console.log('No transactions found, showing empty modal');
     content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
     title.textContent = `Client Details: ${clientName}`;
     modal.classList.remove('hidden');
     modal.style.display = 'block';
+    console.log('Empty modal should be visible now');
     return;
   }
 
@@ -2626,8 +2635,10 @@ function showClientDetails(clientName) {
 
   content.innerHTML = summaryHtml + tableHtml;
   title.textContent = `Client Details: ${clientName}`;
+  console.log('About to show modal with data');
   modal.classList.remove('hidden');
   modal.style.display = 'block';
+  console.log('Modal display set to block, classes:', modal.className);
 
   // Set up close button if not already done
   const closeBtn = document.getElementById('clientDetailsModalClose');
