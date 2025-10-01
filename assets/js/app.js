@@ -2492,6 +2492,8 @@ function formatPercent(num) {
 
 // Client and Order Detail Modal Functions
 function showClientDetails(clientName) {
+  console.log('showClientDetails called with:', clientName);
+
   const modal = document.getElementById('clientDetailsModal');
   const content = document.getElementById('clientDetailsContent');
   const title = document.getElementById('clientDetailsModalTitle');
@@ -2625,11 +2627,13 @@ function showClientDetails(clientName) {
 
   content.innerHTML = summaryHtml + tableHtml;
   title.textContent = `Client Details: ${clientName}`;
+  console.log('About to show modal');
   modal.classList.remove('hidden');
 
   // Only force the minimal CSS needed for visibility
   modal.style.display = 'block';
   modal.style.visibility = 'visible';
+  console.log('Modal should be visible now');
 
   // Set up close button if not already done
   const closeBtn = document.getElementById('clientDetailsModalClose');
@@ -3007,8 +3011,11 @@ function renderSortableClickableTable(container, columns, rows, options = {}) {
         span.className = 'cursor-pointer text-blue-600 hover:text-blue-800 hover:underline';
         span.innerHTML = formattedValue;
         span.addEventListener('click', () => {
+          console.log('Click detected on:', value);
           if (typeof window[options.clickableColumns[column]] === 'function') {
             window[options.clickableColumns[column]](value);
+          } else {
+            console.error('Function not found:', options.clickableColumns[column]);
           }
         });
         td.appendChild(span);
