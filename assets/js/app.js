@@ -2516,10 +2516,13 @@ function showClientDetails(clientName) {
     content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
     title.textContent = `Client Details: ${clientName}`;
     modal.classList.remove('hidden');
-    modal.style.display = 'block';
-    modal.style.visibility = 'visible';
-    modal.style.opacity = '1';
-    modal.style.zIndex = '9999';
+    modal.style.display = 'block !important';
+    modal.style.visibility = 'visible !important';
+    modal.style.opacity = '1 !important';
+    modal.style.zIndex = '9999 !important';
+    modal.style.position = 'fixed !important';
+    modal.style.inset = '0 !important';
+    modal.style.pointerEvents = 'auto !important';
     return;
   }
 
@@ -2632,12 +2635,14 @@ function showClientDetails(clientName) {
   console.log('About to show modal');
   modal.classList.remove('hidden');
 
-  // Force only essential CSS properties for visibility without breaking layout
-  modal.style.display = 'block';
-  modal.style.visibility = 'visible';
-  modal.style.opacity = '1';
-  modal.style.zIndex = '9999';
-  // Don't override position/size properties to preserve responsive modal design
+  // Force modal container visibility while preserving inner content layout
+  modal.style.display = 'block !important';
+  modal.style.visibility = 'visible !important';
+  modal.style.opacity = '1 !important';
+  modal.style.zIndex = '9999 !important';
+  modal.style.position = 'fixed !important';
+  modal.style.inset = '0 !important';  // Modern equivalent of top:0 left:0 right:0 bottom:0
+  modal.style.pointerEvents = 'auto !important';
 
   console.log('Modal should be visible now');
 
