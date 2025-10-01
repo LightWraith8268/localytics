@@ -2520,11 +2520,6 @@ function showClientDetails(clientName) {
     modal.style.visibility = 'visible';
     modal.style.opacity = '1';
     modal.style.zIndex = '9999';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.right = '0';
-    modal.style.bottom = '0';
     return;
   }
 
@@ -2637,16 +2632,12 @@ function showClientDetails(clientName) {
   console.log('About to show modal');
   modal.classList.remove('hidden');
 
-  // Force comprehensive CSS properties to ensure visibility
+  // Force only essential CSS properties for visibility without breaking layout
   modal.style.display = 'block';
   modal.style.visibility = 'visible';
   modal.style.opacity = '1';
   modal.style.zIndex = '9999';
-  modal.style.position = 'fixed';
-  modal.style.top = '0';
-  modal.style.left = '0';
-  modal.style.right = '0';
-  modal.style.bottom = '0';
+  // Don't override position/size properties to preserve responsive modal design
 
   console.log('Modal should be visible now');
 
