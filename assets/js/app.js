@@ -2951,9 +2951,15 @@ function showClientDetails(clientName) {
 }
 
 function showOrderDetails(orderNumber) {
-  // Get all transactions for this order
-  const base = state.filtered || state.rows;
-  const orderTransactions = base.filter(row => (row.__order || '').toLowerCase() === orderNumber.toLowerCase());
+  // Get all transactions for this order - always use state.rows to match aggregation source
+  const base = state.rows;
+
+  // Match using normalized order values (exclude 'undefined' sentinel)
+  const orderTransactions = base.filter(row => {
+    const orderVal = row.__order || '';
+    const normalizedOrder = (orderVal && orderVal !== 'undefined' && String(orderVal).trim() !== '') ? String(orderVal).trim() : '';
+    return normalizedOrder.toLowerCase() === orderNumber.toLowerCase();
+  });
 
   if (!orderTransactions.length) {
     alert('No transactions found for this order.');
