@@ -1404,23 +1404,21 @@
           }
         }
 
-        // Prevent reload loops with session storage flag
-        let isReloading = sessionStorage.getItem('sw-reloading') === 'true';
+        // Prevent reload loops - only reload once per controlling event
+        let hasReloaded = false;
 
         wb.addEventListener('waiting', () => { maybeShowBanner(); });
         wb.addEventListener('externalwaiting', () => { maybeShowBanner(); });
-        btn?.addEventListener('click', () => { wb.messageSkipWaiting(); });
+        btn?.addEventListener('click', () => {
+          wb.messageSkipWaiting();
+          hasReloaded = true; // Mark that we're about to reload
+        });
         wb.addEventListener('controlling', () => {
           hideBanner();
-          if (!isReloading) {
-            sessionStorage.setItem('sw-reloading', 'true');
-            window.location.reload();
+          if (!hasReloaded) {
+            hasReloaded = true;
+            setTimeout(() => window.location.reload(), 100); // Small delay to prevent race
           }
-        });
-
-        // Clear reload flag after successful load
-        window.addEventListener('load', () => {
-          sessionStorage.removeItem('sw-reloading');
         });
 
         wb.register().then((reg) => {

@@ -3273,7 +3273,14 @@ function populateDropdownFilters() {
 
   // Get unique values for each filter type
   const clients = [...new Set(base.map(row => row.__client).filter(val => val && val !== 'undefined'))].sort();
-  const staff = [...new Set(base.map(row => row.__staff).filter(val => val && val !== 'undefined'))].sort();
+
+  // Debug staff values
+  const allStaffValues = base.map(row => row.__staff);
+  const uniqueStaffValues = [...new Set(allStaffValues)];
+  console.log('[populateDropdownFilters] All unique __staff values (before filter):', uniqueStaffValues);
+  const staff = uniqueStaffValues.filter(val => val && val !== 'undefined').sort();
+  console.log('[populateDropdownFilters] Staff after filtering:', staff);
+
   const categories = [...new Set(base.map(row => row.__category).filter(val => val && val !== 'undefined'))].sort();
   const items = [...new Set(base.map(row => row[state.mapping.item]).filter(Boolean))].sort();
   const orders = [...new Set(base.map(row => row.__order).filter(Boolean))].sort();
