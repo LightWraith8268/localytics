@@ -1306,7 +1306,8 @@ function renderReport() {
     const val = r.__category;
     return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
   });
-  state.byOrder = aggregateByOrder(base, state.mapping);
+  // Orders aggregation uses ALL data (like clients/staff) to show complete order list
+  state.byOrder = aggregateByOrder(allData, state.mapping);
 
   // Items data comes from the report
   state.byItem = state.report.byItem;
@@ -2557,7 +2558,8 @@ function renderAnalyticsCharts() {
       const val = r.__category;
       return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
     });
-    state.byOrder = aggregateByOrder(base, state.mapping);
+    // Orders aggregation uses ALL data to show complete order list
+    state.byOrder = aggregateByOrder(allData, state.mapping);
     console.log('Analytics data generated:', {
       clientCount: state.byClient?.length || 0,
       staffCount: state.byStaff?.length || 0,
