@@ -2712,6 +2712,15 @@ function showClientDetails(clientName) {
   // Debug: check what client values look like
   console.log('[showClientDetails] Looking for client:', clientName);
   console.log('[showClientDetails] Total rows in base:', base.length);
+  console.log('[showClientDetails] state.byClient entries:', state.byClient.slice(0, 10).map(c => c.label));
+
+  // Check all unique client values in the data
+  const uniqueClients = new Set();
+  base.forEach(r => {
+    const clientVal = r.__client || r[state.mapping?.client] || '';
+    uniqueClients.add(clientVal);
+  });
+  console.log('[showClientDetails] Unique __client values in data:', Array.from(uniqueClients).slice(0, 20));
 
   const matchingRows = base.filter(r => {
     const rowClient = r.__client || r[state.mapping?.client] || '';
