@@ -1137,7 +1137,7 @@ window.addEventListener('DOMContentLoaded', () => {
         Papa.parse(text, {
           header: true,
           skipEmptyLines: true,
-          complete: (results) => {
+          complete: async (results) => {
             console.log('[CategoryMapUpload] Full parse results:', results);
             console.log('[CategoryMapUpload] Parsed CSV data:', results.data);
             console.log('[CategoryMapUpload] Column names:', results.meta?.fields);
