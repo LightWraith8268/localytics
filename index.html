@@ -1367,9 +1367,22 @@
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <button id="btnGenerateReport" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Generate Report</button>
               <button id="btnClearReportFilters" class="px-4 py-2 border rounded-md text-sm">Clear Filters</button>
+              <button id="btnSaveReport" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">Save Report Config</button>
+            </div>
+
+            <!-- Saved Reports Section -->
+            <div class="mt-4 pt-4 border-t app-border">
+              <h4 class="text-xs font-medium text-gray-700 mb-2">Saved Report Configurations</h4>
+              <div class="flex gap-2 items-center">
+                <select id="savedReportsDropdown" class="flex-1 border rounded-md px-3 py-2 text-sm">
+                  <option value="">-- Select a saved report --</option>
+                </select>
+                <button id="btnLoadReport" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Load & Run</button>
+                <button id="btnDeleteReport" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Delete</button>
+              </div>
             </div>
           </div>
 

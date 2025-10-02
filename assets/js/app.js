@@ -659,6 +659,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // Enhanced report builder listeners
   qs('btnGenerateReport')?.addEventListener('click', () => generateAdvancedReport());
   qs('btnClearReportFilters')?.addEventListener('click', () => clearReportFilters());
+  qs('btnSaveReport')?.addEventListener('click', () => saveReportConfiguration());
+  qs('btnLoadReport')?.addEventListener('click', () => loadReportConfiguration());
+  qs('btnDeleteReport')?.addEventListener('click', () => deleteReportConfiguration());
 
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
@@ -1321,6 +1324,7 @@ function renderReport() {
 
   // Populate advanced report builder filters
   populateReportFilters();
+  populateSavedReportsDropdown();
 
   const clientRows = state.byClient.map(x => ({ client: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
   const staffRows = state.byStaff.map(x => ({ staff: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
@@ -2151,9 +2155,12 @@ function populateReportFilters() {
 
   // Populate category filter
   const categorySelect = qs('reportCategoryFilter');
-  if (categorySelect && state.byCategory) {
+  if (categorySelect) {
+    // Get unique categories from data directly
+    const categories = [...new Set(state.rows.map(r => r.__category).filter(c => c && c !== 'undefined' && c !== 'Uncategorized'))].sort();
+    console.log('[populateReportFilters] Categories found:', categories.length, categories.slice(0, 10));
     categorySelect.innerHTML = '<option value="">All Categories</option>' +
-      state.byCategory.map(c => `<option value="${escapeHtml(c.label)}">${escapeHtml(c.label)}</option>`).join('');
+      categories.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
   }
 }
 
@@ -2165,6 +2172,162 @@ function clearReportFilters() {
   qs('reportStaffFilter').value = '';
   qs('reportCategoryFilter').value = '';
   qs('customTable').innerHTML = '';
+}
+
+// Save/Load/Delete Report Configurations
+function saveReportConfiguration() {
+  const reportName = prompt('Enter a name for this report configuration:');
+  if (!reportName || !reportName.trim()) return;
+
+  const config = {
+    name: reportName.trim(),
+    reportType: qs('reportType')?.value || 'item',
+    startDate: qs('reportStartDate')?.value || '',
+    endDate: qs('reportEndDate')?.value || '',
+    itemFilter: qs('reportItemFilter')?.value || '',
+    clientFilter: qs('reportClientFilter')?.value || '',
+    staffFilter: qs('reportStaffFilter')?.value || '',
+    categoryFilter: qs('reportCategoryFilter')?.value || '',
+    columns: {
+      item: qs('colItem')?.checked || false,
+      quantity: qs('colQuantity')?.checked || false,
+      revenue: qs('colRevenue')?.checked || false,
+      cost: qs('colCost')?.checked || false,
+      profit: qs('colProfit')?.checked || false,
+      margin: qs('colMargin')?.checked || false,
+      orders: qs('colOrders')?.checked || false,
+      date: qs('colDate')?.checked || false
+    },
+    savedAt: new Date().toISOString()
+  };
+
+  // Get existing saved reports
+  let savedReports = [];
+  try {
+    const stored = localStorage.getItem('savedReportConfigs');
+    if (stored) savedReports = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading saved reports:', e);
+  }
+
+  // Add new config
+  savedReports.push(config);
+
+  // Save back to localStorage
+  try {
+    localStorage.setItem('savedReportConfigs', JSON.stringify(savedReports));
+    alert(`Report configuration "${reportName}" saved successfully!`);
+    populateSavedReportsDropdown();
+  } catch (e) {
+    console.error('Error saving report config:', e);
+    alert('Failed to save report configuration. Storage might be full.');
+  }
+}
+
+function loadReportConfiguration() {
+  const dropdown = qs('savedReportsDropdown');
+  if (!dropdown || !dropdown.value) {
+    alert('Please select a saved report to load.');
+    return;
+  }
+
+  const reportName = dropdown.value;
+
+  // Get saved reports
+  let savedReports = [];
+  try {
+    const stored = localStorage.getItem('savedReportConfigs');
+    if (stored) savedReports = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading saved reports:', e);
+    return;
+  }
+
+  // Find the selected report
+  const config = savedReports.find(r => r.name === reportName);
+  if (!config) {
+    alert('Report configuration not found.');
+    return;
+  }
+
+  // Load configuration into UI
+  if (qs('reportType')) qs('reportType').value = config.reportType || 'item';
+  if (qs('reportStartDate')) qs('reportStartDate').value = config.startDate || '';
+  if (qs('reportEndDate')) qs('reportEndDate').value = config.endDate || '';
+  if (qs('reportItemFilter')) qs('reportItemFilter').value = config.itemFilter || '';
+  if (qs('reportClientFilter')) qs('reportClientFilter').value = config.clientFilter || '';
+  if (qs('reportStaffFilter')) qs('reportStaffFilter').value = config.staffFilter || '';
+  if (qs('reportCategoryFilter')) qs('reportCategoryFilter').value = config.categoryFilter || '';
+
+  // Load column selections
+  if (config.columns) {
+    if (qs('colItem')) qs('colItem').checked = config.columns.item;
+    if (qs('colQuantity')) qs('colQuantity').checked = config.columns.quantity;
+    if (qs('colRevenue')) qs('colRevenue').checked = config.columns.revenue;
+    if (qs('colCost')) qs('colCost').checked = config.columns.cost;
+    if (qs('colProfit')) qs('colProfit').checked = config.columns.profit;
+    if (qs('colMargin')) qs('colMargin').checked = config.columns.margin;
+    if (qs('colOrders')) qs('colOrders').checked = config.columns.orders;
+    if (qs('colDate')) qs('colDate').checked = config.columns.date;
+  }
+
+  // Generate the report automatically
+  generateAdvancedReport();
+}
+
+function deleteReportConfiguration() {
+  const dropdown = qs('savedReportsDropdown');
+  if (!dropdown || !dropdown.value) {
+    alert('Please select a saved report to delete.');
+    return;
+  }
+
+  const reportName = dropdown.value;
+
+  if (!confirm(`Are you sure you want to delete the report configuration "${reportName}"?`)) {
+    return;
+  }
+
+  // Get saved reports
+  let savedReports = [];
+  try {
+    const stored = localStorage.getItem('savedReportConfigs');
+    if (stored) savedReports = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading saved reports:', e);
+    return;
+  }
+
+  // Remove the selected report
+  savedReports = savedReports.filter(r => r.name !== reportName);
+
+  // Save back
+  try {
+    localStorage.setItem('savedReportConfigs', JSON.stringify(savedReports));
+    alert(`Report configuration "${reportName}" deleted successfully!`);
+    populateSavedReportsDropdown();
+  } catch (e) {
+    console.error('Error saving after delete:', e);
+    alert('Failed to delete report configuration.');
+  }
+}
+
+function populateSavedReportsDropdown() {
+  const dropdown = qs('savedReportsDropdown');
+  if (!dropdown) return;
+
+  // Get saved reports
+  let savedReports = [];
+  try {
+    const stored = localStorage.getItem('savedReportConfigs');
+    if (stored) savedReports = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading saved reports:', e);
+  }
+
+  // Populate dropdown
+  dropdown.innerHTML = '<option value="">-- Select a saved report --</option>' +
+    savedReports.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
 }
 
 function freezeChartsForPrint(){
