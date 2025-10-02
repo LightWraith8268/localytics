@@ -4882,9 +4882,8 @@ function populateDropdownFilters() {
       dropdown.innerHTML = `<option value="">${defaultText}</option>` +
         options.map(option => `<option value="${escapeHtml(option)}">${escapeHtml(option)}</option>`).join('');
       console.log(`Populated ${selector} with ${options.length} options`);
-    } else {
-      console.warn(`Dropdown not found: ${selector}`);
     }
+    // Silently skip dropdowns that don't exist (not all pages have all filter types)
   }
 
   // Populate dropdowns by name attribute (legacy)
