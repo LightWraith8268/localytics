@@ -1132,42 +1132,55 @@ window.addEventListener('DOMContentLoaded', () => {
 
       try {
         const text = await file.text();
+        console.log('[CategoryMapUpload] Raw CSV text (first 500 chars):', text.substring(0, 500));
+
         Papa.parse(text, {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
+            console.log('[CategoryMapUpload] Full parse results:', results);
             console.log('[CategoryMapUpload] Parsed CSV data:', results.data);
             console.log('[CategoryMapUpload] Column names:', results.meta?.fields);
+            console.log('[CategoryMapUpload] Total rows:', results.data.length);
 
             const newMap = {};
             let count = 0;
             let skipped = 0;
 
             results.data.forEach((row, index) => {
+              console.log(`[Row ${index}] Raw row object:`, row);
+              console.log(`[Row ${index}] Object keys:`, Object.keys(row));
+
               // Flexible column detection - check all possible variations
               const itemValue = row.item || row.Item || row.ITEM ||
                                row['item'] || row['Item'] || row['ITEM'] || '';
               const categoryValue = row.category || row.Category || row.CATEGORY ||
                                    row['category'] || row['Category'] || row['CATEGORY'] || '';
 
-              console.log(`[Row ${index}] item="${itemValue}", category="${categoryValue}"`);
+              console.log(`[Row ${index}] item="${itemValue}" (type: ${typeof itemValue}), category="${categoryValue}" (type: ${typeof categoryValue})`);
+              console.log(`[Row ${index}] item.trim()="${itemValue.trim()}", category.trim()="${categoryValue.trim()}"`);
 
               if (itemValue && itemValue.trim()) {
                 if (categoryValue && categoryValue.trim()) {
                   newMap[itemValue.trim()] = categoryValue.trim();
                   count++;
+                  console.log(`[Row ${index}] ✅ ADDED: "${itemValue.trim()}" -> "${categoryValue.trim()}"`);
                 } else {
                   // Item exists but no category - skip this row
                   skipped++;
+                  console.log(`[Row ${index}] ⏭️ SKIPPED: Empty category for item "${itemValue}"`);
                 }
+              } else {
+                console.log(`[Row ${index}] ⏭️ SKIPPED: Empty item`);
               }
             });
 
-            console.log(`[CategoryMapUpload] Imported: ${count}, Skipped: ${skipped}`);
+            console.log(`[CategoryMapUpload] Final results - Imported: ${count}, Skipped: ${skipped}`);
+            console.log(`[CategoryMapUpload] New mappings:`, newMap);
 
             if (count === 0) {
               const cols = results.meta?.fields?.join(', ') || 'unknown';
-              alert(`No valid item-category mappings found in CSV.\n\nDetected columns: ${cols}\n\nExpected columns: "item" and "category"\n\nMake sure both columns exist and have values.`);
+              alert(`No valid item-category mappings found in CSV.\n\nDetected columns: ${cols}\n\nExpected columns: "item" and "category"\n\nMake sure both columns exist and have values.\n\nCheck browser console (F12) for detailed debugging.`);
               return;
             }
 
