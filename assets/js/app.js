@@ -2706,55 +2706,22 @@ function formatPercent(num) {
 function showClientDetails(clientName) {
   console.log('showClientDetails called with:', clientName);
 
-  // Get all transactions for this client
-  const base = state.filtered || state.rows;
+  // Get all transactions for this client - always use state.rows to match aggregation source
+  const base = state.rows;
 
-  // Debug: check what client values look like
-  console.log('[showClientDetails] Looking for client:', clientName);
-  console.log('[showClientDetails] Total rows in base:', base.length);
-  console.log('[showClientDetails] state.byClient entries:', state.byClient.slice(0, 10).map(c => c.label));
-
-  // Check all unique client values in the data
-  const uniqueClients = new Set();
-  base.forEach(r => {
-    const clientVal = r.__client || r[state.mapping?.client] || '';
-    uniqueClients.add(clientVal);
-  });
-  console.log('[showClientDetails] Unique __client values in data:', Array.from(uniqueClients).slice(0, 20));
-
-  // Find rows that might match with different variations
-  const fuzzyMatches = base.filter(r => {
-    const rowClient = (r.__client || '').toString();
-    return rowClient.toLowerCase().includes('bmj');
-  });
-  console.log('[showClientDetails] Rows containing "bmj" (case-insensitive):', fuzzyMatches.length);
-  if (fuzzyMatches.length > 0) {
-    console.log('[showClientDetails] Sample BMJ-related rows:', fuzzyMatches.slice(0, 5).map(r => ({
-      __client: r.__client,
-      rawClient: r[state.mapping?.client],
-      __order: r.__order,
-      __revenue: r.__revenue
-    })));
-  }
-
-  const matchingRows = base.filter(r => {
-    const rowClient = r.__client || r[state.mapping?.client] || '';
-    return rowClient.toLowerCase() === clientName.toLowerCase();
-  });
-
-  console.log('[showClientDetails] Found rows with exact match:', matchingRows.length);
-  console.log('[showClientDetails] Sample matches:', matchingRows.slice(0, 3).map(r => ({
-    __client: r.__client,
-    __order: r.__order,
-    __revenue: r.__revenue
-  })));
-
-  // Try multiple matching strategies
+  // Match using the same logic as aggregation field function
   const clientTransactions = base.filter(row => {
-    const rowClient = row.__client || row[state.mapping?.client] || '';
-    // Exclude 'undefined' sentinel values from matching
-    if (rowClient === 'undefined') return false;
-    return rowClient.toLowerCase() === clientName.toLowerCase();
+    const val = row.__client;
+    // Apply same transformation as aggregation: filter out null/undefined/'undefined'/empty
+    const normalizedClient = (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? String(val).trim() : '';
+
+    // Also check raw column value as fallback
+    const rawClient = row[state.mapping?.client] || '';
+    const normalizedRaw = (rawClient && rawClient !== 'undefined' && String(rawClient).trim() !== '') ? String(rawClient).trim() : '';
+
+    // Match against either normalized value
+    return normalizedClient.toLowerCase() === clientName.toLowerCase() ||
+           normalizedRaw.toLowerCase() === clientName.toLowerCase();
   });
 
   if (!clientTransactions.length) {
