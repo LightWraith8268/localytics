@@ -2725,27 +2725,6 @@ function showClientDetails(clientName) {
   document.body.appendChild(overlay);
 
   console.log('Created bypass modal overlay');
-
-  // Set up close button if not already done
-  const closeBtn = document.getElementById('clientDetailsModalClose');
-  if (closeBtn && !closeBtn.hasAttribute('data-listener')) {
-    closeBtn.setAttribute('data-listener', 'true');
-    closeBtn.addEventListener('click', () => {
-      modal.classList.add('hidden');
-      modal.style.display = 'none';
-    });
-  }
-
-  // Close on backdrop click
-  if (!modal.hasAttribute('data-backdrop-listener')) {
-    modal.setAttribute('data-backdrop-listener', 'true');
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-      }
-    });
-  }
 }
 
 function showOrderDetails(orderNumber) {
