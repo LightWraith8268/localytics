@@ -1404,10 +1404,24 @@
           }
         }
 
+        // Prevent reload loops with session storage flag
+        let isReloading = sessionStorage.getItem('sw-reloading') === 'true';
+
         wb.addEventListener('waiting', () => { maybeShowBanner(); });
         wb.addEventListener('externalwaiting', () => { maybeShowBanner(); });
         btn?.addEventListener('click', () => { wb.messageSkipWaiting(); });
-        wb.addEventListener('controlling', () => { hideBanner(); window.location.reload(); });
+        wb.addEventListener('controlling', () => {
+          hideBanner();
+          if (!isReloading) {
+            sessionStorage.setItem('sw-reloading', 'true');
+            window.location.reload();
+          }
+        });
+
+        // Clear reload flag after successful load
+        window.addEventListener('load', () => {
+          sessionStorage.removeItem('sw-reloading');
+        });
 
         wb.register().then((reg) => {
           const checkNow = () => { wb.update(); };
