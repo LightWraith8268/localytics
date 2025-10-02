@@ -71,12 +71,23 @@
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          font-size: 11px !important; /* Reduce base font size for print */
+          font-size: 11px !important;
           overflow: visible !important;
+          height: auto !important;
         }
 
-        /* Remove any potential blank space creators */
-        body > *:first-child {
+        /* Aggressively remove all top spacing */
+        body > *, body > * > *, .view, .view > * {
+          margin-top: 0 !important;
+          padding-top: 0 !important;
+        }
+
+        /* Force first visible element to top of page */
+        body > .view:not(.hidden) {
+          page-break-before: avoid !important;
+        }
+
+        body > .view:not(.hidden) > *:first-child {
           margin-top: 0 !important;
           padding-top: 0 !important;
         }
@@ -122,7 +133,12 @@
           overflow: visible !important;
           height: auto !important;
           margin: 0 !important;
-          padding: 1rem !important;
+          padding: 0 !important;
+        }
+
+        /* Add minimal padding to view content, not the view container itself */
+        .view > div, .view > section {
+          padding: 0.5rem !important;
         }
         /* Ensure table containers don't restrict height */
         .overflow-x-auto, .overflow-y-auto, .overflow-auto {
@@ -159,31 +175,29 @@
           page-break-before: avoid !important;
         }
 
-        /* Trends and Analytics: Portrait orientation, multiple charts per page */
+        /* Trends and Analytics: Each section on new page */
         #view-trends, #view-analytics {
           page-break-before: avoid !important;
         }
-        /* Chart containers - allow multiple per page */
-        #view-trends .grid, #view-analytics .grid {
-          display: block !important; /* Override grid for print */
-        }
-        #view-trends .grid > *, #view-analytics .grid > * {
+
+        /* Each chart/section on its own page */
+        #view-trends > *, #view-analytics > * {
+          page-break-before: always !important;
+          page-break-after: always !important;
           page-break-inside: avoid !important;
-          page-break-after: auto !important;
-          margin-bottom: 0.5rem !important;
-          width: 100% !important;
         }
-        /* Constrain chart canvas size to fit multiple on one page */
+
+        /* Exception: Don't force page break before first element */
+        #view-trends > *:first-child, #view-analytics > *:first-child {
+          page-break-before: avoid !important;
+        }
+
+        /* Constrain chart canvas size */
         #view-trends canvas, #view-analytics canvas {
-          max-height: 200px !important;
-          height: 200px !important;
+          max-height: 300px !important;
+          height: 300px !important;
           width: 100% !important;
           page-break-inside: avoid !important;
-        }
-        /* Ensure chart wrappers don't force page breaks */
-        #view-trends .app-card, #view-analytics .app-card {
-          page-break-inside: avoid !important;
-          page-break-after: auto !important;
         }
 
         /* Modal prints: Portrait orientation (bypass overlays only) */
