@@ -2087,35 +2087,32 @@ function ingestRows(rows){
 function appendCategoryMapRow(editor, item = '', category = '') {
   if (!editor) return;
   const row = document.createElement('div');
-  row.className = 'flex flex-col md:flex-row md:items-center md:gap-3 p-3';
+  row.className = 'flex flex-col gap-2 p-3 border app-border rounded-md bg-gray-50 hover:bg-gray-100 transition-colors';
   row.setAttribute('data-category-row', 'true');
 
   const itemInput = document.createElement('input');
   itemInput.type = 'text';
   itemInput.placeholder = 'Item name';
-  itemInput.className = 'border app-border rounded-md px-2 py-1 text-sm flex-1';
+  itemInput.className = 'border app-border rounded-md px-2 py-1 text-sm w-full bg-white';
   itemInput.value = item;
   itemInput.setAttribute('data-role', 'item');
 
   const categoryInput = document.createElement('input');
   categoryInput.type = 'text';
   categoryInput.placeholder = 'Category';
-  categoryInput.className = 'border app-border rounded-md px-2 py-1 text-sm flex-1 mt-2 md:mt-0';
+  categoryInput.className = 'border app-border rounded-md px-2 py-1 text-sm w-full bg-white';
   categoryInput.value = category;
   categoryInput.setAttribute('data-role', 'category');
 
-  const actions = document.createElement('div');
-  actions.className = 'flex items-center gap-2 mt-2 md:mt-0 md:ml-2';
   const removeBtn = document.createElement('button');
   removeBtn.type = 'button';
-  removeBtn.textContent = 'Remove';
-  removeBtn.className = 'px-3 py-1 border border-red-200 text-red-600 rounded-md text-sm font-medium hover:bg-red-50';
+  removeBtn.textContent = '× Remove';
+  removeBtn.className = 'px-2 py-1 text-red-600 rounded-md text-xs font-medium hover:bg-red-50 self-end';
   removeBtn.addEventListener('click', () => row.remove());
-  actions.appendChild(removeBtn);
 
   row.appendChild(itemInput);
   row.appendChild(categoryInput);
-  row.appendChild(actions);
+  row.appendChild(removeBtn);
   editor.appendChild(row);
 }
 
