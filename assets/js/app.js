@@ -1545,11 +1545,12 @@ function renderOrdersView() {
     : `${formatNumber(orders.length)} orders · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`;
   summaryEl.textContent = summaryText;
 
-  renderSortableClickableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
+  renderSortableClickableTable(tableEl, ['order','date','client','staff','items','revenue','profit','margin'], ordersWithDates.map(order => ({
     order: order.order,
     date: order.displayDate,
     client: order.client || 'Unassigned',
     staff: order.staff || 'Unassigned',
+    items: order.items || 0,
     revenue: order.revenue,
     profit: order.profit,
     margin: order.margin
@@ -3667,11 +3668,12 @@ function renderOrdersTableOnly() {
     date: getLatestDate(order.label) || '-'
   }));
 
-  renderSortableClickableTable(tableEl, ['order','date','client','staff','revenue','profit','margin'], ordersWithDates.map(order => ({
+  renderSortableClickableTable(tableEl, ['order','date','client','staff','items','revenue','profit','margin'], ordersWithDates.map(order => ({
     order: order.label || 'Untitled',
     date: order.date,
     client: order.client || '-',
     staff: order.staff || '-',
+    items: order.items || 0,
     revenue: order.revenue,
     profit: order.profit,
     margin: order.margin

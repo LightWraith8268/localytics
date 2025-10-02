@@ -520,8 +520,8 @@ function guessCurrency() { try { return (Intl.NumberFormat().resolvedOptions().c
 function formatCell(col, val) {
   if (/revenue|price|total|cost|profit/i.test(col)) return formatCurrency(val);
   if (/margin/i.test(col)) return formatPercent(val);
-  // Format orders as integers, quantities with 2 decimals to preserve fractional amounts
-  if (/orders/i.test(col)) return escapeHtml((Number(val) || 0).toFixed(0));
+  // Format orders and items as integers, quantities with 2 decimals to preserve fractional amounts
+  if (/orders|items/i.test(col)) return escapeHtml((Number(val) || 0).toFixed(0));
   if (/quantity/i.test(col)) return escapeHtml(formatNumberTwo(val));
   // For any other numeric values, show exactly two decimals
   if (isNumeric(val)) return escapeHtml(formatNumberTwo(val));
