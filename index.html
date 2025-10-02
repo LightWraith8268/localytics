@@ -121,6 +121,11 @@
         .print-section {
           page-break-inside: avoid;
         }
+        /* When modal overlay is present, hide main page content */
+        body:has(#temp-modal-overlay) > *:not(#temp-modal-overlay),
+        body:has(#temp-order-modal-overlay) > *:not(#temp-order-modal-overlay) {
+          display: none !important;
+        }
         /* Ensure only visible data tables are printed */
         .view.hidden {
           display: none !important;
