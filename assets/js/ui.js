@@ -1,7 +1,16 @@
 export function setActiveNav(hash) {
-  document.querySelectorAll('a.nav-link').forEach(a => {
-    if (a.getAttribute('href') === hash) a.classList.add('active');
-    else a.classList.remove('active');
+  console.log('[setActiveNav] Called with hash:', hash);
+  const navLinks = document.querySelectorAll('a.nav-link');
+  console.log('[setActiveNav] Found nav links:', navLinks.length);
+  navLinks.forEach(a => {
+    const href = a.getAttribute('href');
+    console.log('[setActiveNav] Checking link:', href, 'against', hash);
+    if (href === hash) {
+      console.log('[setActiveNav] MATCH - adding active class');
+      a.classList.add('active');
+    } else {
+      a.classList.remove('active');
+    }
   });
 }
 
