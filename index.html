@@ -75,6 +75,34 @@
         button, .dropdown-menu, details summary {
           display: none !important;
         }
+        /* Allow content to flow across multiple pages */
+        .view {
+          max-height: none !important;
+          overflow: visible !important;
+          height: auto !important;
+        }
+        /* Ensure table containers don't restrict height */
+        .overflow-x-auto, .overflow-y-auto, .overflow-auto {
+          max-height: none !important;
+          overflow: visible !important;
+          height: auto !important;
+        }
+        /* Remove any fixed heights on main content */
+        main, section, div {
+          max-height: none !important;
+          height: auto !important;
+        }
+        /* Allow table rows to break across pages if needed */
+        table {
+          page-break-inside: auto !important;
+        }
+        tr {
+          page-break-inside: avoid !important;
+          page-break-after: auto !important;
+        }
+        thead {
+          display: table-header-group !important;
+        }
       }
       /* Force sidebar background in dark mode with highest specificity */
       .dark nav[class*="lg:w-64"],
