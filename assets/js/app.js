@@ -2262,10 +2262,22 @@ function saveReportSnapshot() {
     };
 
     if (config.startDate && config.endDate) {
-      const start = formatDate(config.startDate);
-      const end = formatDate(config.endDate);
-      // If same month/year, just show once
-      dateRangePart = start === end ? ` - ${start}` : ` - ${start} to ${end}`;
+      const startDate = new Date(config.startDate);
+      const endDate = new Date(config.endDate);
+
+      // Check if same month and year
+      const sameMonth = startDate.getFullYear() === endDate.getFullYear() &&
+                        startDate.getMonth() === endDate.getMonth();
+
+      if (sameMonth) {
+        // Same month - just show month/year once
+        dateRangePart = ` - ${formatDate(config.startDate)}`;
+      } else {
+        // Different months - show range
+        const start = formatDate(config.startDate);
+        const end = formatDate(config.endDate);
+        dateRangePart = ` - ${start} to ${end}`;
+      }
     } else if (config.startDate) {
       dateRangePart = ` - From ${formatDate(config.startDate)}`;
     } else if (config.endDate) {
