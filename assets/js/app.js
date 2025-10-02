@@ -2021,21 +2021,38 @@ function openCategoryMapModal() {
   if (textarea) textarea.value = '';
   const list = document.getElementById('categoryMapList');
   if (list) list.scrollTop = 0;
+
+  // Force visibility with inline styles to bypass CSS conflicts
   modal.classList.remove('hidden');
+  modal.style.display = 'flex';
+  modal.style.position = 'fixed';
+  modal.style.inset = '0';
+  modal.style.zIndex = '9999';
+
   previousBodyOverflow = document.body.style.overflow;
   document.body.style.overflow = 'hidden';
+
+  console.log('[openCategoryMapModal] Modal opened with forced styles');
 }
 
 function closeCategoryMapModal() {
   const modal = qs('categoryMapModal');
   if (!modal || modal.classList.contains('hidden')) return;
   modal.classList.add('hidden');
+  // Clear inline styles
+  modal.style.display = '';
+  modal.style.position = '';
+  modal.style.inset = '';
+  modal.style.zIndex = '';
+
   document.body.style.overflow = previousBodyOverflow;
   previousBodyOverflow = '';
   const fileInput = qs('categoryMapFile');
   if (fileInput) fileInput.value = '';
   const textarea = qs('categoryMapBulkInput');
   if (textarea) textarea.value = '';
+
+  console.log('[closeCategoryMapModal] Modal closed');
 }
 
 function updateCategoryMapSummary() {
