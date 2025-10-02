@@ -632,29 +632,8 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnPrintReport').addEventListener('click', () => printCurrentView());
   qs('btnPrintAll').addEventListener('click', () => printAllViews());
 
-  // Custom view
-  const elGroupBy = qs('customGroupBy');
-  const elGranWrap = document.getElementById('granularityWrap');
-  const elGran = qs('customGranularity');
-  const elMetric = qs('customMetric');
-  const elType = qs('customChartType');
-  const elTopN = qs('customTopN');
-  const elStack = document.getElementById('customStackCat');
-  elGroupBy.addEventListener('change', async () => {
-    elGranWrap.style.display = (elGroupBy.value === 'date') ? '' : 'none';
-    await saveCustomChartPrefs();
-  });
-  elGran.addEventListener('change', saveCustomChartPrefs);
-  elMetric.addEventListener('change', saveCustomChartPrefs);
-  elType.addEventListener('change', saveCustomChartPrefs);
-  elGranWrap.style.display = (elGroupBy.value === 'date') ? '' : 'none';
-  qs('btnBuildChart').addEventListener('click', () => {
-    buildCustomChart({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, type: elType.value, topN: elTopN.value, stackCat: elStack?.checked });
-  });
-  qs('btnPrintChart').addEventListener('click', () => printCurrentView());
-  qs('btnBuildTable').addEventListener('click', () => buildCustomTable({ groupBy: elGroupBy.value, granularity: elGran.value, metric: elMetric.value, topN: elTopN.value }));
-  qs('btnExportCustomCsv').addEventListener('click', () => exportCustomCsv());
-  qs('btnPrintTable').addEventListener('click', () => printCurrentView());
+  // Custom view - removed old chart builder, keeping only what's needed
+  // Old custom chart elements removed in v1.12.0
 
   // Enhanced report builder listeners
   qs('btnGenerateReport')?.addEventListener('click', () => generateAdvancedReport());
@@ -663,10 +642,6 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnLoadReport')?.addEventListener('click', () => loadReportConfiguration());
   qs('btnEditReport')?.addEventListener('click', () => editReportConfiguration());
   qs('btnDeleteReport')?.addEventListener('click', () => deleteReportConfiguration());
-  qs('btnToggleTemplates')?.addEventListener('click', () => toggleTemplateBrowser());
-  qs('templateCategoryFilter')?.addEventListener('change', () => filterTemplates());
-  qs('btnLoadAllTemplates')?.addEventListener('click', () => loadAllTemplatesToSaved());
-  qs('btnClearAllSaved')?.addEventListener('click', () => clearAllSavedReports());
 
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
