@@ -1306,7 +1306,7 @@ function renderReport() {
     const val = r.__category;
     return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
   });
-  state.byOrder = aggregateByOrder(base);
+  state.byOrder = aggregateByOrder(base, state.mapping);
 
   // Items data comes from the report
   state.byItem = state.report.byItem;
@@ -2550,7 +2550,7 @@ function renderAnalyticsCharts() {
       const val = r.__category;
       return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
     });
-    state.byOrder = aggregateByOrder(base);
+    state.byOrder = aggregateByOrder(base, state.mapping);
     console.log('Analytics data generated:', {
       clientCount: state.byClient?.length || 0,
       staffCount: state.byStaff?.length || 0,
@@ -3605,7 +3605,7 @@ function applyOrdersFilters() {
   }
 
   // Update orders aggregation with filtered data
-  state.byOrder = aggregateByOrder(filteredRows);
+  state.byOrder = aggregateByOrder(filteredRows, state.mapping);
 
   // Re-render the view with filtered data
   renderOrdersTableOnly();

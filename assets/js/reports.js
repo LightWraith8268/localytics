@@ -249,8 +249,9 @@ export function aggregateByField(rows, field) {
     .sort((a,b)=> b.revenue - a.revenue);
 }
 
-export function aggregateByOrder(rows) {
+export function aggregateByOrder(rows, mapping) {
   const map = new Map();
+  const itemCol = mapping?.item;
   for (const r of rows) {
     const order = r.__order || String(r.order || '').trim() || '-';
     const q = Number(r.__quantity || 0);
@@ -259,10 +260,10 @@ export function aggregateByOrder(rows) {
     const date = r.__dateIso || '';
     const client = r.__client || r.client || '';
     const staff = r.__staff || r.staff || '';
-    const item = r.__item || String(r.item || '').trim();
+    const item = itemCol ? String(r[itemCol] || '').trim() : '';
     const cur = map.get(order) || { order, date, client, staff, quantity: 0, revenue: 0, cost: 0, items: new Set() };
     cur.quantity += q; cur.revenue += rev; cur.cost += cost;
-    if (item && item !== 'undefined') cur.items.add(item);
+    if (item && item !== 'undefined' && item !== '') cur.items.add(item);
     if (!cur.date || (date && date < cur.date)) cur.date = date; // earliest
     if (!cur.client && client) cur.client = client;
     if (!cur.staff && staff) cur.staff = staff;
