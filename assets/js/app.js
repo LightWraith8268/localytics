@@ -1158,12 +1158,26 @@ function renderReport() {
   console.log('[renderReport] Total rows for staff aggregation:', base.length);
   const staffValues = base.map(r => r.__staff).filter((val, idx, self) => self.indexOf(val) === idx);
   console.log('[renderReport] Unique __staff values in data:', staffValues);
+  console.log('[renderReport] Staff value details:', staffValues.map(v => ({
+    value: v,
+    type: typeof v,
+    trimmed: String(v).trim(),
+    length: String(v).length,
+    trimmedLength: String(v).trim().length
+  })));
 
   state.byStaff = aggregateByField(base, r => {
     const val = r.__staff;
-    const result = (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+    const trimmed = String(val).trim();
+    const result = (val !== null && val !== undefined && val !== 'undefined' && trimmed !== '') ? val : '';
     if (result === '') {
-      console.log('[renderReport] Filtering out staff row:', { __staff: val, row: r });
+      console.log('[renderReport] Filtering out staff row:', {
+        __staff: val,
+        type: typeof val,
+        stringVal: String(val),
+        trimmed: trimmed,
+        reason: val === null ? 'null' : val === undefined ? 'undefined' : val === 'undefined' ? 'string undefined' : trimmed === '' ? 'empty after trim' : 'unknown'
+      });
     }
     return result;
   });
