@@ -1384,7 +1384,49 @@
                 <button id="btnEditReport" class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">Edit</button>
                 <button id="btnDeleteReport" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Delete</button>
               </div>
-              <button id="btnLoadTemplates" class="mt-3 px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700">Load Pre-Built Report Templates</button>
+            </div>
+
+            <!-- Template Browser Section -->
+            <div class="mt-4 pt-4 border-t app-border">
+              <div class="flex items-center justify-between mb-3">
+                <h4 class="text-xs font-medium text-gray-700">Pre-Built Report Templates</h4>
+                <button id="btnToggleTemplates" class="text-xs px-3 py-1 border rounded-md hover:bg-gray-50">Show Templates</button>
+              </div>
+
+              <div id="templateBrowser" class="hidden">
+                <!-- Category Filter -->
+                <div class="mb-3">
+                  <label class="block text-xs text-gray-500 mb-1">Filter by Category</label>
+                  <select id="templateCategoryFilter" class="w-full border rounded-md px-3 py-2 text-sm">
+                    <option value="">All Categories (60+ templates)</option>
+                    <option value="YTD">📊 [YTD] Year-to-Date Reports</option>
+                    <option value="QUARTERLY">📅 [QUARTERLY] Quarterly Performance</option>
+                    <option value="MONTHLY">📆 [MONTHLY] Monthly Reports</option>
+                    <option value="PROFIT">💰 [PROFIT] Profitability Analysis</option>
+                    <option value="TOP">🏆 [TOP] Top Performers</option>
+                    <option value="CUSTOMER">👥 [CUSTOMER] Customer Behavior</option>
+                    <option value="PRODUCT">📦 [PRODUCT] Product Performance</option>
+                    <option value="STAFF">👨‍💼 [STAFF] Staff Performance</option>
+                    <option value="TIME">⏰ [TIME] Time Comparisons</option>
+                    <option value="CATEGORY">🏷️ [CATEGORY] Category Analysis</option>
+                    <option value="ORDER">📋 [ORDER] Order Analysis</option>
+                    <option value="SEASONAL">🌸 [SEASONAL] Seasonal Reports</option>
+                    <option value="ITEMS">🔍 [ITEMS] Specific Item Analysis</option>
+                    <option value="COMPLETE">📑 [COMPLETE] Complete Views</option>
+                  </select>
+                </div>
+
+                <!-- Template List -->
+                <div id="templateList" class="space-y-2 max-h-96 overflow-y-auto border rounded-md p-3 bg-gray-50">
+                  <!-- Templates will be populated here -->
+                </div>
+
+                <!-- Actions -->
+                <div class="mt-3 flex gap-2">
+                  <button id="btnLoadAllTemplates" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700">Load All Templates to Saved Reports</button>
+                  <button id="btnClearAllSaved" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Clear All Saved Reports</button>
+                </div>
+              </div>
             </div>
           </div>
 
