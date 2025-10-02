@@ -19,7 +19,8 @@
       "Bash(find:*)",
       "Bash(git fetch:*)",
       "Bash(git config:*)",
-      "Read(//d/**)"
+      "Read(//d/**)",
+      "Bash(git log:*)"
     ]
   },
   "outputStyle": "Explanatory"

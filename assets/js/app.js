@@ -2298,7 +2298,12 @@ function saveReportSnapshot() {
   if (config?.startDate || config?.endDate) {
     const formatDate = (dateStr) => {
       if (!dateStr) return '';
-      const d = new Date(dateStr);
+      // Parse as local date to avoid timezone shifts (e.g., 2025-09-01 should display as September, not August)
+      const parts = dateStr.split('-');
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1; // JS months are 0-indexed
+      const day = parseInt(parts[2] || 1);
+      const d = new Date(year, month, day);
       return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
     };
 
