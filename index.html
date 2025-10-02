@@ -61,14 +61,30 @@
 
       /* Print-specific styles */
       @media print {
-        /* Remove all page margins and padding from body/html */
+        /* Set landscape orientation and margins */
         @page {
+          size: landscape;
           margin: 0.5in;
         }
 
         html, body {
           margin: 0 !important;
           padding: 0 !important;
+          font-size: 11px !important; /* Reduce base font size for print */
+        }
+
+        /* Reduce heading sizes */
+        h1 { font-size: 18px !important; }
+        h2 { font-size: 16px !important; }
+        h3 { font-size: 14px !important; }
+        h4 { font-size: 12px !important; }
+
+        /* Smaller table text */
+        table {
+          font-size: 10px !important;
+        }
+        th, td {
+          padding: 4px 6px !important;
         }
 
         .no-print {

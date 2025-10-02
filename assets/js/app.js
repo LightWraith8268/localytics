@@ -820,6 +820,8 @@ window.addEventListener('DOMContentLoaded', () => {
     exportExcelBook('items.xlsx', report, { Items: itemsData });
   });
   qs('btnItemsPrint')?.addEventListener('click', () => printCurrentView());
+  qs('btnPrintTrends')?.addEventListener('click', () => printCurrentView());
+  qs('btnPrintAnalytics')?.addEventListener('click', () => printCurrentView());
 
   // Note: Branding now loaded in loadUserSettingsAfterAuth() after authentication
   qs('btnSaveBrand').addEventListener('click', saveBranding);
@@ -2636,41 +2638,6 @@ function showClientDetails(clientName) {
     <h4 class="text-lg font-medium text-gray-900 mb-4">Product Breakdown (${products.length} items)</h4>
   `;
 
-  const tableHtml = `
-    <div class="overflow-x-auto border app-border rounded-md">
-      <table class="w-full text-sm">
-        <thead class="app-card">
-          <tr>
-            <th class="text-left px-3 py-2 font-medium">Product</th>
-            <th class="text-left px-3 py-2 font-medium">Quantity</th>
-            <th class="text-left px-3 py-2 font-medium">Revenue</th>
-            <th class="text-left px-3 py-2 font-medium">Cost</th>
-            <th class="text-left px-3 py-2 font-medium">Profit</th>
-            <th class="text-left px-3 py-2 font-medium">Margin</th>
-            <th class="text-left px-3 py-2 font-medium">Orders</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${products.map(product => `
-            <tr class="border-t hover:bg-gray-50">
-              <td class="px-3 py-2">${escapeHtml(product.item)}</td>
-              <td class="px-3 py-2">${formatNumber(product.quantity)}</td>
-              <td class="px-3 py-2">${formatCurrency(product.revenue)}</td>
-              <td class="px-3 py-2">${formatCurrency(product.cost)}</td>
-              <td class="px-3 py-2">${formatCurrency(product.profit)}</td>
-              <td class="px-3 py-2">${formatPercent(product.margin)}</td>
-              <td class="px-3 py-2">${product.orders.toFixed(0)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-
-  content.innerHTML = summaryHtml + tableHtml;
-  title.textContent = `Client Details: ${clientName}`;
-  console.log('About to show modal');
-  modal.classList.remove('hidden');
 
   // Bypass CSS conflicts by creating a fresh modal overlay
   const existingOverlay = document.getElementById('temp-modal-overlay');
@@ -2729,8 +2696,30 @@ function showClientDetails(clientName) {
     color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
   `;
 
+  const buttonGroup = document.createElement('div');
+  buttonGroup.style.cssText = `
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+  `;
+
+  const printBtn = document.createElement('button');
+  printBtn.innerHTML = '🖨️ Print';
+  printBtn.className = 'no-print';
+  printBtn.style.cssText = `
+    background: ${isDark ? '#374151' : '#e5e7eb'} !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
+  `;
+  printBtn.onclick = () => window.print();
+
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '✕';
+  closeBtn.className = 'no-print';
   closeBtn.style.cssText = `
     background: none !important;
     border: none !important;
@@ -2742,6 +2731,9 @@ function showClientDetails(clientName) {
   `;
   closeBtn.onclick = () => overlay.remove();
 
+  buttonGroup.appendChild(printBtn);
+  buttonGroup.appendChild(closeBtn);
+
   const contentArea = document.createElement('div');
   contentArea.style.cssText = `
     flex: 1 !important;
@@ -2750,11 +2742,36 @@ function showClientDetails(clientName) {
     background: ${isDark ? '#1f2937' : '#ffffff'} !important;
   `;
 
-  // Use the existing content HTML
-  contentArea.innerHTML = summaryHtml + tableHtml;
+  // Add summary HTML
+  contentArea.innerHTML = summaryHtml;
+
+  // Create table container for sortable table
+  const tableWrapper = document.createElement('div');
+  tableWrapper.className = 'overflow-x-auto border app-border rounded-md';
+  tableWrapper.style.cssText = `
+    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+  `;
+
+  contentArea.appendChild(tableWrapper);
+
+  // Render sortable table with product data
+  renderSortableTable(
+    tableWrapper,
+    ['item', 'quantity', 'revenue', 'cost', 'profit', 'margin', 'orders'],
+    products.map(product => ({
+      item: product.item,
+      quantity: formatNumber(product.quantity),
+      revenue: formatCurrency(product.revenue),
+      cost: formatCurrency(product.cost),
+      profit: formatCurrency(product.profit),
+      margin: formatPercent(product.margin),
+      orders: product.orders.toFixed(0)
+    })),
+    { defaultSort: { column: 'revenue', direction: 'desc' } }
+  );
 
   header.appendChild(titleEl);
-  header.appendChild(closeBtn);
+  header.appendChild(buttonGroup);
   modalContent.appendChild(header);
   modalContent.appendChild(contentArea);
   overlay.appendChild(modalContent);
@@ -2854,37 +2871,6 @@ function showOrderDetails(orderNumber) {
     <h4 class="text-lg font-medium text-gray-900 mb-4">Order Items (${items.length} items)</h4>
   `;
 
-  const tableHtml = `
-    <div class="overflow-x-auto border app-border rounded-md">
-      <table class="w-full text-sm">
-        <thead class="app-card">
-          <tr>
-            <th class="text-left px-3 py-2 font-medium">Item</th>
-            <th class="text-left px-3 py-2 font-medium">Quantity</th>
-            <th class="text-left px-3 py-2 font-medium">Unit Price</th>
-            <th class="text-left px-3 py-2 font-medium">Revenue</th>
-            <th class="text-left px-3 py-2 font-medium">Cost</th>
-            <th class="text-left px-3 py-2 font-medium">Profit</th>
-            <th class="text-left px-3 py-2 font-medium">Margin</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${items.map(item => `
-            <tr class="border-t hover:bg-gray-50">
-              <td class="px-3 py-2">${escapeHtml(item.item)}</td>
-              <td class="px-3 py-2">${formatNumber(item.quantity)}</td>
-              <td class="px-3 py-2">${formatCurrency(item.price)}</td>
-              <td class="px-3 py-2">${formatCurrency(item.revenue)}</td>
-              <td class="px-3 py-2">${formatCurrency(item.cost)}</td>
-              <td class="px-3 py-2">${formatCurrency(item.profit)}</td>
-              <td class="px-3 py-2">${formatPercent(item.margin)}</td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
-
   // Bypass CSS conflicts by creating a fresh modal overlay
   const existingOverlay = document.getElementById('temp-order-modal-overlay');
   if (existingOverlay) {
@@ -2942,8 +2928,30 @@ function showOrderDetails(orderNumber) {
     color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
   `;
 
+  const buttonGroup = document.createElement('div');
+  buttonGroup.style.cssText = `
+    display: flex !important;
+    gap: 8px !important;
+    align-items: center !important;
+  `;
+
+  const printBtn = document.createElement('button');
+  printBtn.innerHTML = '🖨️ Print';
+  printBtn.className = 'no-print';
+  printBtn.style.cssText = `
+    background: ${isDark ? '#374151' : '#e5e7eb'} !important;
+    border: none !important;
+    padding: 6px 12px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 14px !important;
+    color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
+  `;
+  printBtn.onclick = () => window.print();
+
   const closeBtn = document.createElement('button');
   closeBtn.innerHTML = '✕';
+  closeBtn.className = 'no-print';
   closeBtn.style.cssText = `
     background: none !important;
     border: none !important;
@@ -2955,6 +2963,9 @@ function showOrderDetails(orderNumber) {
   `;
   closeBtn.onclick = () => overlay.remove();
 
+  buttonGroup.appendChild(printBtn);
+  buttonGroup.appendChild(closeBtn);
+
   const contentArea = document.createElement('div');
   contentArea.style.cssText = `
     flex: 1 !important;
@@ -2963,11 +2974,36 @@ function showOrderDetails(orderNumber) {
     background: ${isDark ? '#1f2937' : '#ffffff'} !important;
   `;
 
-  // Use the existing content HTML
-  contentArea.innerHTML = summaryHtml + tableHtml;
+  // Add summary HTML
+  contentArea.innerHTML = summaryHtml;
+
+  // Create table container for sortable table
+  const tableWrapper = document.createElement('div');
+  tableWrapper.className = 'overflow-x-auto border app-border rounded-md';
+  tableWrapper.style.cssText = `
+    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+  `;
+
+  contentArea.appendChild(tableWrapper);
+
+  // Render sortable table with items data
+  renderSortableTable(
+    tableWrapper,
+    ['item', 'quantity', 'price', 'revenue', 'cost', 'profit', 'margin'],
+    items.map(item => ({
+      item: item.item,
+      quantity: formatNumber(item.quantity),
+      price: formatCurrency(item.price),
+      revenue: formatCurrency(item.revenue),
+      cost: formatCurrency(item.cost),
+      profit: formatCurrency(item.profit),
+      margin: formatPercent(item.margin)
+    })),
+    { defaultSort: { column: 'revenue', direction: 'desc' } }
+  );
 
   header.appendChild(titleEl);
-  header.appendChild(closeBtn);
+  header.appendChild(buttonGroup);
   modalContent.appendChild(header);
   modalContent.appendChild(contentArea);
   overlay.appendChild(modalContent);
