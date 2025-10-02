@@ -2373,12 +2373,19 @@ function editReportConfiguration() {
 }
 
 function loadReportTemplates() {
+  const currentYear = new Date().getFullYear();
+  const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+  const last30Days = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const last90Days = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
   const templates = [
-    // Year-to-Date Reports
+    // ============================================
+    // YTD REPORTS (Year-to-Date)
+    // ============================================
     {
-      name: "📊 YTD Revenue by Item",
+      name: "[YTD] Revenue by Item",
       reportType: "item",
-      startDate: `${new Date().getFullYear()}-01-01`,
+      startDate: `${currentYear}-01-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2387,9 +2394,9 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "📊 YTD Revenue by Client",
+      name: "[YTD] Revenue by Client",
       reportType: "client",
-      startDate: `${new Date().getFullYear()}-01-01`,
+      startDate: `${currentYear}-01-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2398,9 +2405,9 @@ function loadReportTemplates() {
       columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
     },
     {
-      name: "📊 YTD Revenue by Staff",
+      name: "[YTD] Revenue by Staff",
       reportType: "staff",
-      startDate: `${new Date().getFullYear()}-01-01`,
+      startDate: `${currentYear}-01-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2408,46 +2415,11 @@ function loadReportTemplates() {
       categoryFilter: "",
       columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
     },
-
-    // Quarterly Reports
     {
-      name: "📅 Q1 Performance by Item",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-01-01`,
-      endDate: `${new Date().getFullYear()}-03-31`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "📅 Q2 Performance by Item",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-04-01`,
-      endDate: `${new Date().getFullYear()}-06-30`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "📅 Q3 Performance by Item",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-07-01`,
-      endDate: `${new Date().getFullYear()}-09-30`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "📅 Q4 Performance by Item",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-10-01`,
-      endDate: `${new Date().getFullYear()}-12-31`,
+      name: "[YTD] Category Performance",
+      reportType: "category",
+      startDate: `${currentYear}-01-01`,
+      endDate: "",
       itemFilter: "",
       clientFilter: "",
       staffFilter: "",
@@ -2455,11 +2427,61 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
 
-    // Monthly Reports
+    // ============================================
+    // QUARTERLY REPORTS
+    // ============================================
     {
-      name: "📆 This Month - All Items",
+      name: "[QUARTERLY] Q1 Performance by Item",
       reportType: "item",
-      startDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`,
+      startDate: `${currentYear}-01-01`,
+      endDate: `${currentYear}-03-31`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[QUARTERLY] Q2 Performance by Item",
+      reportType: "item",
+      startDate: `${currentYear}-04-01`,
+      endDate: `${currentYear}-06-30`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[QUARTERLY] Q3 Performance by Item",
+      reportType: "item",
+      startDate: `${currentYear}-07-01`,
+      endDate: `${currentYear}-09-30`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[QUARTERLY] Q4 Performance by Item",
+      reportType: "item",
+      startDate: `${currentYear}-10-01`,
+      endDate: `${currentYear}-12-31`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+
+    // ============================================
+    // MONTHLY REPORTS
+    // ============================================
+    {
+      name: "[MONTHLY] This Month - All Items",
+      reportType: "item",
+      startDate: `${currentYear}-${currentMonth}-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2468,9 +2490,9 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "📆 This Month - Client Performance",
+      name: "[MONTHLY] This Month - Client Performance",
       reportType: "client",
-      startDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`,
+      startDate: `${currentYear}-${currentMonth}-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2479,20 +2501,33 @@ function loadReportTemplates() {
       columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
     },
     {
-      name: "📆 This Month - Staff Performance",
+      name: "[MONTHLY] This Month - Staff Performance",
       reportType: "staff",
-      startDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`,
+      startDate: `${currentYear}-${currentMonth}-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
       staffFilter: "",
       categoryFilter: "",
       columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
+    },
+    {
+      name: "[MONTHLY] This Month - Orders",
+      reportType: "order",
+      startDate: `${currentYear}-${currentMonth}-01`,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true }
     },
 
-    // Profitability Analysis
+    // ============================================
+    // PROFITABILITY ANALYSIS
+    // ============================================
     {
-      name: "💰 High Margin Items (All Time)",
+      name: "[PROFIT] High Margin Items (All Time)",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2503,7 +2538,7 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "💰 Revenue vs Cost Analysis",
+      name: "[PROFIT] Low Margin Items (All Time)",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2514,7 +2549,29 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "💰 Client Profitability Analysis",
+      name: "[PROFIT] Negative Profit Items",
+      reportType: "item",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[PROFIT] Revenue vs Cost Analysis",
+      reportType: "item",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[PROFIT] Client Profitability Analysis",
       reportType: "client",
       startDate: "",
       endDate: "",
@@ -2524,10 +2581,23 @@ function loadReportTemplates() {
       categoryFilter: "",
       columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false }
     },
-
-    // Top Performers
     {
-      name: "🏆 Top 20 Items by Revenue",
+      name: "[PROFIT] Category Profit Margins",
+      reportType: "category",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+
+    // ============================================
+    // TOP PERFORMERS
+    // ============================================
+    {
+      name: "[TOP] Top 20 Items by Revenue",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2538,7 +2608,29 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "🏆 Top 10 Clients by Revenue",
+      name: "[TOP] Top 20 Items by Quantity",
+      reportType: "item",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: false, date: false }
+    },
+    {
+      name: "[TOP] Top 20 Items by Profit",
+      reportType: "item",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[TOP] Top 10 Clients by Revenue",
       reportType: "client",
       startDate: "",
       endDate: "",
@@ -2549,7 +2641,29 @@ function loadReportTemplates() {
       columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
     },
     {
-      name: "🏆 Top Staff by Orders",
+      name: "[TOP] Top 10 Clients by Orders",
+      reportType: "client",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: false, margin: false, orders: true, date: false }
+    },
+    {
+      name: "[TOP] Top Staff by Revenue",
+      reportType: "staff",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
+    },
+    {
+      name: "[TOP] Top Staff by Orders",
       reportType: "staff",
       startDate: "",
       endDate: "",
@@ -2560,9 +2674,203 @@ function loadReportTemplates() {
       columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
     },
 
-    // Category Analysis
+    // ============================================
+    // CUSTOMER BEHAVIOR
+    // ============================================
     {
-      name: "📦 Category Performance Overview",
+      name: "[CUSTOMER] High-Value Clients (Top 10%)",
+      reportType: "client",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false }
+    },
+    {
+      name: "[CUSTOMER] Client Purchase Frequency",
+      reportType: "client",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: false, margin: false, orders: true, date: false }
+    },
+    {
+      name: "[CUSTOMER] Dormant Clients (No Orders 90+ Days)",
+      reportType: "client",
+      startDate: "",
+      endDate: last90Days,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: false, margin: false, orders: true, date: false }
+    },
+    {
+      name: "[CUSTOMER] Active Clients (Last 30 Days)",
+      reportType: "client",
+      startDate: last30Days,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
+    },
+
+    // ============================================
+    // PRODUCT PERFORMANCE
+    // ============================================
+    {
+      name: "[PRODUCT] Item Velocity (Revenue per Day)",
+      reportType: "item",
+      startDate: last90Days,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: false, date: false }
+    },
+    {
+      name: "[PRODUCT] Slow-Moving Items (Low Quantity)",
+      reportType: "item",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[PRODUCT] Fast-Moving Items (High Quantity)",
+      reportType: "item",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: true, date: false }
+    },
+
+    // ============================================
+    // STAFF PERFORMANCE
+    // ============================================
+    {
+      name: "[STAFF] Staff Efficiency (Revenue per Order)",
+      reportType: "staff",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: false, orders: true, date: false }
+    },
+    {
+      name: "[STAFF] Staff Product Mix (Categories)",
+      reportType: "staff",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: true, date: false }
+    },
+    {
+      name: "[STAFF] This Month Staff Performance",
+      reportType: "staff",
+      startDate: `${currentYear}-${currentMonth}-01`,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
+    },
+    {
+      name: "[STAFF] YTD Staff Growth",
+      reportType: "staff",
+      startDate: `${currentYear}-01-01`,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false }
+    },
+
+    // ============================================
+    // TIME COMPARISON
+    // ============================================
+    {
+      name: "[TIME] Last 7 Days Performance",
+      reportType: "item",
+      startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[TIME] Last 30 Days Performance",
+      reportType: "item",
+      startDate: last30Days,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[TIME] Last 90 Days Performance",
+      reportType: "item",
+      startDate: last90Days,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[TIME] Week-over-Week Comparison",
+      reportType: "item",
+      startDate: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[TIME] Month-over-Month Growth",
+      reportType: "item",
+      startDate: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+
+    // ============================================
+    // CATEGORY ANALYSIS
+    // ============================================
+    {
+      name: "[CATEGORY] All Categories Overview",
       reportType: "category",
       startDate: "",
       endDate: "",
@@ -2573,9 +2881,20 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "📦 YTD Category Performance",
+      name: "[CATEGORY] YTD Category Performance",
       reportType: "category",
-      startDate: `${new Date().getFullYear()}-01-01`,
+      startDate: `${currentYear}-01-01`,
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[CATEGORY] This Month Category Mix",
+      reportType: "category",
+      startDate: `${currentYear}-${currentMonth}-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2584,9 +2903,11 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
 
-    // Order Analysis
+    // ============================================
+    // ORDER ANALYSIS
+    // ============================================
     {
-      name: "📋 All Orders Overview",
+      name: "[ORDER] All Orders Overview",
       reportType: "order",
       startDate: "",
       endDate: "",
@@ -2597,9 +2918,31 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true }
     },
     {
-      name: "📋 This Month Orders",
+      name: "[ORDER] Large Orders (>$1000)",
       reportType: "order",
-      startDate: `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}-01`,
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true }
+    },
+    {
+      name: "[ORDER] Small Orders (<$100)",
+      reportType: "order",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true }
+    },
+    {
+      name: "[ORDER] This Month Orders",
+      reportType: "order",
+      startDate: `${currentYear}-${currentMonth}-01`,
       endDate: "",
       itemFilter: "",
       clientFilter: "",
@@ -2608,9 +2951,59 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true }
     },
 
-    // Specific Item Analysis
+    // ============================================
+    // SEASONAL REPORTS
+    // ============================================
     {
-      name: "🔍 Mulch Sales Analysis",
+      name: "[SEASONAL] Spring Sales (Mar-May)",
+      reportType: "item",
+      startDate: `${currentYear}-03-01`,
+      endDate: `${currentYear}-05-31`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[SEASONAL] Summer Sales (Jun-Aug)",
+      reportType: "item",
+      startDate: `${currentYear}-06-01`,
+      endDate: `${currentYear}-08-31`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[SEASONAL] Fall Sales (Sep-Nov)",
+      reportType: "item",
+      startDate: `${currentYear}-09-01`,
+      endDate: `${currentYear}-11-30`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+    {
+      name: "[SEASONAL] Winter Sales (Dec-Feb)",
+      reportType: "item",
+      startDate: `${currentYear}-12-01`,
+      endDate: `${currentYear + 1}-02-28`,
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
+    },
+
+    // ============================================
+    // SPECIFIC ITEMS
+    // ============================================
+    {
+      name: "[ITEMS] Mulch Sales Analysis",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2621,7 +3014,7 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "🔍 Stone/Gravel Sales Analysis",
+      name: "[ITEMS] Stone/Gravel Sales Analysis",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2632,7 +3025,7 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "🔍 Soil/Topsoil Sales Analysis",
+      name: "[ITEMS] Soil/Topsoil Sales Analysis",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2643,79 +3036,11 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
 
-    // Seasonal Reports
+    // ============================================
+    // COMPLETE VIEWS
+    // ============================================
     {
-      name: "🌸 Spring Sales (Mar-May)",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-03-01`,
-      endDate: `${new Date().getFullYear()}-05-31`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "☀️ Summer Sales (Jun-Aug)",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-06-01`,
-      endDate: `${new Date().getFullYear()}-08-31`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "🍂 Fall Sales (Sep-Nov)",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-09-01`,
-      endDate: `${new Date().getFullYear()}-11-30`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "❄️ Winter Sales (Dec-Feb)",
-      reportType: "item",
-      startDate: `${new Date().getFullYear()}-12-01`,
-      endDate: `${new Date().getFullYear() + 1}-02-28`,
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-
-    // Comparison Reports
-    {
-      name: "📊 Last 30 Days Performance",
-      reportType: "item",
-      startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: "",
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-    {
-      name: "📊 Last 90 Days Performance",
-      reportType: "item",
-      startDate: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      endDate: "",
-      itemFilter: "",
-      clientFilter: "",
-      staffFilter: "",
-      categoryFilter: "",
-      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
-    },
-
-    // Complete Views
-    {
-      name: "📑 Complete Item Report (All Data)",
+      name: "[COMPLETE] All Items (Full Details)",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2726,7 +3051,7 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false }
     },
     {
-      name: "📑 Complete Client Report (All Data)",
+      name: "[COMPLETE] All Clients (Full Details)",
       reportType: "client",
       startDate: "",
       endDate: "",
@@ -2737,8 +3062,30 @@ function loadReportTemplates() {
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false }
     },
     {
-      name: "📑 Complete Staff Report (All Data)",
+      name: "[COMPLETE] All Staff (Full Details)",
       reportType: "staff",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false }
+    },
+    {
+      name: "[COMPLETE] All Orders (Full Details)",
+      reportType: "order",
+      startDate: "",
+      endDate: "",
+      itemFilter: "",
+      clientFilter: "",
+      staffFilter: "",
+      categoryFilter: "",
+      columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true }
+    },
+    {
+      name: "[COMPLETE] All Categories (Full Details)",
+      reportType: "category",
       startDate: "",
       endDate: "",
       itemFilter: "",
