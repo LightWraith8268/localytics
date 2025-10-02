@@ -1617,7 +1617,8 @@ function renderClientTrackingView() {
     : `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${(totalOrders / (clients.length || 1)).toFixed(0)}`;
   summaryEl.textContent = summaryText;
 
-  const topClients = clients.slice(0, 5);
+  // Exclude "Windsor Cash" from top clients ranking
+  const topClients = clients.filter(c => c.label !== 'Windsor Cash').slice(0, 5);
   highlightsEl.innerHTML = topClients.map((c, index) => `
     <div class="highlight-card rank-${index + 1} p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(c.label || 'Unassigned')}</div>
@@ -3496,6 +3497,24 @@ function setupOrdersLiveFilters() {
       input.addEventListener('change', applyOrdersFilters);
     }
   });
+
+  // Clear filters button
+  const clearBtn = qs('ordersClearFilters');
+  if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
+    clearBtn.setAttribute('data-clear-handler', 'true');
+    clearBtn.addEventListener('click', () => {
+      filterInputs.forEach(input => {
+        if (input) {
+          if (input.type === 'checkbox') {
+            input.checked = false;
+          } else {
+            input.value = '';
+          }
+        }
+      });
+      applyOrdersFilters();
+    });
+  }
 }
 
 function applyOrdersFilters() {
@@ -3662,6 +3681,25 @@ function setupClientsLiveFilters() {
   if (searchInput && !searchInput.hasAttribute('data-live-filter')) {
     searchInput.setAttribute('data-live-filter', 'true');
   }
+
+  // Clear filters button
+  const clearBtn = qs('clientsClearFilters');
+  if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
+    clearBtn.setAttribute('data-clear-handler', 'true');
+    clearBtn.addEventListener('click', () => {
+      filterInputs.forEach(input => {
+        if (input) {
+          if (input.type === 'checkbox') {
+            input.checked = false;
+          } else {
+            input.value = '';
+          }
+        }
+      });
+      if (searchInput) searchInput.value = '';
+      applyClientsFilters();
+    });
+  }
 }
 
 function setupStaffLiveFilters() {
@@ -3682,6 +3720,24 @@ function setupStaffLiveFilters() {
       input.addEventListener('change', applyStaffFilters);
     }
   });
+
+  // Clear filters button
+  const clearBtn = qs('staffClearFilters');
+  if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
+    clearBtn.setAttribute('data-clear-handler', 'true');
+    clearBtn.addEventListener('click', () => {
+      filterInputs.forEach(input => {
+        if (input) {
+          if (input.type === 'checkbox') {
+            input.checked = false;
+          } else {
+            input.value = '';
+          }
+        }
+      });
+      applyStaffFilters();
+    });
+  }
 }
 
 function setupItemsLiveFilters() {
@@ -3707,6 +3763,25 @@ function setupItemsLiveFilters() {
   const searchInput = qs('itemsSearch');
   if (searchInput && !searchInput.hasAttribute('data-live-filter')) {
     searchInput.setAttribute('data-live-filter', 'true');
+  }
+
+  // Clear filters button
+  const clearBtn = qs('itemsClearFilters');
+  if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
+    clearBtn.setAttribute('data-clear-handler', 'true');
+    clearBtn.addEventListener('click', () => {
+      filterInputs.forEach(input => {
+        if (input) {
+          if (input.type === 'checkbox') {
+            input.checked = false;
+          } else {
+            input.value = '';
+          }
+        }
+      });
+      if (searchInput) searchInput.value = '';
+      applyItemsFilters();
+    });
   }
 }
 
