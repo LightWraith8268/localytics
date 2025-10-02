@@ -211,14 +211,30 @@ function palette(n) {
 
 export function aggregateByField(rows, field) {
   const map = new Map();
+  let debuggedFirstRow = false;
   for (const r of rows) {
     const key = String(field(r) ?? '').trim() || '-';
     const q = Number(r.__quantity || 0);
     const rev = Number(r.__revenue || 0);
     const cost = Number(r.__cost || 0);
-    const order = r.__order || '';
+    const order = (r.__order || '').toString().trim();
     const cur = map.get(key) || { label: key, quantity: 0, revenue: 0, cost: 0, orders: new Set() };
-    cur.quantity += q; cur.revenue += rev; cur.cost += cost; if (order) cur.orders.add(order); map.set(key, cur);
+    cur.quantity += q; cur.revenue += rev; cur.cost += cost;
+
+    // Debug first row to see what order values look like
+    if (!debuggedFirstRow && order) {
+      console.log('[aggregateByField] First row order value:', {
+        raw: r.__order,
+        trimmed: order,
+        willCount: order && order !== 'undefined' && order !== '-'
+      });
+      debuggedFirstRow = true;
+    }
+
+    if (order && order !== 'undefined' && order !== '-' && order !== '') {
+      cur.orders.add(order);
+    }
+    map.set(key, cur);
   }
   return Array.from(map.values())
     .map(x => ({
