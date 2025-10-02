@@ -1123,6 +1123,29 @@ window.addEventListener('DOMContentLoaded', () => {
     console.warn('[app] btnExportCategoryMapCsv not found in DOM');
   }
 
+  // Reapply categories button
+  const btnReapplyCategories = qs('btnReapplyCategories');
+  if (btnReapplyCategories) {
+    btnReapplyCategories.addEventListener('click', async () => {
+      if (!state.rows || !state.rows.length) {
+        alert('No data loaded. Please upload CSV data first.');
+        return;
+      }
+
+      const mapCount = state.categoryMap ? Object.keys(state.categoryMap).length : 0;
+      if (!mapCount) {
+        alert('No category mappings found. Please create mappings first.');
+        return;
+      }
+
+      console.log(`[ReapplyCategories] Reapplying ${mapCount} category mappings to data`);
+      await reapplyCategoryMap();
+      alert(`✅ Successfully applied ${mapCount} category mappings to your data!`);
+    });
+  } else {
+    console.warn('[app] btnReapplyCategories not found in DOM');
+  }
+
   // Upload category mapping CSV
   const uploadCategoryMapCsv = qs('uploadCategoryMapCsv');
   if (uploadCategoryMapCsv) {
