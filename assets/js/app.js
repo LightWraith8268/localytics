@@ -2286,6 +2286,9 @@ function preparePrintCover() {
   document.getElementById('printMapping')?.replaceChildren(document.createTextNode(mParts.join(', ')));
 }
 function normalizeAndDedupe(rows, mapping) {
+  console.log('[app] normalizeAndDedupe called with', rows.length, 'rows');
+  console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
+
   const orderCol = mapping.order;
   const dateCol = mapping.date;
   const itemCol = mapping.item;
@@ -2295,6 +2298,7 @@ function normalizeAndDedupe(rows, mapping) {
   const clientCol = mapping.client;
   const staffCol = mapping.staff;
   const out = [];
+  let rowIndex = 0;
   for (const r of rows) {
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
@@ -2326,6 +2330,12 @@ function normalizeAndDedupe(rows, mapping) {
     const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
     const csvCat = mapping.category ? (r[mapping.category] || '') : '';
     obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
+    // Debug log first few rows
+    if (rowIndex < 5) {
+      console.log(`[app][normalizeAndDedupe Row ${rowIndex}] Item: "${name}", Canon: "${canonName}"`);
+      console.log(`[app][normalizeAndDedupe Row ${rowIndex}] Manual: "${manualCat}", CSV: "${csvCat}", Final: "${obj.__category}"`);
+    }
+    rowIndex++;
     // Allowed items filter (hard-coded list in settings, canonical)
     const allowed = window.__allowedItemsList || [];
     const enforce = window.__enforceAllowed || false;
@@ -2389,8 +2399,12 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     const csvCat = mapping.category ? (r[mapping.category] || '') : '';
     obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
     // Debug log first few category applications
-    if (i < 3 && manualCat) {
-      console.log(`[app] Applied category mapping: "${name}" → "${manualCat}"`);
+    if (i < 5) {
+      console.log(`[app][Row ${i}] Item: "${name}", Canon: "${canonName}"`);
+      console.log(`[app][Row ${i}] Manual cat: "${manualCat}", CSV cat: "${csvCat}", Final: "${obj.__category}"`);
+      if (state.categoryMap && Object.keys(state.categoryMap).length > 0 && i === 0) {
+        console.log(`[app] Sample of categoryMap:`, Object.entries(state.categoryMap).slice(0, 5));
+      }
     }
     const allowed = window.__allowedItemsList || [];
     const enforce = window.__enforceAllowed || false;
