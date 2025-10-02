@@ -2295,21 +2295,30 @@ function saveReportSnapshot() {
     };
 
     if (config.startDate && config.endDate) {
-      const startDate = new Date(config.startDate);
-      const endDate = new Date(config.endDate);
+      // Parse dates as local dates to avoid timezone shifts
+      // Extract year and month from YYYY-MM-DD format
+      const parseLocalDate = (dateStr) => {
+        const parts = dateStr.split('-');
+        return {
+          year: parseInt(parts[0]),
+          month: parseInt(parts[1]) - 1  // JS months are 0-indexed
+        };
+      };
+
+      const start = parseLocalDate(config.startDate);
+      const end = parseLocalDate(config.endDate);
 
       // Check if same month and year
-      const sameMonth = startDate.getFullYear() === endDate.getFullYear() &&
-                        startDate.getMonth() === endDate.getMonth();
+      const sameMonth = start.year === end.year && start.month === end.month;
 
       if (sameMonth) {
         // Same month - just show month/year once
         dateRangePart = ` - ${formatDate(config.startDate)}`;
       } else {
         // Different months - show range
-        const start = formatDate(config.startDate);
-        const end = formatDate(config.endDate);
-        dateRangePart = ` - ${start} to ${end}`;
+        const startFormatted = formatDate(config.startDate);
+        const endFormatted = formatDate(config.endDate);
+        dateRangePart = ` - ${startFormatted} to ${endFormatted}`;
       }
     } else if (config.startDate) {
       dateRangePart = ` - From ${formatDate(config.startDate)}`;
