@@ -2641,6 +2641,9 @@ function showClientDetails(clientName) {
     existingOverlay.remove();
   }
 
+  // Detect dark mode
+  const isDark = document.documentElement.classList.contains('dark');
+
   const overlay = document.createElement('div');
   overlay.id = 'temp-modal-overlay';
   overlay.style.cssText = `
@@ -2659,7 +2662,8 @@ function showClientDetails(clientName) {
 
   const modalContent = document.createElement('div');
   modalContent.style.cssText = `
-    background: white !important;
+    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+    color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
     border-radius: 8px !important;
     max-width: 800px !important;
     width: 100% !important;
@@ -2673,7 +2677,7 @@ function showClientDetails(clientName) {
   const header = document.createElement('div');
   header.style.cssText = `
     padding: 24px !important;
-    border-bottom: 1px solid #e5e7eb !important;
+    border-bottom: 1px solid ${isDark ? '#374151' : '#e5e7eb'} !important;
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -2685,7 +2689,7 @@ function showClientDetails(clientName) {
     font-size: 18px !important;
     font-weight: 600 !important;
     margin: 0 !important;
-    color: #1f2937 !important;
+    color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
   `;
 
   const closeBtn = document.createElement('button');
@@ -2697,7 +2701,7 @@ function showClientDetails(clientName) {
     cursor: pointer !important;
     padding: 8px !important;
     border-radius: 4px !important;
-    color: #6b7280 !important;
+    color: ${isDark ? '#9ca3af' : '#6b7280'} !important;
   `;
   closeBtn.onclick = () => overlay.remove();
 
@@ -2706,6 +2710,7 @@ function showClientDetails(clientName) {
     flex: 1 !important;
     overflow: auto !important;
     padding: 24px !important;
+    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
   `;
 
   // Use the existing content HTML
@@ -2728,20 +2733,12 @@ function showClientDetails(clientName) {
 }
 
 function showOrderDetails(orderNumber) {
-  const modal = document.getElementById('orderDetailsModal');
-  const content = document.getElementById('orderDetailsContent');
-  const title = document.getElementById('orderDetailsModalTitle');
-
-  if (!modal || !content || !title) return;
-
   // Get all transactions for this order
   const base = state.filtered || state.rows;
   const orderTransactions = base.filter(row => (row.__order || '').toLowerCase() === orderNumber.toLowerCase());
 
   if (!orderTransactions.length) {
-    content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this order.</div>';
-    title.textContent = `Order Details: ${orderNumber}`;
-    modal.classList.remove('hidden');
+    alert('No transactions found for this order.');
     return;
   }
 
@@ -2851,9 +2848,101 @@ function showOrderDetails(orderNumber) {
     </div>
   `;
 
-  content.innerHTML = summaryHtml + tableHtml;
-  title.textContent = `Order Details: ${orderNumber}`;
-  modal.classList.remove('hidden');
+  // Bypass CSS conflicts by creating a fresh modal overlay
+  const existingOverlay = document.getElementById('temp-order-modal-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
+
+  // Detect dark mode
+  const isDark = document.documentElement.classList.contains('dark');
+
+  const overlay = document.createElement('div');
+  overlay.id = 'temp-order-modal-overlay';
+  overlay.style.cssText = `
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 999999 !important;
+    background: rgba(0,0,0,0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+  `;
+
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+    color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
+    border-radius: 8px !important;
+    max-width: 900px !important;
+    width: 100% !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  `;
+
+  const header = document.createElement('div');
+  header.style.cssText = `
+    padding: 24px !important;
+    border-bottom: 1px solid ${isDark ? '#374151' : '#e5e7eb'} !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  `;
+
+  const titleEl = document.createElement('h3');
+  titleEl.textContent = `Order Details: ${orderNumber}`;
+  titleEl.style.cssText = `
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    color: ${isDark ? '#f9fafb' : '#1f2937'} !important;
+  `;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    padding: 8px !important;
+    border-radius: 4px !important;
+    color: ${isDark ? '#9ca3af' : '#6b7280'} !important;
+  `;
+  closeBtn.onclick = () => overlay.remove();
+
+  const contentArea = document.createElement('div');
+  contentArea.style.cssText = `
+    flex: 1 !important;
+    overflow: auto !important;
+    padding: 24px !important;
+    background: ${isDark ? '#1f2937' : '#ffffff'} !important;
+  `;
+
+  // Use the existing content HTML
+  contentArea.innerHTML = summaryHtml + tableHtml;
+
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+  modalContent.appendChild(header);
+  modalContent.appendChild(contentArea);
+  overlay.appendChild(modalContent);
+
+  // Close on backdrop click
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+
+  document.body.appendChild(overlay);
+
+  console.log('Created order details modal overlay');
 }
 
 // Modal event handlers and initialization
