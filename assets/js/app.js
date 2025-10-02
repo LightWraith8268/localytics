@@ -2966,6 +2966,17 @@ function showOrderDetails(orderNumber) {
     return;
   }
 
+  // Debug log for diagnosing quantity issues
+  console.log('[showOrderDetails] Order:', orderNumber);
+  console.log('[showOrderDetails] Transactions:', orderTransactions.length);
+  console.log('[showOrderDetails] Sample transaction:', {
+    __quantity: orderTransactions[0].__quantity,
+    __revenue: orderTransactions[0].__revenue,
+    __price: orderTransactions[0].__price,
+    rawQtyCol: orderTransactions[0][state.mapping.qty],
+    mapping: state.mapping
+  });
+
   // Get order summary info
   const firstTransaction = orderTransactions[0];
   const orderDate = firstTransaction[state.mapping.date] || 'Unknown Date';
