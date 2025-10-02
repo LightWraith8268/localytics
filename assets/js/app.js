@@ -652,7 +652,10 @@ window.addEventListener('DOMContentLoaded', () => {
   // Snapshot viewer modal listeners
   qs('btnCloseSnapshotViewer')?.addEventListener('click', () => {
     const modal = qs('snapshotViewerModal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.add('hidden');
+    }
   });
 
   qs('btnPrintSnapshotFromModal')?.addEventListener('click', () => {
@@ -664,6 +667,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Close modal when clicking outside
   qs('snapshotViewerModal')?.addEventListener('click', (e) => {
     if (e.target.id === 'snapshotViewerModal') {
+      e.target.style.display = 'none';
       e.target.classList.add('hidden');
     }
   });
@@ -2383,9 +2387,10 @@ function viewSnapshot(snapshotId) {
   // Store snapshot ID for print button
   modal.dataset.snapshotId = snapshotId;
 
-  // Show modal
+  // Show modal - use display style instead of class
+  modal.style.display = 'block';
   modal.classList.remove('hidden');
-  console.log('[viewSnapshot] Modal should now be visible');
+  console.log('[viewSnapshot] Modal should now be visible, display:', modal.style.display);
 }
 
 function printSnapshot(snapshotId) {
