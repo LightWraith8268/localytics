@@ -1743,36 +1743,32 @@ async function saveLastMapping(mapping) {
 }
 
 function printCurrentView() {
-  // Hide all navigation and non-essential elements for printing
-  const elementsToHide = document.querySelectorAll('.no-print, nav, header, .sidebar-scroll');
-  const originalDisplay = Array.from(elementsToHide).map(el => el.style.display);
-
-  // Hide elements
-  elementsToHide.forEach(el => el.style.display = 'none');
+  console.log('[printCurrentView] Starting print process');
 
   // Find the current active view (the one that's not hidden)
   const currentView = document.querySelector('.view:not(.hidden)');
+  console.log('[printCurrentView] Current view:', currentView?.id);
 
-  // If there's an active view, hide all other views temporarily
-  const allViews = document.querySelectorAll('.view');
-  const originalViewStates = Array.from(allViews).map(v => v.classList.contains('hidden'));
-
-  if (currentView) {
-    allViews.forEach(view => {
-      if (view !== currentView) {
-        view.style.display = 'none';
-      }
-    });
+  if (!currentView) {
+    console.warn('[printCurrentView] No active view found');
+    window.print();
+    return;
   }
+
+  // Get all views and temporarily add 'hidden' class to non-current views
+  const allViews = document.querySelectorAll('.view');
+  const viewsToHide = Array.from(allViews).filter(v => v !== currentView && !v.classList.contains('hidden'));
+
+  console.log('[printCurrentView] Hiding views:', viewsToHide.map(v => v.id));
+
+  // Temporarily hide other views for print
+  viewsToHide.forEach(view => view.classList.add('hidden'));
 
   const done = () => {
     window.removeEventListener('afterprint', done);
-    // Restore original display states
-    elementsToHide.forEach((el, i) => el.style.display = originalDisplay[i]);
-    allViews.forEach((view, i) => {
-      view.style.display = '';
-      if (originalViewStates[i]) view.classList.add('hidden');
-    });
+    // Restore hidden class states
+    viewsToHide.forEach(view => view.classList.remove('hidden'));
+    console.log('[printCurrentView] Print cleanup complete');
   };
 
   window.addEventListener('afterprint', done);
