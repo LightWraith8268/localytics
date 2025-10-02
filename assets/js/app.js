@@ -2252,6 +2252,39 @@ function saveReportSnapshot() {
   const reportType = config?.reportType || 'Report';
   const reportTypeLabel = reportType.charAt(0).toUpperCase() + reportType.slice(1);
 
+  // Build descriptive report title with sort/limit
+  let reportTitle = '';
+  const limit = config?.limit || 0;
+  const sortBy = config?.sortBy || 'revenue';
+
+  if (limit > 0) {
+    // Has limit - format like "Top 40 Items by Revenue"
+    const sortLabel = {
+      'revenue': 'by Revenue',
+      'quantity': 'by Quantity',
+      'profit': 'by Profit',
+      'margin': 'by Margin',
+      'orders': 'by Orders',
+      'name': 'Alphabetical'
+    }[sortBy] || 'by Revenue';
+
+    reportTitle = `Top ${limit} ${reportTypeLabel}s ${sortLabel}`;
+  } else {
+    // No limit - just "All Items by Revenue" or "Item Report"
+    if (sortBy && sortBy !== 'revenue') {
+      const sortLabel = {
+        'quantity': 'by Quantity',
+        'profit': 'by Profit',
+        'margin': 'by Margin',
+        'orders': 'by Orders',
+        'name': 'Alphabetical'
+      }[sortBy] || '';
+      reportTitle = `All ${reportTypeLabel}s ${sortLabel}`;
+    } else {
+      reportTitle = `${reportTypeLabel} Report`;
+    }
+  }
+
   // Format date range
   let dateRangePart = '';
   if (config?.startDate || config?.endDate) {
@@ -2294,7 +2327,7 @@ function saveReportSnapshot() {
   if (config?.categoryFilter) filters.push(config.categoryFilter);
   const filterPart = filters.length > 0 ? ` (${filters.join(', ')})` : '';
 
-  const defaultName = `${reportTypeLabel} Report${dateRangePart}${filterPart}`;
+  const defaultName = `${reportTitle}${dateRangePart}${filterPart}`;
 
   const name = prompt('Enter a name for this report snapshot:', defaultName);
   if (!name || !name.trim()) return;
