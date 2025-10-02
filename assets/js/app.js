@@ -2722,6 +2722,21 @@ function showClientDetails(clientName) {
   });
   console.log('[showClientDetails] Unique __client values in data:', Array.from(uniqueClients).slice(0, 20));
 
+  // Find rows that might match with different variations
+  const fuzzyMatches = base.filter(r => {
+    const rowClient = (r.__client || '').toString();
+    return rowClient.toLowerCase().includes('bmj');
+  });
+  console.log('[showClientDetails] Rows containing "bmj" (case-insensitive):', fuzzyMatches.length);
+  if (fuzzyMatches.length > 0) {
+    console.log('[showClientDetails] Sample BMJ-related rows:', fuzzyMatches.slice(0, 5).map(r => ({
+      __client: r.__client,
+      rawClient: r[state.mapping?.client],
+      __order: r.__order,
+      __revenue: r.__revenue
+    })));
+  }
+
   const matchingRows = base.filter(r => {
     const rowClient = r.__client || r[state.mapping?.client] || '';
     return rowClient.toLowerCase() === clientName.toLowerCase();
