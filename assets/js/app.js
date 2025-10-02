@@ -1188,20 +1188,13 @@ window.addEventListener('DOMContentLoaded', () => {
             state.categoryMap = { ...state.categoryMap, ...newMap };
 
             // Save to settings
-            saveUserSettings('categoryMap', state.categoryMap);
-
-            // Update the summary display
-            updateCategoryMapSummary();
+            await saveUserSettings('categoryMap', state.categoryMap);
 
             const skippedMsg = skipped > 0 ? `\n(${skipped} rows skipped due to empty category)` : '';
             alert(`✅ Successfully imported ${count} category mapping(s).${skippedMsg}\n\nData will be reprocessed.`);
 
-            // Reprocess data with new mappings
-            if (state.rows && state.rows.length) {
-              const report = computeReport(state.rows, state.mapping);
-              state.report = report;
-              renderDashboard();
-            }
+            // Reprocess data with new mappings - this re-normalizes rows with new __category values
+            await reapplyCategoryMap();
 
             // Clear file input
             e.target.value = '';
