@@ -1228,11 +1228,13 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <!-- Date Range -->
                 <div>
-                  <label class="block text-xs text-gray-500 mb-1">Date Range</label>
+                  <label class="block text-xs text-gray-500 mb-1">Date Range (click to select range or single date)</label>
                   <div class="flex gap-2">
-                    <input type="date" id="reportStartDate" class="flex-1 border rounded-md px-2 py-1 text-xs">
-                    <input type="date" id="reportEndDate" class="flex-1 border rounded-md px-2 py-1 text-xs">
+                    <input type="date" id="reportStartDate" class="flex-1 border rounded-md px-2 py-1 text-xs" title="Start date - leave blank for no start limit">
+                    <span class="self-center text-gray-400">to</span>
+                    <input type="date" id="reportEndDate" class="flex-1 border rounded-md px-2 py-1 text-xs" title="End date - leave blank for no end limit">
                   </div>
+                  <div class="text-xs text-gray-400 mt-0.5">Tip: Set both to same date for single day, or use either for open-ended ranges</div>
                 </div>
 
                 <!-- Item Filter -->
