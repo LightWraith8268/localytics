@@ -2263,14 +2263,18 @@ function toggleSnapshotsList() {
   if (!list || !button) return;
 
   const isHidden = list.classList.contains('hidden');
+  const showText = button.querySelector('.show-text');
+  const hideText = button.querySelector('.hide-text');
 
   if (isHidden) {
     list.classList.remove('hidden');
-    button.textContent = 'Hide Snapshots';
+    if (showText) showText.classList.add('hidden');
+    if (hideText) hideText.classList.remove('hidden');
     populateSnapshotsList();
   } else {
     list.classList.add('hidden');
-    button.textContent = 'Show Snapshots';
+    if (showText) showText.classList.remove('hidden');
+    if (hideText) hideText.classList.add('hidden');
   }
 }
 

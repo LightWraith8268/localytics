@@ -1349,18 +1349,6 @@
               </div>
             </div>
 
-            <!-- Report Snapshots Section -->
-            <div class="mt-4 pt-4 border-t app-border">
-              <div class="flex items-center justify-between mb-2">
-                <h4 class="text-xs font-medium text-gray-700">Saved Report Snapshots</h4>
-                <button id="btnToggleSnapshots" class="text-xs px-3 py-1 border rounded-md hover:bg-gray-50">Show Snapshots</button>
-              </div>
-
-              <div id="snapshotsList" class="hidden space-y-2 max-h-96 overflow-y-auto">
-                <!-- Snapshots will be populated here -->
-              </div>
-            </div>
-
           </div>
 
           <div class="mt-6">
@@ -1371,9 +1359,25 @@
 
       <!-- History View -->
       <section id="view-history" class="view hidden">
+        <!-- Saved Report Snapshots -->
+        <div class="app-card rounded-lg border app-border shadow-sm p-5 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-base font-medium">Saved Report Snapshots</h2>
+            <button id="btnToggleSnapshots" class="text-sm px-3 py-1.5 border rounded-md hover:bg-gray-50">
+              <span class="show-text">Show Snapshots</span>
+              <span class="hide-text hidden">Hide Snapshots</span>
+            </button>
+          </div>
+
+          <div id="snapshotsList" class="hidden space-y-2 max-h-96 overflow-y-auto">
+            <!-- Snapshots will be populated here -->
+          </div>
+        </div>
+
+        <!-- Firebase Saved Reports -->
         <div class="app-card rounded-lg border app-border shadow-sm p-5">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-medium">History</h2>
+            <h2 class="text-base font-medium">Firebase Saved Reports</h2>
             <button id="btnRefreshHistory" class="px-3 py-1.5 border rounded-md text-sm">Refresh</button>
           </div>
           <div id="historyList" class="mt-4 divide-y"></div>
