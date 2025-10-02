@@ -1054,12 +1054,19 @@ window.addEventListener('DOMContentLoaded', () => {
   if (btnSaveCategoryMap) {
     btnSaveCategoryMap.addEventListener('click', async () => {
       const map = collectCategoryMapDraft('categoryMapList', { includeEmpty: false });
+      const count = Object.keys(map).length;
+
       state.categoryMap = map;
       await saveUserSettings('categoryMap', map);
+
+      console.log('[CategoryMap] Saved mappings:', map);
+
+      // Reapply mappings and reprocess data
       await reapplyCategoryMap();
       updateCategoryMapSummary();
       closeCategoryMapModal();
-      alert('Category mapping saved.');
+
+      alert(`✅ Successfully saved ${count} category mapping(s).\n\nYour data has been reprocessed with the new categories.`);
     });
   } else {
     console.warn('[app] btnSaveCategoryMap not found in DOM');
