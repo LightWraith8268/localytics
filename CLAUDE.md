@@ -159,3 +159,4 @@ The application supports 11+ themes using CSS custom properties:
 - Excluded Firebase domains from caching to prevent API conflicts
 - Enhanced version management for proper PWA update notifications
 - Maintains separate caching strategies for assets vs. API calls
+- all css should be in a central css file and only referanced in d on the pages

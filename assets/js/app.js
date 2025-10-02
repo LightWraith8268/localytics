@@ -1149,9 +1149,18 @@ function renderReport() {
 
   // Staff aggregation uses filtered data
 
-  state.byClient = aggregateByField(base, r => r.__client && r.__client !== 'undefined' ? r.__client : '');
-  state.byStaff = aggregateByField(base, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
-  state.byCategory = aggregateByField(base, r => r.__category && r.__category !== 'undefined' ? r.__category : '');
+  state.byClient = aggregateByField(base, r => {
+    const val = r.__client;
+    return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+  });
+  state.byStaff = aggregateByField(base, r => {
+    const val = r.__staff;
+    return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+  });
+  state.byCategory = aggregateByField(base, r => {
+    const val = r.__category;
+    return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+  });
   state.byOrder = aggregateByOrder(base);
 
   // Items data comes from the report
@@ -2334,9 +2343,18 @@ function renderAnalyticsCharts() {
   if (!state.byClient || !state.byStaff || !state.byCategory) {
     console.log('Regenerating aggregated data for analytics');
     const base = state.filtered || state.rows;
-    state.byClient = aggregateByField(base, r => r.__client && r.__client !== 'undefined' ? r.__client : '');
-    state.byStaff = aggregateByField(base, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
-    state.byCategory = aggregateByField(base, r => r.__category && r.__category !== 'undefined' ? r.__category : '');
+    state.byClient = aggregateByField(base, r => {
+      const val = r.__client;
+      return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+    });
+    state.byStaff = aggregateByField(base, r => {
+      const val = r.__staff;
+      return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+    });
+    state.byCategory = aggregateByField(base, r => {
+      const val = r.__category;
+      return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+    });
     state.byOrder = aggregateByOrder(base);
     console.log('Analytics data generated:', {
       clientCount: state.byClient?.length || 0,
@@ -3634,7 +3652,10 @@ function applyStaffFilters() {
   }
 
   // Update staff aggregation with filtered data
-  state.byStaff = aggregateByField(filteredRows, r => r.__staff && r.__staff !== 'undefined' ? r.__staff : '');
+  state.byStaff = aggregateByField(filteredRows, r => {
+    const val = r.__staff;
+    return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+  });
 
   // Re-render the staff view
   renderStaffTrackingView();
