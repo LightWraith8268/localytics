@@ -1136,21 +1136,38 @@ window.addEventListener('DOMContentLoaded', () => {
           header: true,
           skipEmptyLines: true,
           complete: (results) => {
+            console.log('[CategoryMapUpload] Parsed CSV data:', results.data);
+            console.log('[CategoryMapUpload] Column names:', results.meta?.fields);
+
             const newMap = {};
             let count = 0;
+            let skipped = 0;
 
-            results.data.forEach(row => {
-              const item = row.item || row.Item || '';
-              const category = row.category || row.Category || '';
+            results.data.forEach((row, index) => {
+              // Flexible column detection - check all possible variations
+              const itemValue = row.item || row.Item || row.ITEM ||
+                               row['item'] || row['Item'] || row['ITEM'] || '';
+              const categoryValue = row.category || row.Category || row.CATEGORY ||
+                                   row['category'] || row['Category'] || row['CATEGORY'] || '';
 
-              if (item && item.trim() && category && category.trim()) {
-                newMap[item.trim()] = category.trim();
-                count++;
+              console.log(`[Row ${index}] item="${itemValue}", category="${categoryValue}"`);
+
+              if (itemValue && itemValue.trim()) {
+                if (categoryValue && categoryValue.trim()) {
+                  newMap[itemValue.trim()] = categoryValue.trim();
+                  count++;
+                } else {
+                  // Item exists but no category - skip this row
+                  skipped++;
+                }
               }
             });
 
+            console.log(`[CategoryMapUpload] Imported: ${count}, Skipped: ${skipped}`);
+
             if (count === 0) {
-              alert('No valid item-category mappings found in CSV. Expected columns: item, category');
+              const cols = results.meta?.fields?.join(', ') || 'unknown';
+              alert(`No valid item-category mappings found in CSV.\n\nDetected columns: ${cols}\n\nExpected columns: "item" and "category"\n\nMake sure both columns exist and have values.`);
               return;
             }
 
@@ -1160,7 +1177,8 @@ window.addEventListener('DOMContentLoaded', () => {
             // Save to settings
             saveUserSettings('categoryMap', state.categoryMap);
 
-            alert(`Successfully imported ${count} category mappings. Data will be reprocessed.`);
+            const skippedMsg = skipped > 0 ? `\n(${skipped} rows skipped due to empty category)` : '';
+            alert(`✅ Successfully imported ${count} category mapping(s).${skippedMsg}\n\nData will be reprocessed.`);
 
             // Reprocess data with new mappings
             if (state.rows && state.rows.length) {
