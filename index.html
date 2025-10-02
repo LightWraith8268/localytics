@@ -61,15 +61,16 @@
 
       /* Print-specific styles */
       @media print {
-        /* Default landscape for most pages, can be overridden */
+        /* Default portrait orientation for all pages */
         @page {
-          size: landscape;
-          margin: 0.25in; /* Uniform margins */
+          size: portrait;
+          margin: 0.3in;
         }
 
-        /* Portrait for specific views */
-        @page :first {
-          margin-top: 0.25in; /* Minimize first page top margin */
+        /* Landscape only for overview pages (clients, items, staff, orders) */
+        body.print-landscape @page {
+          size: landscape;
+          margin: 0.3in;
         }
 
         html, body {
@@ -175,6 +176,11 @@
         #view-trends canvas, #view-analytics canvas {
           max-height: 250px !important;
           page-break-inside: avoid !important;
+        }
+
+        /* Hide old modal elements during print - only show bypass overlays */
+        #clientDetailsModal, #orderDetailsModal {
+          display: none !important;
         }
 
         /* Modal prints: Portrait orientation */

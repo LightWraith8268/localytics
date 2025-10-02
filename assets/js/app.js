@@ -1762,11 +1762,20 @@ function printCurrentView() {
     return;
   }
 
+  // Determine if landscape orientation is needed (only for overview pages)
+  const landscapeViews = ['view-clients', 'view-items', 'view-staff', 'view-orders'];
+  const needsLandscape = landscapeViews.includes(currentView.id);
+
+  if (needsLandscape) {
+    document.body.classList.add('print-landscape');
+  }
+
   // Get all views and temporarily add 'hidden' class to non-current views
   const allViews = document.querySelectorAll('.view');
   const viewsToHide = Array.from(allViews).filter(v => v !== currentView && !v.classList.contains('hidden'));
 
   console.log('[printCurrentView] Hiding views:', viewsToHide.map(v => v.id));
+  console.log('[printCurrentView] Landscape mode:', needsLandscape);
 
   // Temporarily hide other views for print
   viewsToHide.forEach(view => view.classList.add('hidden'));
@@ -1775,6 +1784,8 @@ function printCurrentView() {
     window.removeEventListener('afterprint', done);
     // Restore hidden class states
     viewsToHide.forEach(view => view.classList.remove('hidden'));
+    // Remove landscape class
+    document.body.classList.remove('print-landscape');
     console.log('[printCurrentView] Print cleanup complete');
   };
 
