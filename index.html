@@ -1404,21 +1404,16 @@
           }
         }
 
-        // Prevent reload loops - only reload once per controlling event
-        let hasReloaded = false;
-
+        // Show update banner but let user manually reload
         wb.addEventListener('waiting', () => { maybeShowBanner(); });
         wb.addEventListener('externalwaiting', () => { maybeShowBanner(); });
         btn?.addEventListener('click', () => {
           wb.messageSkipWaiting();
-          hasReloaded = true; // Mark that we're about to reload
         });
         wb.addEventListener('controlling', () => {
+          // Don't auto-reload - let the service worker take control
+          // User will reload manually or on next page visit
           hideBanner();
-          if (!hasReloaded) {
-            hasReloaded = true;
-            setTimeout(() => window.location.reload(), 100); // Small delay to prevent race
-          }
         });
 
         wb.register().then((reg) => {

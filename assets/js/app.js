@@ -1147,43 +1147,20 @@ function renderReport() {
   // Additional aggregates (based on filtered rows)
   const base = state.filtered || state.rows;
 
-  // Staff aggregation uses filtered data
+  // Staff, client, and category aggregations use ALL data (not filtered)
+  // This ensures these pages show complete entity lists
+  const allData = state.rows;
 
-  state.byClient = aggregateByField(base, r => {
+  state.byClient = aggregateByField(allData, r => {
     const val = r.__client;
     return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
   });
 
-  // Debug staff aggregation
-  console.log('[renderReport] Total rows for staff aggregation:', base.length);
-  const staffValues = base.map(r => r.__staff).filter((val, idx, self) => self.indexOf(val) === idx);
-  console.log('[renderReport] Unique __staff values in data:', staffValues);
-  console.log('[renderReport] Staff value details:', staffValues.map(v => ({
-    value: v,
-    type: typeof v,
-    trimmed: String(v).trim(),
-    length: String(v).length,
-    trimmedLength: String(v).trim().length
-  })));
-
-  state.byStaff = aggregateByField(base, r => {
+  state.byStaff = aggregateByField(allData, r => {
     const val = r.__staff;
     const trimmed = String(val).trim();
-    const result = (val !== null && val !== undefined && val !== 'undefined' && trimmed !== '') ? val : '';
-    if (result === '') {
-      console.log('[renderReport] Filtering out staff row:', {
-        __staff: val,
-        type: typeof val,
-        stringVal: String(val),
-        trimmed: trimmed,
-        reason: val === null ? 'null' : val === undefined ? 'undefined' : val === 'undefined' ? 'string undefined' : trimmed === '' ? 'empty after trim' : 'unknown'
-      });
-    }
-    return result;
+    return (val !== null && val !== undefined && val !== 'undefined' && trimmed !== '') ? val : '';
   });
-
-  console.log('[renderReport] Final byStaff count:', state.byStaff.length);
-  console.log('[renderReport] byStaff labels:', state.byStaff.map(s => s.label));
 
   state.byCategory = aggregateByField(base, r => {
     const val = r.__category;
@@ -2366,15 +2343,16 @@ function renderAnalyticsCharts() {
   // Ensure aggregated data is available by regenerating it if needed
   if (!state.byClient || !state.byStaff || !state.byCategory) {
     console.log('Regenerating aggregated data for analytics');
-    const base = state.filtered || state.rows;
-    state.byClient = aggregateByField(base, r => {
+    const allData = state.rows; // Use all data for entity lists
+    state.byClient = aggregateByField(allData, r => {
       const val = r.__client;
       return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
     });
-    state.byStaff = aggregateByField(base, r => {
+    state.byStaff = aggregateByField(allData, r => {
       const val = r.__staff;
       return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
     });
+    const base = state.filtered || state.rows;
     state.byCategory = aggregateByField(base, r => {
       const val = r.__category;
       return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
