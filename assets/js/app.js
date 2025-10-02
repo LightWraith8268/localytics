@@ -1766,8 +1766,13 @@ function printCurrentView() {
   const landscapeViews = ['view-clients', 'view-items', 'view-staff', 'view-orders'];
   const needsLandscape = landscapeViews.includes(currentView.id);
 
+  // Inject dynamic print style for orientation
+  let printStyleEl = null;
   if (needsLandscape) {
-    document.body.classList.add('print-landscape');
+    printStyleEl = document.createElement('style');
+    printStyleEl.id = 'dynamic-print-orientation';
+    printStyleEl.textContent = '@media print { @page { size: landscape; margin: 0.3in; } }';
+    document.head.appendChild(printStyleEl);
   }
 
   // Get all views and temporarily add 'hidden' class to non-current views
@@ -1784,8 +1789,10 @@ function printCurrentView() {
     window.removeEventListener('afterprint', done);
     // Restore hidden class states
     viewsToHide.forEach(view => view.classList.remove('hidden'));
-    // Remove landscape class
-    document.body.classList.remove('print-landscape');
+    // Remove dynamic print style
+    if (printStyleEl && printStyleEl.parentNode) {
+      printStyleEl.parentNode.removeChild(printStyleEl);
+    }
     console.log('[printCurrentView] Print cleanup complete');
   };
 

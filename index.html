@@ -66,12 +66,7 @@
           size: portrait;
           margin: 0.3in;
         }
-
-        /* Landscape only for overview pages (clients, items, staff, orders) */
-        body.print-landscape @page {
-          size: landscape;
-          margin: 0.3in;
-        }
+        /* Note: Landscape orientation injected dynamically via JavaScript for overview pages */
 
         html, body {
           margin: 0 !important;
@@ -168,14 +163,27 @@
         #view-trends, #view-analytics {
           page-break-before: avoid !important;
         }
+        /* Chart containers - allow multiple per page */
+        #view-trends .grid, #view-analytics .grid {
+          display: block !important; /* Override grid for print */
+        }
         #view-trends .grid > *, #view-analytics .grid > * {
           page-break-inside: avoid !important;
           page-break-after: auto !important;
+          margin-bottom: 0.5rem !important;
+          width: 100% !important;
         }
-        /* Allow charts to be smaller and flow naturally */
+        /* Constrain chart canvas size to fit multiple on one page */
         #view-trends canvas, #view-analytics canvas {
-          max-height: 250px !important;
+          max-height: 200px !important;
+          height: 200px !important;
+          width: 100% !important;
           page-break-inside: avoid !important;
+        }
+        /* Ensure chart wrappers don't force page breaks */
+        #view-trends .app-card, #view-analytics .app-card {
+          page-break-inside: avoid !important;
+          page-break-after: auto !important;
         }
 
         /* Hide old modal elements during print - only show bypass overlays */
