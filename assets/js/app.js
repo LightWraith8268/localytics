@@ -648,7 +648,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Report snapshot listeners
   qs('btnSaveSnapshot')?.addEventListener('click', () => saveReportSnapshot());
-  qs('btnToggleSnapshots')?.addEventListener('click', () => toggleSnapshotsList());
 
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
@@ -2257,27 +2256,6 @@ function saveReportSnapshot() {
   } catch (e) {
     console.error('Error saving snapshot:', e);
     alert('Failed to save snapshot. Storage might be full.');
-  }
-}
-
-function toggleSnapshotsList() {
-  const list = qs('snapshotsList');
-  const button = qs('btnToggleSnapshots');
-  if (!list || !button) return;
-
-  const isHidden = list.classList.contains('hidden');
-  const showText = button.querySelector('.show-text');
-  const hideText = button.querySelector('.hide-text');
-
-  if (isHidden) {
-    list.classList.remove('hidden');
-    if (showText) showText.classList.add('hidden');
-    if (hideText) hideText.classList.remove('hidden');
-    populateSnapshotsList();
-  } else {
-    list.classList.add('hidden');
-    if (showText) showText.classList.remove('hidden');
-    if (hideText) hideText.classList.add('hidden');
   }
 }
 
