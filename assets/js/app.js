@@ -1083,16 +1083,100 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnExportCategoryMapCsv = qs('btnExportCategoryMapCsv');
   if (btnExportCategoryMapCsv) {
     btnExportCategoryMapCsv.addEventListener('click', () => {
-      const entries = Object.entries(state.categoryMap || {});
-      if (!entries.length) {
-        alert('No category mappings to export.');
+      // Export all unique items from current dataset with existing category mappings
+      if (!state.rows || !state.rows.length) {
+        alert('No data loaded. Please upload CSV data first.');
         return;
       }
-      const rows = entries.map(([item, category]) => ({ item, category }));
-      downloadCsv('category_mapping.csv', ['item','category'], rows);
+
+      // Get unique items from current dataset
+      const uniqueItems = new Set();
+      state.rows.forEach(row => {
+        const item = row[state.mapping?.item] || row.__item || '';
+        if (item && item.trim()) {
+          uniqueItems.add(item.trim());
+        }
+      });
+
+      if (!uniqueItems.size) {
+        alert('No items found in dataset.');
+        return;
+      }
+
+      // Create rows with item and category (pre-filled if exists in categoryMap)
+      const rows = Array.from(uniqueItems).sort().map(item => ({
+        item: item,
+        category: state.categoryMap?.[item] || ''
+      }));
+
+      downloadCsv('item_category_mapping.csv', ['item', 'category'], rows);
+      console.log(`Exported ${rows.length} items for category mapping`);
     });
   } else {
     console.warn('[app] btnExportCategoryMapCsv not found in DOM');
+  }
+
+  // Upload category mapping CSV
+  const uploadCategoryMapCsv = qs('uploadCategoryMapCsv');
+  if (uploadCategoryMapCsv) {
+    uploadCategoryMapCsv.addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        Papa.parse(text, {
+          header: true,
+          skipEmptyLines: true,
+          complete: (results) => {
+            const newMap = {};
+            let count = 0;
+
+            results.data.forEach(row => {
+              const item = row.item || row.Item || '';
+              const category = row.category || row.Category || '';
+
+              if (item && item.trim() && category && category.trim()) {
+                newMap[item.trim()] = category.trim();
+                count++;
+              }
+            });
+
+            if (count === 0) {
+              alert('No valid item-category mappings found in CSV. Expected columns: item, category');
+              return;
+            }
+
+            // Merge with existing mappings
+            state.categoryMap = { ...state.categoryMap, ...newMap };
+
+            // Save to settings
+            saveUserSettings('categoryMap', state.categoryMap);
+
+            alert(`Successfully imported ${count} category mappings. Data will be reprocessed.`);
+
+            // Reprocess data with new mappings
+            if (state.rows && state.rows.length) {
+              const report = computeReport(state.rows, state.mapping);
+              state.report = report;
+              renderDashboard();
+            }
+
+            // Clear file input
+            e.target.value = '';
+          },
+          error: (error) => {
+            console.error('CSV parse error:', error);
+            alert('Error parsing CSV file: ' + error.message);
+          }
+        });
+      } catch (error) {
+        console.error('File read error:', error);
+        alert('Error reading file: ' + error.message);
+      }
+    });
+  } else {
+    console.warn('[app] uploadCategoryMapCsv not found in DOM');
   }
 
   // Initialize dropdown filters when data is available

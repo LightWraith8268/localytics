@@ -76,20 +76,29 @@
           height: auto !important;
         }
 
-        /* Aggressively remove all top spacing */
-        body > *, body > * > *, .view, .view > * {
+        /* Aggressively remove all top spacing from all elements */
+        *, *::before, *::after {
           margin-top: 0 !important;
           padding-top: 0 !important;
         }
 
-        /* Force first visible element to top of page */
-        body > .view:not(.hidden) {
+        /* Main container must have no padding */
+        main, main > *, main > * > * {
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        /* Container and wrapper divs */
+        .container, .mx-auto {
+          padding-top: 0 !important;
+          margin-top: 0 !important;
+        }
+
+        /* Force first visible view to top */
+        .view:not(.hidden) {
+          margin-top: 0 !important;
+          padding-top: 0 !important;
           page-break-before: avoid !important;
-        }
-
-        body > .view:not(.hidden) > *:first-child {
-          margin-top: 0 !important;
-          padding-top: 0 !important;
         }
 
         /* Reduce heading sizes */
@@ -1351,7 +1360,9 @@
               <p class="text-sm text-gray-600">Assign categories to item names. Manual mappings override CSV categories.</p>
               <div class="flex flex-col sm:flex-row gap-2">
                 <button id="btnOpenCategoryMapModal" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Manage Mapping</button>
-                <button id="btnExportCategoryMapCsv" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Export Mapping CSV</button>
+                <button id="btnExportCategoryMapCsv" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Export Template CSV</button>
+                <label for="uploadCategoryMapCsv" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50 cursor-pointer text-center">Upload Mapping CSV</label>
+                <input type="file" id="uploadCategoryMapCsv" accept=".csv" class="hidden">
               </div>
               <p id="categoryMapSummary" class="text-xs text-gray-500">No categories configured yet.</p>
             </div>
