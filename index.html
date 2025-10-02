@@ -1333,6 +1333,7 @@
               <button id="btnGenerateReport" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Generate Report</button>
               <button id="btnClearReportFilters" class="px-4 py-2 border rounded-md text-sm">Clear Filters</button>
               <button id="btnSaveReport" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">Save Report Config</button>
+              <button id="btnSaveSnapshot" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 hidden">Save Report Snapshot</button>
             </div>
 
             <!-- Saved Reports Section -->
@@ -1345,6 +1346,18 @@
                 <button id="btnLoadReport" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Load & Run</button>
                 <button id="btnEditReport" class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">Edit</button>
                 <button id="btnDeleteReport" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Delete</button>
+              </div>
+            </div>
+
+            <!-- Report Snapshots Section -->
+            <div class="mt-4 pt-4 border-t app-border">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-medium text-gray-700">Saved Report Snapshots</h4>
+                <button id="btnToggleSnapshots" class="text-xs px-3 py-1 border rounded-md hover:bg-gray-50">Show Snapshots</button>
+              </div>
+
+              <div id="snapshotsList" class="hidden space-y-2 max-h-96 overflow-y-auto">
+                <!-- Snapshots will be populated here -->
               </div>
             </div>
 

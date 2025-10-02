@@ -643,6 +643,10 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnEditReport')?.addEventListener('click', () => editReportConfiguration());
   qs('btnDeleteReport')?.addEventListener('click', () => deleteReportConfiguration());
 
+  // Report snapshot listeners
+  qs('btnSaveSnapshot')?.addEventListener('click', () => saveReportSnapshot());
+  qs('btnToggleSnapshots')?.addEventListener('click', () => toggleSnapshotsList());
+
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
     if (!state.byClient) return; const cols = ['client','orders','quantity','revenue','cost','profit','margin'];
@@ -2139,6 +2143,27 @@ function generateAdvancedReport() {
   if (!container) return;
 
   renderSortableTable(container, columns, data, { defaultSort: { column: sortBy, direction: sortBy === 'name' ? 'asc' : 'desc' } });
+
+  // Capture report data for snapshotting
+  currentReportData = {
+    config: {
+      reportType,
+      startDate,
+      endDate,
+      itemFilter,
+      clientFilter,
+      staffFilter,
+      categoryFilter,
+      sortBy,
+      limit
+    },
+    tableData: data,
+    columns: columns
+  };
+
+  // Show snapshot button
+  const snapshotBtn = qs('btnSaveSnapshot');
+  if (snapshotBtn) snapshotBtn.classList.remove('hidden');
 }
 
 function populateReportFilters() {
@@ -2176,7 +2201,277 @@ function clearReportFilters() {
   qs('reportClientFilter').value = '';
   qs('reportStaffFilter').value = '';
   qs('reportCategoryFilter').value = '';
+  qs('reportSortBy').value = 'revenue';
+  qs('reportLimit').value = '';
   qs('customTable').innerHTML = '';
+
+  // Hide snapshot button when table is cleared
+  const snapshotBtn = qs('btnSaveSnapshot');
+  if (snapshotBtn) snapshotBtn.classList.add('hidden');
+}
+
+// ============================================
+// REPORT SNAPSHOTS
+// ============================================
+
+let currentReportData = null; // Store current report data for snapshotting
+
+function saveReportSnapshot() {
+  if (!currentReportData || !currentReportData.tableData || currentReportData.tableData.length === 0) {
+    alert('No report data to save. Please generate a report first.');
+    return;
+  }
+
+  const name = prompt('Enter a name for this report snapshot:');
+  if (!name || !name.trim()) return;
+
+  const snapshot = {
+    id: Date.now(),
+    name: name.trim(),
+    savedAt: new Date().toISOString(),
+    config: currentReportData.config,
+    tableData: currentReportData.tableData,
+    columns: currentReportData.columns
+  };
+
+  // Get existing snapshots
+  let snapshots = [];
+  try {
+    const stored = localStorage.getItem('reportSnapshots');
+    if (stored) snapshots = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading snapshots:', e);
+  }
+
+  // Add new snapshot
+  snapshots.push(snapshot);
+
+  // Save back to localStorage
+  try {
+    localStorage.setItem('reportSnapshots', JSON.stringify(snapshots));
+    alert(`Report snapshot "${name}" saved successfully!`);
+    populateSnapshotsList();
+  } catch (e) {
+    console.error('Error saving snapshot:', e);
+    alert('Failed to save snapshot. Storage might be full.');
+  }
+}
+
+function toggleSnapshotsList() {
+  const list = qs('snapshotsList');
+  const button = qs('btnToggleSnapshots');
+  if (!list || !button) return;
+
+  const isHidden = list.classList.contains('hidden');
+
+  if (isHidden) {
+    list.classList.remove('hidden');
+    button.textContent = 'Hide Snapshots';
+    populateSnapshotsList();
+  } else {
+    list.classList.add('hidden');
+    button.textContent = 'Show Snapshots';
+  }
+}
+
+function populateSnapshotsList() {
+  const list = qs('snapshotsList');
+  if (!list) return;
+
+  // Get snapshots
+  let snapshots = [];
+  try {
+    const stored = localStorage.getItem('reportSnapshots');
+    if (stored) snapshots = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading snapshots:', e);
+  }
+
+  if (snapshots.length === 0) {
+    list.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No saved snapshots yet</p>';
+    return;
+  }
+
+  // Sort by date (newest first)
+  snapshots.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+
+  list.innerHTML = snapshots.map(snapshot => {
+    const date = new Date(snapshot.savedAt);
+    const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+    const rowCount = snapshot.tableData?.length || 0;
+
+    return `
+      <div class="flex items-center justify-between p-3 bg-white rounded border hover:border-blue-400">
+        <div class="flex-1">
+          <div class="text-sm font-medium">${escapeHtml(snapshot.name)}</div>
+          <div class="text-xs text-gray-500">Saved: ${dateStr} • ${rowCount} rows • ${snapshot.config?.reportType || 'unknown'} report</div>
+        </div>
+        <div class="flex gap-2">
+          <button class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 btn-view-snapshot" data-snapshot-id="${snapshot.id}">View</button>
+          <button class="px-3 py-1 bg-green-600 text-white rounded text-xs hover:bg-green-700 btn-print-snapshot" data-snapshot-id="${snapshot.id}">Print</button>
+          <button class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 btn-delete-snapshot" data-snapshot-id="${snapshot.id}">Delete</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Add click handlers
+  list.querySelectorAll('.btn-view-snapshot').forEach(btn => {
+    btn.addEventListener('click', () => viewSnapshot(parseInt(btn.dataset.snapshotId)));
+  });
+
+  list.querySelectorAll('.btn-print-snapshot').forEach(btn => {
+    btn.addEventListener('click', () => printSnapshot(parseInt(btn.dataset.snapshotId)));
+  });
+
+  list.querySelectorAll('.btn-delete-snapshot').forEach(btn => {
+    btn.addEventListener('click', () => deleteSnapshot(parseInt(btn.dataset.snapshotId)));
+  });
+}
+
+function viewSnapshot(snapshotId) {
+  let snapshots = [];
+  try {
+    const stored = localStorage.getItem('reportSnapshots');
+    if (stored) snapshots = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading snapshots:', e);
+    return;
+  }
+
+  const snapshot = snapshots.find(s => s.id === snapshotId);
+  if (!snapshot) {
+    alert('Snapshot not found.');
+    return;
+  }
+
+  // Render the snapshot data in the table
+  const container = qs('customTable');
+  if (!container) return;
+
+  renderSortableTable(container, snapshot.columns, snapshot.tableData, {
+    defaultSort: { column: snapshot.config?.sortBy || 'revenue', direction: 'desc' }
+  });
+
+  // Store as current data for potential re-snapshotting
+  currentReportData = {
+    config: snapshot.config,
+    tableData: snapshot.tableData,
+    columns: snapshot.columns
+  };
+
+  // Show snapshot button
+  const snapshotBtn = qs('btnSaveSnapshot');
+  if (snapshotBtn) snapshotBtn.classList.remove('hidden');
+
+  alert(`Viewing snapshot: ${snapshot.name}\nSaved: ${new Date(snapshot.savedAt).toLocaleString()}`);
+}
+
+function printSnapshot(snapshotId) {
+  let snapshots = [];
+  try {
+    const stored = localStorage.getItem('reportSnapshots');
+    if (stored) snapshots = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading snapshots:', e);
+    return;
+  }
+
+  const snapshot = snapshots.find(s => s.id === snapshotId);
+  if (!snapshot) {
+    alert('Snapshot not found.');
+    return;
+  }
+
+  // Create a print-friendly page
+  const printWindow = window.open('', '_blank');
+  const date = new Date(snapshot.savedAt);
+
+  // Build table HTML
+  const tableHTML = `
+    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+      <thead>
+        <tr style="background-color: #f3f4f6;">
+          ${snapshot.columns.map(col => `<th style="border: 1px solid #d1d5db; padding: 8px; text-align: left;">${col}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody>
+        ${snapshot.tableData.map(row => `
+          <tr>
+            ${snapshot.columns.map(col => {
+              const val = row[col];
+              const formatted = typeof val === 'number' ? val.toLocaleString() : (val || '-');
+              return `<td style="border: 1px solid #d1d5db; padding: 8px;">${formatted}</td>`;
+            }).join('')}
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${snapshot.name} - Report Snapshot</title>
+      <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { font-size: 18px; margin-bottom: 10px; }
+        .meta { font-size: 12px; color: #666; margin-bottom: 20px; }
+        @media print {
+          body { margin: 10px; }
+        }
+      </style>
+    </head>
+    <body>
+      <h1>${snapshot.name}</h1>
+      <div class="meta">
+        <div>Generated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+        <div>Report Type: ${snapshot.config?.reportType || 'Unknown'}</div>
+        <div>Rows: ${snapshot.tableData.length}</div>
+      </div>
+      ${tableHTML}
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  setTimeout(() => {
+    printWindow.print();
+  }, 250);
+}
+
+function deleteSnapshot(snapshotId) {
+  let snapshots = [];
+  try {
+    const stored = localStorage.getItem('reportSnapshots');
+    if (stored) snapshots = JSON.parse(stored);
+  } catch (e) {
+    console.error('Error loading snapshots:', e);
+    return;
+  }
+
+  const snapshot = snapshots.find(s => s.id === snapshotId);
+  if (!snapshot) {
+    alert('Snapshot not found.');
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete the snapshot "${snapshot.name}"?`)) {
+    return;
+  }
+
+  // Remove snapshot
+  snapshots = snapshots.filter(s => s.id !== snapshotId);
+
+  try {
+    localStorage.setItem('reportSnapshots', JSON.stringify(snapshots));
+    alert('Snapshot deleted successfully!');
+    populateSnapshotsList();
+  } catch (e) {
+    console.error('Error deleting snapshot:', e);
+    alert('Failed to delete snapshot.');
+  }
 }
 
 // Save/Load/Delete Report Configurations
