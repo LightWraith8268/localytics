@@ -2247,7 +2247,44 @@ function saveReportSnapshot() {
     return;
   }
 
-  const name = prompt('Enter a name for this report snapshot:');
+  // Generate smart default name
+  const config = currentReportData.config;
+  const reportType = config?.reportType || 'Report';
+  const reportTypeLabel = reportType.charAt(0).toUpperCase() + reportType.slice(1);
+
+  // Format date range
+  let dateRangePart = '';
+  if (config?.startDate || config?.endDate) {
+    const formatDate = (dateStr) => {
+      if (!dateStr) return '';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+    };
+
+    if (config.startDate && config.endDate) {
+      const start = formatDate(config.startDate);
+      const end = formatDate(config.endDate);
+      // If same month/year, just show once
+      dateRangePart = start === end ? ` - ${start}` : ` - ${start} to ${end}`;
+    } else if (config.startDate) {
+      dateRangePart = ` - From ${formatDate(config.startDate)}`;
+    } else if (config.endDate) {
+      dateRangePart = ` - Until ${formatDate(config.endDate)}`;
+    }
+  } else {
+    // No date filter - use "All Time"
+    dateRangePart = ' - All Time';
+  }
+
+  // Add filter context if present
+  const filters = [];
+  if (config?.clientFilter) filters.push(config.clientFilter);
+  if (config?.categoryFilter) filters.push(config.categoryFilter);
+  const filterPart = filters.length > 0 ? ` (${filters.join(', ')})` : '';
+
+  const defaultName = `${reportTypeLabel} Report${dateRangePart}${filterPart}`;
+
+  const name = prompt('Enter a name for this report snapshot:', defaultName);
   if (!name || !name.trim()) return;
 
   const snapshot = {
@@ -2374,10 +2411,7 @@ function viewSnapshot(snapshotId) {
 
   // Build metadata string
   const date = new Date(snapshot.savedAt);
-  const dateRange = snapshot.config?.startDate || snapshot.config?.endDate
-    ? `Date Range: ${snapshot.config.startDate || 'Beginning'} to ${snapshot.config.endDate || 'End'} • `
-    : '';
-  meta.textContent = `${dateRange}Saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()} • Report Type: ${snapshot.config?.reportType || 'Unknown'} • ${snapshot.tableData.length} rows`;
+  meta.textContent = `Saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()} • ${snapshot.tableData.length} rows`;
 
   // Render table in modal
   renderSortableTable(content, snapshot.columns, snapshot.tableData, {
@@ -2435,29 +2469,15 @@ function printSnapshot(snapshotId) {
     </table>
   `;
 
-  // Build date range display
-  const dateRangeHTML = snapshot.config?.startDate || snapshot.config?.endDate
-    ? `<div>Date Range: ${snapshot.config.startDate || 'Beginning'} to ${snapshot.config.endDate || 'End'}</div>`
-    : '';
-
-  // Build filters display
-  const filtersHTML = [];
-  if (snapshot.config?.itemFilter) filtersHTML.push(`Items: ${snapshot.config.itemFilter}`);
-  if (snapshot.config?.clientFilter) filtersHTML.push(`Client: ${snapshot.config.clientFilter}`);
-  if (snapshot.config?.staffFilter) filtersHTML.push(`Staff: ${snapshot.config.staffFilter}`);
-  if (snapshot.config?.categoryFilter) filtersHTML.push(`Category: ${snapshot.config.categoryFilter}`);
-  const filtersDisplay = filtersHTML.length > 0 ? `<div>Filters: ${filtersHTML.join(', ')}</div>` : '';
-
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
-      <title>${snapshot.name} - Report Snapshot</title>
+      <title>${snapshot.name}</title>
       <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { font-size: 18px; margin-bottom: 10px; }
         .meta { font-size: 12px; color: #666; margin-bottom: 20px; }
-        .meta div { margin-bottom: 4px; }
         @media print {
           body { margin: 10px; }
         }
@@ -2466,11 +2486,7 @@ function printSnapshot(snapshotId) {
     <body>
       <h1>${snapshot.name}</h1>
       <div class="meta">
-        <div>Saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
-        ${dateRangeHTML}
-        <div>Report Type: ${snapshot.config?.reportType || 'Unknown'}</div>
-        ${filtersDisplay}
-        <div>Total Rows: ${snapshot.tableData.length}</div>
+        <div>Saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()} • ${snapshot.tableData.length} rows</div>
       </div>
       ${tableHTML}
     </body>
