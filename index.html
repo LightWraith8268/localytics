@@ -1755,5 +1755,29 @@
   </div>
 
 <!-- Modal elements dynamically created by JavaScript (see showClientDetails and showOrderDetails functions) -->
+
+<!-- Snapshot Viewer Modal -->
+<div id="snapshotViewerModal" class="hidden fixed inset-0 z-50 overflow-y-auto" style="background: rgba(0,0,0,0.5);">
+  <div class="flex items-center justify-center min-h-screen px-4 py-8">
+    <div class="app-card rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-5 border-b app-border">
+        <div>
+          <h3 id="snapshotViewerTitle" class="text-lg font-medium">Report Snapshot</h3>
+          <p id="snapshotViewerMeta" class="text-xs text-gray-600 mt-1"></p>
+        </div>
+        <div class="flex gap-2">
+          <button id="btnPrintSnapshotFromModal" class="px-3 py-1.5 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700">Print</button>
+          <button id="btnCloseSnapshotViewer" class="px-3 py-1.5 border rounded-md text-sm hover:bg-gray-50">Close</button>
+        </div>
+      </div>
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-auto p-5">
+        <div id="snapshotViewerContent" class="overflow-auto border rounded-md"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>

@@ -649,6 +649,25 @@ window.addEventListener('DOMContentLoaded', () => {
   // Report snapshot listeners
   qs('btnSaveSnapshot')?.addEventListener('click', () => saveReportSnapshot());
 
+  // Snapshot viewer modal listeners
+  qs('btnCloseSnapshotViewer')?.addEventListener('click', () => {
+    const modal = qs('snapshotViewerModal');
+    if (modal) modal.classList.add('hidden');
+  });
+
+  qs('btnPrintSnapshotFromModal')?.addEventListener('click', () => {
+    const modal = qs('snapshotViewerModal');
+    const snapshotId = modal?.dataset?.snapshotId;
+    if (snapshotId) printSnapshot(parseInt(snapshotId));
+  });
+
+  // Close modal when clicking outside
+  qs('snapshotViewerModal')?.addEventListener('click', (e) => {
+    if (e.target.id === 'snapshotViewerModal') {
+      e.target.classList.add('hidden');
+    }
+  });
+
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
     if (!state.byClient) return; const cols = ['client','orders','quantity','revenue','cost','profit','margin'];
@@ -2330,26 +2349,34 @@ function viewSnapshot(snapshotId) {
     return;
   }
 
-  // Render the snapshot data in the table
-  const container = qs('customTable');
-  if (!container) return;
+  // Open modal and populate it
+  const modal = qs('snapshotViewerModal');
+  const title = qs('snapshotViewerTitle');
+  const meta = qs('snapshotViewerMeta');
+  const content = qs('snapshotViewerContent');
 
-  renderSortableTable(container, snapshot.columns, snapshot.tableData, {
+  if (!modal || !title || !meta || !content) return;
+
+  // Set title
+  title.textContent = snapshot.name;
+
+  // Build metadata string
+  const date = new Date(snapshot.savedAt);
+  const dateRange = snapshot.config?.startDate || snapshot.config?.endDate
+    ? `Date Range: ${snapshot.config.startDate || 'Beginning'} to ${snapshot.config.endDate || 'End'} • `
+    : '';
+  meta.textContent = `${dateRange}Saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()} • Report Type: ${snapshot.config?.reportType || 'Unknown'} • ${snapshot.tableData.length} rows`;
+
+  // Render table in modal
+  renderSortableTable(content, snapshot.columns, snapshot.tableData, {
     defaultSort: { column: snapshot.config?.sortBy || 'revenue', direction: 'desc' }
   });
 
-  // Store as current data for potential re-snapshotting
-  currentReportData = {
-    config: snapshot.config,
-    tableData: snapshot.tableData,
-    columns: snapshot.columns
-  };
+  // Store snapshot ID for print button
+  modal.dataset.snapshotId = snapshotId;
 
-  // Show snapshot button
-  const snapshotBtn = qs('btnSaveSnapshot');
-  if (snapshotBtn) snapshotBtn.classList.remove('hidden');
-
-  alert(`Viewing snapshot: ${snapshot.name}\nSaved: ${new Date(snapshot.savedAt).toLocaleString()}`);
+  // Show modal
+  modal.classList.remove('hidden');
 }
 
 function printSnapshot(snapshotId) {
@@ -2394,6 +2421,19 @@ function printSnapshot(snapshotId) {
     </table>
   `;
 
+  // Build date range display
+  const dateRangeHTML = snapshot.config?.startDate || snapshot.config?.endDate
+    ? `<div>Date Range: ${snapshot.config.startDate || 'Beginning'} to ${snapshot.config.endDate || 'End'}</div>`
+    : '';
+
+  // Build filters display
+  const filtersHTML = [];
+  if (snapshot.config?.itemFilter) filtersHTML.push(`Items: ${snapshot.config.itemFilter}`);
+  if (snapshot.config?.clientFilter) filtersHTML.push(`Client: ${snapshot.config.clientFilter}`);
+  if (snapshot.config?.staffFilter) filtersHTML.push(`Staff: ${snapshot.config.staffFilter}`);
+  if (snapshot.config?.categoryFilter) filtersHTML.push(`Category: ${snapshot.config.categoryFilter}`);
+  const filtersDisplay = filtersHTML.length > 0 ? `<div>Filters: ${filtersHTML.join(', ')}</div>` : '';
+
   printWindow.document.write(`
     <!DOCTYPE html>
     <html>
@@ -2403,6 +2443,7 @@ function printSnapshot(snapshotId) {
         body { font-family: Arial, sans-serif; margin: 20px; }
         h1 { font-size: 18px; margin-bottom: 10px; }
         .meta { font-size: 12px; color: #666; margin-bottom: 20px; }
+        .meta div { margin-bottom: 4px; }
         @media print {
           body { margin: 10px; }
         }
@@ -2411,9 +2452,11 @@ function printSnapshot(snapshotId) {
     <body>
       <h1>${snapshot.name}</h1>
       <div class="meta">
-        <div>Generated: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+        <div>Saved: ${date.toLocaleDateString()} ${date.toLocaleTimeString()}</div>
+        ${dateRangeHTML}
         <div>Report Type: ${snapshot.config?.reportType || 'Unknown'}</div>
-        <div>Rows: ${snapshot.tableData.length}</div>
+        ${filtersDisplay}
+        <div>Total Rows: ${snapshot.tableData.length}</div>
       </div>
       ${tableHTML}
     </body>
