@@ -186,12 +186,7 @@
           page-break-after: auto !important;
         }
 
-        /* Hide old modal elements during print - only show bypass overlays */
-        #clientDetailsModal, #orderDetailsModal {
-          display: none !important;
-        }
-
-        /* Modal prints: Portrait orientation */
+        /* Modal prints: Portrait orientation (bypass overlays only) */
         #temp-modal-overlay, #temp-order-modal-overlay {
           position: static !important;
           background: transparent !important;
@@ -1624,46 +1619,6 @@
     </div>
   </div>
 
-<!-- Client Details Modal -->
-<div id="clientDetailsModal" class="fixed inset-0 z-50 hidden" style="background: rgba(0,0,0,0.5);">
-  <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="app-card border app-border rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" role="dialog" aria-modal="true" aria-labelledby="clientDetailsModalTitle">
-      <div class="flex items-center justify-between p-6 border-b app-border">
-        <h3 id="clientDetailsModalTitle" class="text-lg font-semibold text-gray-900">Client Purchase History</h3>
-        <button id="clientDetailsModalClose" class="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="flex-1 overflow-auto p-6">
-        <div id="clientDetailsContent">
-          <!-- Client details will be populated here -->
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Order Details Modal -->
-<div id="orderDetailsModal" class="fixed inset-0 z-50 hidden" style="background: rgba(0,0,0,0.5);">
-  <div class="flex items-center justify-center min-h-screen p-4">
-    <div class="app-card border app-border rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col" role="dialog" aria-modal="true" aria-labelledby="orderDetailsModalTitle">
-      <div class="flex items-center justify-between p-6 border-b app-border">
-        <h3 id="orderDetailsModalTitle" class="text-lg font-semibold text-gray-900">Order Details</h3>
-        <button id="orderDetailsModalClose" class="p-2 rounded-lg hover:bg-gray-100" aria-label="Close">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-      </div>
-      <div class="flex-1 overflow-auto p-6">
-        <div id="orderDetailsContent">
-          <!-- Order details will be populated here -->
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+<!-- Modal elements dynamically created by JavaScript (see showClientDetails and showOrderDetails functions) -->
 </body>
 </html>

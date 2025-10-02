@@ -1095,9 +1095,6 @@ window.addEventListener('DOMContentLoaded', () => {
     console.warn('[app] btnExportCategoryMapCsv not found in DOM');
   }
 
-  // Initialize modals for client and order details
-  initializeModals();
-
   // Initialize dropdown filters when data is available
   if (state.rows && state.rows.length) {
     populateDropdownFilters();
@@ -2551,15 +2548,6 @@ function formatPercent(num) {
 function showClientDetails(clientName) {
   console.log('showClientDetails called with:', clientName);
 
-  const modal = document.getElementById('clientDetailsModal');
-  const content = document.getElementById('clientDetailsContent');
-  const title = document.getElementById('clientDetailsModalTitle');
-
-  if (!modal || !content || !title) {
-    console.error('Modal elements not found');
-    return;
-  }
-
   // Get all transactions for this client
   const base = state.filtered || state.rows;
 
@@ -2570,16 +2558,7 @@ function showClientDetails(clientName) {
   });
 
   if (!clientTransactions.length) {
-    content.innerHTML = '<div class="text-sm text-gray-500">No transactions found for this client.</div>';
-    title.textContent = `Client Details: ${clientName}`;
-    modal.classList.remove('hidden');
-    modal.style.display = 'block !important';
-    modal.style.visibility = 'visible !important';
-    modal.style.opacity = '1 !important';
-    modal.style.zIndex = '9999 !important';
-    modal.style.position = 'fixed !important';
-    modal.style.inset = '0 !important';
-    modal.style.pointerEvents = 'auto !important';
+    alert('No transactions found for this client.');
     return;
   }
 
@@ -3036,52 +3015,7 @@ function showOrderDetails(orderNumber) {
   console.log('Created order details modal overlay');
 }
 
-// Modal event handlers and initialization
-function initializeModals() {
-  // Client details modal
-  const clientModal = document.getElementById('clientDetailsModal');
-  const clientCloseBtn = document.getElementById('clientDetailsModalClose');
-
-  if (clientCloseBtn) {
-    clientCloseBtn.addEventListener('click', () => {
-      clientModal?.classList.add('hidden');
-    });
-  }
-
-  if (clientModal) {
-    clientModal.addEventListener('click', (e) => {
-      if (e.target === clientModal) {
-        clientModal.classList.add('hidden');
-      }
-    });
-  }
-
-  // Order details modal
-  const orderModal = document.getElementById('orderDetailsModal');
-  const orderCloseBtn = document.getElementById('orderDetailsModalClose');
-
-  if (orderCloseBtn) {
-    orderCloseBtn.addEventListener('click', () => {
-      orderModal?.classList.add('hidden');
-    });
-  }
-
-  if (orderModal) {
-    orderModal.addEventListener('click', (e) => {
-      if (e.target === orderModal) {
-        orderModal.classList.add('hidden');
-      }
-    });
-  }
-
-  // Escape key handler
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      clientModal?.classList.add('hidden');
-      orderModal?.classList.add('hidden');
-    }
-  });
-}
+// Modal event handlers now integrated into bypass overlay creation (see showClientDetails and showOrderDetails)
 
 // Enhanced table rendering with clickable cells
 function renderClickableTable(container, columns, rows, clickableColumns = {}) {
