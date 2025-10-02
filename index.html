@@ -61,6 +61,16 @@
 
       /* Print-specific styles */
       @media print {
+        /* Remove all page margins and padding from body/html */
+        @page {
+          margin: 0.5in;
+        }
+
+        html, body {
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+
         .no-print {
           display: none !important;
         }
@@ -69,6 +79,13 @@
         }
         /* Ensure only visible data tables are printed */
         .view.hidden {
+          display: none !important;
+        }
+        /* Keep hidden elements hidden during print */
+        .hidden {
+          display: none !important;
+        }
+        #print-cover {
           display: none !important;
         }
         /* Hide interactive elements during print */
@@ -80,6 +97,8 @@
           max-height: none !important;
           overflow: visible !important;
           height: auto !important;
+          margin: 0 !important;
+          padding: 1rem !important;
         }
         /* Ensure table containers don't restrict height */
         .overflow-x-auto, .overflow-y-auto, .overflow-auto {
@@ -88,13 +107,21 @@
           height: auto !important;
         }
         /* Remove any fixed heights on main content */
-        main, section, div {
+        main {
+          max-height: none !important;
+          height: auto !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        /* Ensure sections and divs don't create blank space */
+        section, div {
           max-height: none !important;
           height: auto !important;
         }
         /* Allow table rows to break across pages if needed */
         table {
           page-break-inside: auto !important;
+          width: 100% !important;
         }
         tr {
           page-break-inside: avoid !important;
@@ -102,6 +129,10 @@
         }
         thead {
           display: table-header-group !important;
+        }
+        /* Prevent page breaks before first content */
+        .view > *:first-child {
+          page-break-before: avoid !important;
         }
       }
       /* Force sidebar background in dark mode with highest specificity */
