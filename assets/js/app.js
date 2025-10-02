@@ -2342,6 +2342,7 @@ function normalizeAndDedupe(rows, mapping) {
 async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   console.log('[app] Starting normalizeAndDedupeAsync with', rows.length, 'rows');
   console.log('[app] Mapping:', mapping);
+  console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
 
   const orderCol = mapping.order;
   const dateCol = mapping.date;
@@ -2387,6 +2388,10 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
     const csvCat = mapping.category ? (r[mapping.category] || '') : '';
     obj.__category = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
+    // Debug log first few category applications
+    if (i < 3 && manualCat) {
+      console.log(`[app] Applied category mapping: "${name}" → "${manualCat}"`);
+    }
     const allowed = window.__allowedItemsList || [];
     const enforce = window.__enforceAllowed || false;
     const allowedCanon = window.__allowedCanonSet || new Set(allowed.map(canonicalizeItemName));
