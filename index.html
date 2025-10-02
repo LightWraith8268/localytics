@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./assets/css/styles.css" id="appStyles">
+    <!-- Flatpickr for date range picker -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="manifest" href="./manifest.webmanifest">
     <meta name="theme-color" content="#2563eb">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1228,13 +1230,12 @@
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <!-- Date Range -->
                 <div>
-                  <label class="block text-xs text-gray-500 mb-1">Date Range (click to select range or single date)</label>
-                  <div class="flex gap-2">
-                    <input type="date" id="reportStartDate" class="flex-1 border rounded-md px-2 py-1 text-xs" title="Start date - leave blank for no start limit">
-                    <span class="self-center text-gray-400">to</span>
-                    <input type="date" id="reportEndDate" class="flex-1 border rounded-md px-2 py-1 text-xs" title="End date - leave blank for no end limit">
-                  </div>
-                  <div class="text-xs text-gray-400 mt-0.5">Tip: Set both to same date for single day, or use either for open-ended ranges</div>
+                  <label class="block text-xs text-gray-500 mb-1">Date Range</label>
+                  <input type="text" id="reportDateRange" placeholder="Click to select date or range..." class="w-full border rounded-md px-2 py-1 text-xs" readonly>
+                  <div class="text-xs text-gray-400 mt-0.5">Click once for single date, or click start then end date for a range</div>
+                  <!-- Hidden inputs for compatibility -->
+                  <input type="hidden" id="reportStartDate">
+                  <input type="hidden" id="reportEndDate">
                 </div>
 
                 <!-- Item Filter -->
@@ -1585,6 +1586,54 @@
           }
         } catch (error) {
           console.warn('Failed to update cache-busting URLs:', error);
+        }
+      });
+    </script>
+    <!-- Flatpickr date range picker -->
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script>
+      // Initialize Flatpickr date range picker
+      window.addEventListener('DOMContentLoaded', () => {
+        const dateRangeInput = document.getElementById('reportDateRange');
+        const startDateHidden = document.getElementById('reportStartDate');
+        const endDateHidden = document.getElementById('reportEndDate');
+
+        if (dateRangeInput) {
+          flatpickr(dateRangeInput, {
+            mode: 'range',
+            dateFormat: 'Y-m-d',
+            altInput: true,
+            altFormat: 'M j, Y',
+            onChange: function(selectedDates, dateStr, instance) {
+              if (selectedDates.length === 1) {
+                // Single date selected
+                const date = selectedDates[0].toISOString().split('T')[0];
+                startDateHidden.value = date;
+                endDateHidden.value = date;
+              } else if (selectedDates.length === 2) {
+                // Range selected
+                startDateHidden.value = selectedDates[0].toISOString().split('T')[0];
+                endDateHidden.value = selectedDates[1].toISOString().split('T')[0];
+              } else {
+                // Cleared
+                startDateHidden.value = '';
+                endDateHidden.value = '';
+              }
+            },
+            onReady: function(selectedDates, dateStr, instance) {
+              // Add clear button
+              const clearBtn = document.createElement('button');
+              clearBtn.innerHTML = '✕ Clear';
+              clearBtn.className = 'flatpickr-clear';
+              clearBtn.style.cssText = 'position:absolute;top:5px;right:5px;padding:2px 6px;font-size:11px;border:1px solid #ccc;border-radius:3px;background:#fff;cursor:pointer;';
+              clearBtn.addEventListener('click', () => {
+                instance.clear();
+                startDateHidden.value = '';
+                endDateHidden.value = '';
+              });
+              instance.calendarContainer.appendChild(clearBtn);
+            }
+          });
         }
       });
     </script>

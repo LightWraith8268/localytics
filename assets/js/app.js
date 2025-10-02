@@ -2220,8 +2220,16 @@ function populateReportFilters() {
 }
 
 function clearReportFilters() {
+  // Clear hidden date inputs
   qs('reportStartDate').value = '';
   qs('reportEndDate').value = '';
+
+  // Clear Flatpickr date range picker
+  const dateRangeInput = qs('reportDateRange');
+  if (dateRangeInput && dateRangeInput._flatpickr) {
+    dateRangeInput._flatpickr.clear();
+  }
+
   qs('reportItemFilter').value = '';
   qs('reportClientFilter').value = '';
   qs('reportStaffFilter').value = '';
