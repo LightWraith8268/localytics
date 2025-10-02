@@ -114,6 +114,9 @@ function showView(hash) {
     renderStaffTrackingView();
   } else if (view === 'items') {
     renderItemTrackingView();
+  } else if (view === 'history') {
+    // Populate snapshots list when History page is viewed
+    populateSnapshotsList();
   }
 }
 
