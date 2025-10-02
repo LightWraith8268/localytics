@@ -237,14 +237,18 @@ export function makeChart(canvas, labels, data, label='Series') {
   });
 }
 
-export function makeBarChart(canvas, labels, data, label='Series') {
+export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
   if (!window.Chart) return null;
   if (!canvas) { console.info('[ui] makeBarChart: canvas element not found (skipping)'); return null; }
   const ctx = canvas.getContext ? canvas.getContext('2d') : null;
   if (!ctx) { console.info('[ui] makeBarChart: unable to acquire 2d context (skipping)'); return null; }
 
+  const isHorizontal = opts.indexAxis === 'y';
+
   // Create gradient for bars
-  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+  const gradient = isHorizontal
+    ? ctx.createLinearGradient(0, 0, 400, 0)
+    : ctx.createLinearGradient(0, 0, 0, 400);
   gradient.addColorStop(0, '#3B82F6');
   gradient.addColorStop(1, '#1E40AF');
 
@@ -263,6 +267,7 @@ export function makeBarChart(canvas, labels, data, label='Series') {
       }]
     },
     options: {
+      indexAxis: opts.indexAxis || 'x',
       responsive: true,
       maintainAspectRatio: false,
       interaction: {
@@ -286,27 +291,35 @@ export function makeBarChart(canvas, labels, data, label='Series') {
           borderWidth: 1,
           cornerRadius: 8,
           displayColors: false,
-          callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` }
+          callbacks: {
+            label: (ctx) => {
+              const val = isHorizontal ? ctx.parsed.x : ctx.parsed.y;
+              return `${ctx.dataset.label ?? ''}: ${formatNumberTwo(val)}`;
+            }
+          }
         }
       },
       scales: {
         x: {
+          beginAtZero: isHorizontal,
           grid: {
-            display: false
+            display: isHorizontal,
+            color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
+            callback: isHorizontal ? (v) => formatNumberTwo(v) : undefined,
             color: '#6B7280',
             font: { size: 11 }
           }
         },
         y: {
-          beginAtZero: true,
+          beginAtZero: !isHorizontal,
           grid: {
-            display: true,
+            display: !isHorizontal,
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
-            callback: (v) => formatNumberTwo(v),
+            callback: !isHorizontal ? (v) => formatNumberTwo(v) : undefined,
             color: '#6B7280',
             font: { size: 11 }
           }

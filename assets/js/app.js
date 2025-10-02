@@ -1323,11 +1323,11 @@ function renderReport() {
     catSection?.classList.remove('hidden');
     const catRows = state.byCategory.map(x => ({ category: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
     renderTable(qs('table-category-main'), ['category','orders','quantity','revenue','cost','profit','margin'], catRows);
-    // Category share chart
+    // Category share chart - horizontal bar for print-friendly black & white
     if (state.chartCatShare) { state.chartCatShare.destroy(); state.chartCatShare = null; }
     const labelsCat = state.byCategory.map(x => x.label);
     const valsCat = state.byCategory.map(x => x.revenue);
-    state.chartCatShare = makeChartTyped(document.getElementById('chart-category-share'), 'doughnut', labelsCat, valsCat, 'Category Share');
+    state.chartCatShare = makeBarChart(document.getElementById('chart-category-share'), labelsCat, valsCat, 'Category Share (Revenue)', { indexAxis: 'y' });
   } else {
     catSection?.classList.add('hidden');
   }
@@ -2675,7 +2675,7 @@ function renderSegmentAnalysisCharts() {
   const catData = state.byCategory.map(x => x.revenue);
 
   if (state.chartCatShare) state.chartCatShare.destroy();
-  state.chartCatShare = makeChartTyped(document.getElementById('analytics-chart-category-share'), 'doughnut', catLabels, catData, 'Category Share');
+  state.chartCatShare = makeBarChart(document.getElementById('analytics-chart-category-share'), catLabels, catData, 'Category Share (Revenue)', { indexAxis: 'y' });
 }
 
 function calculateRollingAverage(data, window) {
