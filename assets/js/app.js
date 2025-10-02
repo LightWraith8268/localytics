@@ -2334,6 +2334,8 @@ function populateSnapshotsList() {
 }
 
 function viewSnapshot(snapshotId) {
+  console.log('[viewSnapshot] Called with ID:', snapshotId);
+
   let snapshots = [];
   try {
     const stored = localStorage.getItem('reportSnapshots');
@@ -2345,9 +2347,12 @@ function viewSnapshot(snapshotId) {
 
   const snapshot = snapshots.find(s => s.id === snapshotId);
   if (!snapshot) {
+    console.error('[viewSnapshot] Snapshot not found with ID:', snapshotId);
     alert('Snapshot not found.');
     return;
   }
+
+  console.log('[viewSnapshot] Found snapshot:', snapshot.name);
 
   // Open modal and populate it
   const modal = qs('snapshotViewerModal');
@@ -2355,7 +2360,10 @@ function viewSnapshot(snapshotId) {
   const meta = qs('snapshotViewerMeta');
   const content = qs('snapshotViewerContent');
 
-  if (!modal || !title || !meta || !content) return;
+  if (!modal || !title || !meta || !content) {
+    console.error('[viewSnapshot] Modal elements not found:', { modal: !!modal, title: !!title, meta: !!meta, content: !!content });
+    return;
+  }
 
   // Set title
   title.textContent = snapshot.name;
@@ -2377,6 +2385,7 @@ function viewSnapshot(snapshotId) {
 
   // Show modal
   modal.classList.remove('hidden');
+  console.log('[viewSnapshot] Modal should now be visible');
 }
 
 function printSnapshot(snapshotId) {
