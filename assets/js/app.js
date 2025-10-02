@@ -3141,9 +3141,43 @@ function loadReportTemplates() {
   }
 }
 
+function migrateOldTemplateNames() {
+  // One-time migration to update "Top 20" to "Top 40" in saved reports
+  try {
+    const stored = localStorage.getItem('savedReportConfigs');
+    if (!stored) return;
+
+    let savedReports = JSON.parse(stored);
+    let modified = false;
+
+    savedReports = savedReports.map(report => {
+      if (report.name && report.name.includes('Top 20')) {
+        modified = true;
+        return {
+          ...report,
+          name: report.name.replace('Top 20', 'Top 40'),
+          limit: report.limit || '40', // Ensure limit is set
+          sortBy: report.sortBy || (report.name.includes('Revenue') ? 'revenue' : report.name.includes('Quantity') ? 'quantity' : report.name.includes('Profit') ? 'profit' : 'revenue')
+        };
+      }
+      return report;
+    });
+
+    if (modified) {
+      localStorage.setItem('savedReportConfigs', JSON.stringify(savedReports));
+      console.log('[migration] Updated old "Top 20" templates to "Top 40"');
+    }
+  } catch (e) {
+    console.error('Error migrating template names:', e);
+  }
+}
+
 function populateSavedReportsDropdown() {
   const dropdown = qs('savedReportsDropdown');
   if (!dropdown) return;
+
+  // Run migration once
+  migrateOldTemplateNames();
 
   // Get saved reports
   let savedReports = [];
