@@ -2022,6 +2022,9 @@ function generateAdvancedReport() {
   const clientFilter = qs('reportClientFilter')?.value || '';
   const staffFilter = qs('reportStaffFilter')?.value || '';
   const categoryFilter = qs('reportCategoryFilter')?.value || '';
+  const sortBy = qs('reportSortBy')?.value || 'revenue';
+  const limitValue = qs('reportLimit')?.value || '';
+  const limit = limitValue ? parseInt(limitValue, 10) : 0;
 
   // Get selected columns
   const columns = [];
@@ -2051,7 +2054,7 @@ function generateAdvancedReport() {
   // Filter data
   let filteredRows = [...state.rows];
 
-  // Date range filter
+  // Date range filter - FIXED: Only filter if dates are provided
   if (startDate || endDate) {
     filteredRows = filteredRows.filter(row => {
       const dateIso = row.__dateIso || '';
@@ -2103,6 +2106,11 @@ function generateAdvancedReport() {
         const val = r[state.mapping.item];
         return val ? String(val).trim() : '';
       });
+      // Exclude Freight from item reports
+      data = data.filter(item => {
+        const name = (item.label || '').toLowerCase();
+        return !name.includes('freight');
+      });
       break;
     case 'order':
       data = aggregateByOrder(filteredRows, state.mapping);
@@ -2134,11 +2142,28 @@ function generateAdvancedReport() {
     name: item.name || item.label || item.order || '-'
   }));
 
+  // Sort data
+  data.sort((a, b) => {
+    if (sortBy === 'name') {
+      return (a.name || '').toString().localeCompare((b.name || '').toString());
+    } else {
+      // Numeric sorts - highest first
+      const aVal = Number(a[sortBy]) || 0;
+      const bVal = Number(b[sortBy]) || 0;
+      return bVal - aVal;
+    }
+  });
+
+  // Limit results if specified
+  if (limit > 0 && data.length > limit) {
+    data = data.slice(0, limit);
+  }
+
   // Build table with selected columns
   const container = qs('customTable');
   if (!container) return;
 
-  renderSortableTable(container, columns, data, { defaultSort: { column: 'revenue', direction: 'desc' } });
+  renderSortableTable(container, columns, data, { defaultSort: { column: sortBy, direction: sortBy === 'name' ? 'asc' : 'desc' } });
 }
 
 function populateReportFilters() {
@@ -2193,6 +2218,8 @@ function saveReportConfiguration() {
     clientFilter: qs('reportClientFilter')?.value || '',
     staffFilter: qs('reportStaffFilter')?.value || '',
     categoryFilter: qs('reportCategoryFilter')?.value || '',
+    sortBy: qs('reportSortBy')?.value || 'revenue',
+    limit: qs('reportLimit')?.value || '',
     columns: {
       item: qs('colItem')?.checked || false,
       quantity: qs('colQuantity')?.checked || false,
@@ -2263,17 +2290,19 @@ function loadReportConfiguration() {
   if (qs('reportClientFilter')) qs('reportClientFilter').value = config.clientFilter || '';
   if (qs('reportStaffFilter')) qs('reportStaffFilter').value = config.staffFilter || '';
   if (qs('reportCategoryFilter')) qs('reportCategoryFilter').value = config.categoryFilter || '';
+  if (qs('reportSortBy')) qs('reportSortBy').value = config.sortBy || 'revenue';
+  if (qs('reportLimit')) qs('reportLimit').value = config.limit || '';
 
   // Load column selections
   if (config.columns) {
-    if (qs('colItem')) qs('colItem').checked = config.columns.item;
-    if (qs('colQuantity')) qs('colQuantity').checked = config.columns.quantity;
-    if (qs('colRevenue')) qs('colRevenue').checked = config.columns.revenue;
-    if (qs('colCost')) qs('colCost').checked = config.columns.cost;
-    if (qs('colProfit')) qs('colProfit').checked = config.columns.profit;
-    if (qs('colMargin')) qs('colMargin').checked = config.columns.margin;
-    if (qs('colOrders')) qs('colOrders').checked = config.columns.orders;
-    if (qs('colDate')) qs('colDate').checked = config.columns.date;
+    if (qs('colItem')) qs('colItem').checked = config.columns.item !== false;
+    if (qs('colQuantity')) qs('colQuantity').checked = config.columns.quantity !== false;
+    if (qs('colRevenue')) qs('colRevenue').checked = config.columns.revenue !== false;
+    if (qs('colCost')) qs('colCost').checked = config.columns.cost !== false;
+    if (qs('colProfit')) qs('colProfit').checked = config.columns.profit !== false;
+    if (qs('colMargin')) qs('colMargin').checked = config.columns.margin !== false;
+    if (qs('colOrders')) qs('colOrders').checked = config.columns.orders === true;
+    if (qs('colDate')) qs('colDate').checked = config.columns.date === true;
   }
 
   // Generate the report automatically
@@ -2351,16 +2380,18 @@ function editReportConfiguration() {
   if (qs('reportClientFilter')) qs('reportClientFilter').value = config.clientFilter || '';
   if (qs('reportStaffFilter')) qs('reportStaffFilter').value = config.staffFilter || '';
   if (qs('reportCategoryFilter')) qs('reportCategoryFilter').value = config.categoryFilter || '';
+  if (qs('reportSortBy')) qs('reportSortBy').value = config.sortBy || 'revenue';
+  if (qs('reportLimit')) qs('reportLimit').value = config.limit || '';
 
   if (config.columns) {
-    if (qs('colItem')) qs('colItem').checked = config.columns.item;
-    if (qs('colQuantity')) qs('colQuantity').checked = config.columns.quantity;
-    if (qs('colRevenue')) qs('colRevenue').checked = config.columns.revenue;
-    if (qs('colCost')) qs('colCost').checked = config.columns.cost;
-    if (qs('colProfit')) qs('colProfit').checked = config.columns.profit;
-    if (qs('colMargin')) qs('colMargin').checked = config.columns.margin;
-    if (qs('colOrders')) qs('colOrders').checked = config.columns.orders;
-    if (qs('colDate')) qs('colDate').checked = config.columns.date;
+    if (qs('colItem')) qs('colItem').checked = config.columns.item !== false;
+    if (qs('colQuantity')) qs('colQuantity').checked = config.columns.quantity !== false;
+    if (qs('colRevenue')) qs('colRevenue').checked = config.columns.revenue !== false;
+    if (qs('colCost')) qs('colCost').checked = config.columns.cost !== false;
+    if (qs('colProfit')) qs('colProfit').checked = config.columns.profit !== false;
+    if (qs('colMargin')) qs('colMargin').checked = config.columns.margin !== false;
+    if (qs('colOrders')) qs('colOrders').checked = config.columns.orders === true;
+    if (qs('colDate')) qs('colDate').checked = config.columns.date === true;
   }
 
   // Delete the old version
@@ -2600,7 +2631,7 @@ function loadReportTemplates() {
     // TOP PERFORMERS
     // ============================================
     {
-      name: "[TOP] Top 20 Items by Revenue",
+      name: "[TOP] Top 40 Items by Revenue",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2608,10 +2639,12 @@ function loadReportTemplates() {
       clientFilter: "",
       staffFilter: "",
       categoryFilter: "",
+      sortBy: "revenue",
+      limit: "40",
       columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: true, orders: false, date: false }
     },
     {
-      name: "[TOP] Top 20 Items by Quantity",
+      name: "[TOP] Top 40 Items by Quantity",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2619,10 +2652,12 @@ function loadReportTemplates() {
       clientFilter: "",
       staffFilter: "",
       categoryFilter: "",
+      sortBy: "quantity",
+      limit: "40",
       columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: false, date: false }
     },
     {
-      name: "[TOP] Top 20 Items by Profit",
+      name: "[TOP] Top 40 Items by Profit",
       reportType: "item",
       startDate: "",
       endDate: "",
@@ -2630,6 +2665,8 @@ function loadReportTemplates() {
       clientFilter: "",
       staffFilter: "",
       categoryFilter: "",
+      sortBy: "profit",
+      limit: "40",
       columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false }
     },
     {
@@ -3203,9 +3240,9 @@ function getTemplateDefinitions() {
     { name: "[PROFIT] Category Profit Margins", reportType: "category", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
 
     // TOP PERFORMERS
-    { name: "[TOP] Top 20 Items by Revenue", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: true, orders: false, date: false } },
-    { name: "[TOP] Top 20 Items by Quantity", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: false, date: false } },
-    { name: "[TOP] Top 20 Items by Profit", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[TOP] Top 40 Items by Revenue", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", sortBy: "revenue", limit: "40", columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: true, orders: false, date: false } },
+    { name: "[TOP] Top 40 Items by Quantity", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", sortBy: "quantity", limit: "40", columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: false, date: false } },
+    { name: "[TOP] Top 40 Items by Profit", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", sortBy: "profit", limit: "40", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
     { name: "[TOP] Top 10 Clients by Revenue", reportType: "client", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false } },
     { name: "[TOP] Top 10 Clients by Orders", reportType: "client", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: false, profit: false, margin: false, orders: true, date: false } },
     { name: "[TOP] Top Staff by Revenue", reportType: "staff", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false } },
@@ -3315,22 +3352,24 @@ function filterTemplates() {
 function loadTemplateToForm(template) {
   // Load template configuration into the form fields
   qs('reportType').value = template.reportType;
-  qs('reportStartDate').value = template.startDate;
-  qs('reportEndDate').value = template.endDate;
-  qs('reportItemFilter').value = template.itemFilter;
-  qs('reportClientFilter').value = template.clientFilter;
-  qs('reportStaffFilter').value = template.staffFilter;
-  qs('reportCategoryFilter').value = template.categoryFilter;
+  qs('reportStartDate').value = template.startDate || '';
+  qs('reportEndDate').value = template.endDate || '';
+  qs('reportItemFilter').value = template.itemFilter || '';
+  qs('reportClientFilter').value = template.clientFilter || '';
+  qs('reportStaffFilter').value = template.staffFilter || '';
+  qs('reportCategoryFilter').value = template.categoryFilter || '';
+  qs('reportSortBy').value = template.sortBy || 'revenue';
+  qs('reportLimit').value = template.limit || '';
 
   // Set column checkboxes
-  qs('colItem').checked = template.columns.item;
-  qs('colQuantity').checked = template.columns.quantity;
-  qs('colRevenue').checked = template.columns.revenue;
-  qs('colCost').checked = template.columns.cost;
-  qs('colProfit').checked = template.columns.profit;
-  qs('colMargin').checked = template.columns.margin;
-  qs('colOrders').checked = template.columns.orders;
-  qs('colDate').checked = template.columns.date;
+  qs('colItem').checked = template.columns.item !== false;
+  qs('colQuantity').checked = template.columns.quantity !== false;
+  qs('colRevenue').checked = template.columns.revenue !== false;
+  qs('colCost').checked = template.columns.cost !== false;
+  qs('colProfit').checked = template.columns.profit !== false;
+  qs('colMargin').checked = template.columns.margin !== false;
+  qs('colOrders').checked = template.columns.orders === true;
+  qs('colDate').checked = template.columns.date === true;
 
   alert(`Template "${template.name}" loaded into form. Click "Generate Report" to run it, or modify settings and click "Save Report Config" to save your customized version.`);
 }
