@@ -61,16 +61,28 @@
 
       /* Print-specific styles */
       @media print {
-        /* Set landscape orientation and margins */
+        /* Default landscape for most pages, can be overridden */
         @page {
           size: landscape;
-          margin: 0.5in;
+          margin: 0.25in; /* Uniform margins */
+        }
+
+        /* Portrait for specific views */
+        @page :first {
+          margin-top: 0.25in; /* Minimize first page top margin */
         }
 
         html, body {
           margin: 0 !important;
           padding: 0 !important;
           font-size: 11px !important; /* Reduce base font size for print */
+          overflow: visible !important;
+        }
+
+        /* Remove any potential blank space creators */
+        body > *:first-child {
+          margin-top: 0 !important;
+          padding-top: 0 !important;
         }
 
         /* Reduce heading sizes */
@@ -149,6 +161,33 @@
         /* Prevent page breaks before first content */
         .view > *:first-child {
           page-break-before: avoid !important;
+        }
+
+        /* Trends and Analytics: Portrait orientation, multiple charts per page */
+        #view-trends, #view-analytics {
+          page-break-before: avoid !important;
+        }
+        #view-trends .grid > *, #view-analytics .grid > * {
+          page-break-inside: avoid !important;
+          page-break-after: auto !important;
+        }
+        /* Allow charts to be smaller and flow naturally */
+        #view-trends canvas, #view-analytics canvas {
+          max-height: 250px !important;
+          page-break-inside: avoid !important;
+        }
+
+        /* Modal prints: Portrait orientation */
+        #temp-modal-overlay, #temp-order-modal-overlay {
+          position: static !important;
+          background: transparent !important;
+          display: block !important;
+          padding: 0 !important;
+        }
+        #temp-modal-overlay > div, #temp-order-modal-overlay > div {
+          max-width: 100% !important;
+          box-shadow: none !important;
+          border-radius: 0 !important;
         }
       }
       /* Force sidebar background in dark mode with highest specificity */

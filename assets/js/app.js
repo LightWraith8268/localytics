@@ -1479,7 +1479,7 @@ function renderClientTrackingView() {
     : `${formatNumber(clients.length)} clients · Revenue ${formatCurrencyShort(totalRevenue)} · Avg Orders ${(totalOrders / (clients.length || 1)).toFixed(0)}`;
   summaryEl.textContent = summaryText;
 
-  const topClients = clients.slice(0, 3);
+  const topClients = clients.slice(0, 5);
   highlightsEl.innerHTML = topClients.map((c, index) => `
     <div class="highlight-card rank-${index + 1} p-3 border app-border rounded-md">
       <div class="text-xs text-gray-500 truncate">${escapeHtml(c.label || 'Unassigned')}</div>
@@ -2754,18 +2754,18 @@ function showClientDetails(clientName) {
 
   contentArea.appendChild(tableWrapper);
 
-  // Render sortable table with product data
+  // Render sortable table with product data (pass raw values, formatCell will handle formatting)
   renderSortableTable(
     tableWrapper,
     ['item', 'quantity', 'revenue', 'cost', 'profit', 'margin', 'orders'],
     products.map(product => ({
       item: product.item,
-      quantity: formatNumber(product.quantity),
-      revenue: formatCurrency(product.revenue),
-      cost: formatCurrency(product.cost),
-      profit: formatCurrency(product.profit),
-      margin: formatPercent(product.margin),
-      orders: product.orders.toFixed(0)
+      quantity: product.quantity,
+      revenue: product.revenue,
+      cost: product.cost,
+      profit: product.profit,
+      margin: product.margin,
+      orders: product.orders
     })),
     { defaultSort: { column: 'revenue', direction: 'desc' } }
   );
@@ -2986,18 +2986,18 @@ function showOrderDetails(orderNumber) {
 
   contentArea.appendChild(tableWrapper);
 
-  // Render sortable table with items data
+  // Render sortable table with items data (pass raw values, formatCell will handle formatting)
   renderSortableTable(
     tableWrapper,
     ['item', 'quantity', 'price', 'revenue', 'cost', 'profit', 'margin'],
     items.map(item => ({
       item: item.item,
-      quantity: formatNumber(item.quantity),
-      price: formatCurrency(item.price),
-      revenue: formatCurrency(item.revenue),
-      cost: formatCurrency(item.cost),
-      profit: formatCurrency(item.profit),
-      margin: formatPercent(item.margin)
+      quantity: item.quantity,
+      price: item.price,
+      revenue: item.revenue,
+      cost: item.cost,
+      profit: item.profit,
+      margin: item.margin
     })),
     { defaultSort: { column: 'revenue', direction: 'desc' } }
   );
