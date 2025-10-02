@@ -2635,38 +2635,96 @@ function showClientDetails(clientName) {
   console.log('About to show modal');
   modal.classList.remove('hidden');
 
-  // Force modal container visibility while preserving inner content layout
-  modal.style.display = 'block !important';
-  modal.style.visibility = 'visible !important';
-  modal.style.opacity = '1 !important';
-  modal.style.zIndex = '9999 !important';
-  modal.style.position = 'fixed !important';
-  modal.style.inset = '0 !important';  // Modern equivalent of top:0 left:0 right:0 bottom:0
-  modal.style.pointerEvents = 'auto !important';
+  // Bypass CSS conflicts by creating a fresh modal overlay
+  const existingOverlay = document.getElementById('temp-modal-overlay');
+  if (existingOverlay) {
+    existingOverlay.remove();
+  }
 
-  console.log('Modal should be visible now');
+  const overlay = document.createElement('div');
+  overlay.id = 'temp-modal-overlay';
+  overlay.style.cssText = `
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    z-index: 999999 !important;
+    background: rgba(0,0,0,0.5) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 16px !important;
+  `;
 
-  // Debug modal visibility
-  console.log('Modal element:', modal);
-  console.log('Modal classes:', modal.className);
-  console.log('Modal computed styles after forcing:', {
-    display: window.getComputedStyle(modal).display,
-    visibility: window.getComputedStyle(modal).visibility,
-    opacity: window.getComputedStyle(modal).opacity,
-    zIndex: window.getComputedStyle(modal).zIndex,
-    position: window.getComputedStyle(modal).position,
-    transform: window.getComputedStyle(modal).transform,
-    overflow: window.getComputedStyle(modal).overflow
-  });
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
+    background: white !important;
+    border-radius: 8px !important;
+    max-width: 800px !important;
+    width: 100% !important;
+    max-height: 90vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1) !important;
+  `;
 
-  // Try to force the modal to be absolutely visible
-  modal.style.setProperty('display', 'block', 'important');
-  modal.style.setProperty('visibility', 'visible', 'important');
-  modal.style.setProperty('opacity', '1', 'important');
-  modal.style.setProperty('z-index', '99999', 'important');
-  modal.style.setProperty('background', 'rgba(255,0,0,0.8)', 'important'); // Red background for testing
+  const header = document.createElement('div');
+  header.style.cssText = `
+    padding: 24px !important;
+    border-bottom: 1px solid #e5e7eb !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  `;
 
-  console.log('Applied emergency visibility styles');
+  const titleEl = document.createElement('h3');
+  titleEl.textContent = `Client Details: ${clientName}`;
+  titleEl.style.cssText = `
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin: 0 !important;
+    color: #1f2937 !important;
+  `;
+
+  const closeBtn = document.createElement('button');
+  closeBtn.innerHTML = '✕';
+  closeBtn.style.cssText = `
+    background: none !important;
+    border: none !important;
+    font-size: 24px !important;
+    cursor: pointer !important;
+    padding: 8px !important;
+    border-radius: 4px !important;
+    color: #6b7280 !important;
+  `;
+  closeBtn.onclick = () => overlay.remove();
+
+  const contentArea = document.createElement('div');
+  contentArea.style.cssText = `
+    flex: 1 !important;
+    overflow: auto !important;
+    padding: 24px !important;
+  `;
+
+  // Use the existing content HTML
+  contentArea.innerHTML = summaryHtml + tableHtml;
+
+  header.appendChild(titleEl);
+  header.appendChild(closeBtn);
+  modalContent.appendChild(header);
+  modalContent.appendChild(contentArea);
+  overlay.appendChild(modalContent);
+
+  // Close on backdrop click
+  overlay.onclick = (e) => {
+    if (e.target === overlay) overlay.remove();
+  };
+
+  document.body.appendChild(overlay);
+
+  console.log('Created bypass modal overlay');
 
   // Set up close button if not already done
   const closeBtn = document.getElementById('clientDetailsModalClose');
