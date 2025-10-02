@@ -2709,9 +2709,27 @@ function showClientDetails(clientName) {
   // Get all transactions for this client
   const base = state.filtered || state.rows;
 
+  // Debug: check what client values look like
+  console.log('[showClientDetails] Looking for client:', clientName);
+  console.log('[showClientDetails] Total rows in base:', base.length);
+
+  const matchingRows = base.filter(r => {
+    const rowClient = r.__client || r[state.mapping?.client] || '';
+    return rowClient.toLowerCase() === clientName.toLowerCase();
+  });
+
+  console.log('[showClientDetails] Found rows with exact match:', matchingRows.length);
+  console.log('[showClientDetails] Sample matches:', matchingRows.slice(0, 3).map(r => ({
+    __client: r.__client,
+    __order: r.__order,
+    __revenue: r.__revenue
+  })));
+
   // Try multiple matching strategies
   const clientTransactions = base.filter(row => {
     const rowClient = row.__client || row[state.mapping?.client] || '';
+    // Exclude 'undefined' sentinel values from matching
+    if (rowClient === 'undefined') return false;
     return rowClient.toLowerCase() === clientName.toLowerCase();
   });
 
