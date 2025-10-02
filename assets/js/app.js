@@ -1190,6 +1190,9 @@ window.addEventListener('DOMContentLoaded', () => {
             // Save to settings
             saveUserSettings('categoryMap', state.categoryMap);
 
+            // Update the summary display
+            updateCategoryMapSummary();
+
             const skippedMsg = skipped > 0 ? `\n(${skipped} rows skipped due to empty category)` : '';
             alert(`✅ Successfully imported ${count} category mapping(s).${skippedMsg}\n\nData will be reprocessed.`);
 
