@@ -1303,28 +1303,6 @@
             }
           });
         });
-
-        // Set active nav link
-        function setActiveNavLink() {
-          const currentHash = location.hash || '#/upload';
-          const currentPath = currentHash.replace('#/', '');
-
-          navLinks.forEach(link => {
-            link.classList.remove('active');
-            const href = link.getAttribute('href') || '';
-            const linkPath = href.replace('#/', '');
-
-            if (linkPath === currentPath || (currentPath === '' && linkPath === 'upload')) {
-              link.classList.add('active');
-            }
-          });
-        }
-
-        // Initialize
-        setActiveNavLink();
-
-        // Update active nav on hash change
-        window.addEventListener('hashchange', setActiveNavLink);
       });
     </script>
 
