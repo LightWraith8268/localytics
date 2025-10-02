@@ -252,8 +252,10 @@ export function aggregateByField(rows, field) {
 export function aggregateByOrder(rows, mapping) {
   const map = new Map();
   const itemCol = mapping?.item;
+  let undefinedCount = 0;
   for (const r of rows) {
     const order = r.__order || String(r.order || '').trim() || '-';
+    if (order === 'undefined') undefinedCount++;
     const q = Number(r.__quantity || 0);
     const rev = Number(r.__revenue || 0);
     const cost = Number(r.__cost || 0);
@@ -269,6 +271,9 @@ export function aggregateByOrder(rows, mapping) {
     if (!cur.staff && staff) cur.staff = staff;
     map.set(order, cur);
   }
+  console.log('[aggregateByOrder] Total rows processed:', rows.length);
+  console.log('[aggregateByOrder] Rows with order="undefined":', undefinedCount);
+  console.log('[aggregateByOrder] Distinct order numbers:', map.size);
   return Array.from(map.values()).map(x => ({
     order: x.order,
     date: x.date,

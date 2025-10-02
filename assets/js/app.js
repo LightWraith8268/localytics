@@ -1539,6 +1539,13 @@ function renderOrdersView() {
   }, { revenue: 0, profit: 0 });
 
   const totalOrdersCount = state.byOrder.length;
+  const totalTransactions = state.rows?.length || 0;
+
+  // Debug: log order vs transaction counts
+  console.log('[renderOrdersView] Total transactions:', totalTransactions);
+  console.log('[renderOrdersView] Distinct orders:', totalOrdersCount);
+  console.log('[renderOrdersView] Avg transactions per order:', (totalTransactions / totalOrdersCount).toFixed(1));
+
   const isFiltered = orders.length !== totalOrdersCount || searchTerm;
   const summaryText = isFiltered
     ? `${formatNumber(orders.length)} of ${formatNumber(totalOrdersCount)} orders${searchTerm ? ` matching "${searchTerm}"` : ''} · Revenue ${formatCurrencyShort(totals.revenue)} · Profit ${formatCurrencyShort(totals.profit)}`
