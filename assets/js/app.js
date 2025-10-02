@@ -656,6 +656,10 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnExportCustomCsv').addEventListener('click', () => exportCustomCsv());
   qs('btnPrintTable').addEventListener('click', () => printCurrentView());
 
+  // Enhanced report builder listeners
+  qs('btnGenerateReport')?.addEventListener('click', () => generateAdvancedReport());
+  qs('btnClearReportFilters')?.addEventListener('click', () => clearReportFilters());
+
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
     if (!state.byClient) return; const cols = ['client','orders','quantity','revenue','cost','profit','margin'];
@@ -1314,6 +1318,9 @@ function renderReport() {
 
   // Populate dropdown filters with current data
   populateDropdownFilters();
+
+  // Populate advanced report builder filters
+  populateReportFilters();
 
   const clientRows = state.byClient.map(x => ({ client: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
   const staffRows = state.byStaff.map(x => ({ staff: x.label, orders: x.orders, quantity: x.quantity, revenue: x.revenue, cost: x.cost, profit: x.profit, margin: x.margin }));
@@ -1990,6 +1997,174 @@ function exportCustomCsv() {
     const obj = {}; headers.forEach((h,i)=> obj[h.toLowerCase()] = cells[i]); rows.push(obj);
   });
   downloadCsv('custom_report.csv', headers, rows);
+}
+
+// Enhanced Report Builder
+function generateAdvancedReport() {
+  if (!state.rows || !state.rows.length) {
+    alert('Please upload data first.');
+    return;
+  }
+
+  const reportType = qs('reportType')?.value || 'item';
+  const startDate = qs('reportStartDate')?.value || '';
+  const endDate = qs('reportEndDate')?.value || '';
+  const itemFilter = qs('reportItemFilter')?.value || '';
+  const clientFilter = qs('reportClientFilter')?.value || '';
+  const staffFilter = qs('reportStaffFilter')?.value || '';
+  const categoryFilter = qs('reportCategoryFilter')?.value || '';
+
+  // Get selected columns
+  const columns = [];
+  const columnMap = {
+    colItem: 'name',
+    colQuantity: 'quantity',
+    colRevenue: 'revenue',
+    colCost: 'cost',
+    colProfit: 'profit',
+    colMargin: 'margin',
+    colOrders: 'orders',
+    colDate: 'date'
+  };
+
+  Object.keys(columnMap).forEach(id => {
+    const checkbox = qs(id);
+    if (checkbox && checkbox.checked) {
+      columns.push(columnMap[id]);
+    }
+  });
+
+  if (columns.length === 0) {
+    alert('Please select at least one column to display.');
+    return;
+  }
+
+  // Filter data
+  let filteredRows = [...state.rows];
+
+  // Date range filter
+  if (startDate || endDate) {
+    filteredRows = filteredRows.filter(row => {
+      const dateIso = row.__dateIso || '';
+      if (!dateIso) return false;
+      if (startDate && dateIso < startDate) return false;
+      if (endDate && dateIso > endDate) return false;
+      return true;
+    });
+  }
+
+  // Item filter
+  if (itemFilter) {
+    const items = itemFilter.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
+    filteredRows = filteredRows.filter(row => {
+      const itemName = String(row[state.mapping.item] || '').toLowerCase();
+      return items.some(filterItem => itemName.includes(filterItem));
+    });
+  }
+
+  // Client filter
+  if (clientFilter) {
+    filteredRows = filteredRows.filter(row => {
+      const client = row.__client || '';
+      return client === clientFilter;
+    });
+  }
+
+  // Staff filter
+  if (staffFilter) {
+    filteredRows = filteredRows.filter(row => {
+      const staff = row.__staff || '';
+      return staff === staffFilter;
+    });
+  }
+
+  // Category filter
+  if (categoryFilter) {
+    filteredRows = filteredRows.filter(row => {
+      const category = row.__category || '';
+      return category === categoryFilter;
+    });
+  }
+
+  // Aggregate based on report type
+  let data = [];
+  switch (reportType) {
+    case 'item':
+      data = aggregateByField(filteredRows, r => {
+        const val = r[state.mapping.item];
+        return val ? String(val).trim() : '';
+      });
+      break;
+    case 'order':
+      data = aggregateByOrder(filteredRows, state.mapping);
+      data = data.map(x => ({ ...x, name: x.order }));
+      break;
+    case 'client':
+      data = aggregateByField(filteredRows, r => {
+        const val = r.__client;
+        return (val && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+      });
+      break;
+    case 'staff':
+      data = aggregateByField(filteredRows, r => {
+        const val = r.__staff;
+        return (val && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+      });
+      break;
+    case 'category':
+      data = aggregateByField(filteredRows, r => {
+        const val = r.__category;
+        return (val && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+      });
+      break;
+  }
+
+  // Map label to name for consistency
+  data = data.map(item => ({
+    ...item,
+    name: item.name || item.label || item.order || '-'
+  }));
+
+  // Build table with selected columns
+  const container = qs('customTable');
+  if (!container) return;
+
+  renderSortableTable(container, columns, data, { defaultSort: { column: 'revenue', direction: 'desc' } });
+}
+
+function populateReportFilters() {
+  if (!state.rows || !state.rows.length) return;
+
+  // Populate client filter
+  const clientSelect = qs('reportClientFilter');
+  if (clientSelect && state.byClient) {
+    clientSelect.innerHTML = '<option value="">All Clients</option>' +
+      state.byClient.map(c => `<option value="${escapeHtml(c.label)}">${escapeHtml(c.label)}</option>`).join('');
+  }
+
+  // Populate staff filter
+  const staffSelect = qs('reportStaffFilter');
+  if (staffSelect && state.byStaff) {
+    staffSelect.innerHTML = '<option value="">All Staff</option>' +
+      state.byStaff.map(s => `<option value="${escapeHtml(s.label)}">${escapeHtml(s.label)}</option>`).join('');
+  }
+
+  // Populate category filter
+  const categorySelect = qs('reportCategoryFilter');
+  if (categorySelect && state.byCategory) {
+    categorySelect.innerHTML = '<option value="">All Categories</option>' +
+      state.byCategory.map(c => `<option value="${escapeHtml(c.label)}">${escapeHtml(c.label)}</option>`).join('');
+  }
+}
+
+function clearReportFilters() {
+  qs('reportStartDate').value = '';
+  qs('reportEndDate').value = '';
+  qs('reportItemFilter').value = '';
+  qs('reportClientFilter').value = '';
+  qs('reportStaffFilter').value = '';
+  qs('reportCategoryFilter').value = '';
+  qs('customTable').innerHTML = '';
 }
 
 function freezeChartsForPrint(){

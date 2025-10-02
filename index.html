@@ -1265,6 +1265,114 @@
               <span>Stack by Category (date charts)</span>
             </label>
           </div>
+
+          <!-- Enhanced Report Builder -->
+          <div class="mt-6 no-print border app-border rounded-md p-4">
+            <h3 class="text-sm font-medium mb-3">Advanced Report Builder</h3>
+
+            <!-- Report Type Selection -->
+            <div class="mb-4">
+              <label class="block text-xs text-gray-500 mb-1">Report Type</label>
+              <select id="reportType" class="w-full border rounded-md px-3 py-2 text-sm">
+                <option value="item">By Item</option>
+                <option value="order">By Order</option>
+                <option value="client">By Client</option>
+                <option value="staff">By Staff</option>
+                <option value="category">By Category</option>
+              </select>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="mb-4">
+              <h4 class="text-xs font-medium text-gray-700 mb-2">Filters</h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Date Range -->
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Date Range</label>
+                  <div class="flex gap-2">
+                    <input type="date" id="reportStartDate" class="flex-1 border rounded-md px-2 py-1 text-xs">
+                    <input type="date" id="reportEndDate" class="flex-1 border rounded-md px-2 py-1 text-xs">
+                  </div>
+                </div>
+
+                <!-- Item Filter -->
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Items (comma-separated)</label>
+                  <input type="text" id="reportItemFilter" placeholder="e.g., Item A, Item B" class="w-full border rounded-md px-2 py-1 text-xs">
+                </div>
+
+                <!-- Client Filter -->
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Client</label>
+                  <select id="reportClientFilter" class="w-full border rounded-md px-2 py-1 text-xs">
+                    <option value="">All Clients</option>
+                  </select>
+                </div>
+
+                <!-- Staff Filter -->
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Staff</label>
+                  <select id="reportStaffFilter" class="w-full border rounded-md px-2 py-1 text-xs">
+                    <option value="">All Staff</option>
+                  </select>
+                </div>
+
+                <!-- Category Filter -->
+                <div>
+                  <label class="block text-xs text-gray-500 mb-1">Category</label>
+                  <select id="reportCategoryFilter" class="w-full border rounded-md px-2 py-1 text-xs">
+                    <option value="">All Categories</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Column Selection -->
+            <div class="mb-4">
+              <h4 class="text-xs font-medium text-gray-700 mb-2">Columns to Display</h4>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colItem" class="report-column" checked>
+                  <span>Item/Name</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colQuantity" class="report-column" checked>
+                  <span>Quantity</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colRevenue" class="report-column" checked>
+                  <span>Revenue</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colCost" class="report-column" checked>
+                  <span>Cost</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colProfit" class="report-column" checked>
+                  <span>Profit</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colMargin" class="report-column" checked>
+                  <span>Margin</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colOrders" class="report-column">
+                  <span>Orders</span>
+                </label>
+                <label class="inline-flex items-center gap-1.5 text-xs">
+                  <input type="checkbox" id="colDate" class="report-column">
+                  <span>Date</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2">
+              <button id="btnGenerateReport" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Generate Report</button>
+              <button id="btnClearReportFilters" class="px-4 py-2 border rounded-md text-sm">Clear Filters</button>
+            </div>
+          </div>
+
           <div class="mt-6">
             <div id="customTable" class="overflow-auto border rounded-md"></div>
           </div>
