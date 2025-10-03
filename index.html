@@ -63,17 +63,30 @@
 
       /* Print-specific styles */
       @media print {
-        /* Default portrait orientation for all pages */
+        /* Default portrait orientation for all pages with double-sided printing */
         @page {
           size: portrait;
           margin: 0.3in;
+        }
+
+        /* Enable double-sided (duplex) printing - not all browsers support this */
+        @page { marks: none; }
+
+        /* Left/right pages for duplex printing */
+        @page :left {
+          margin-left: 0.4in;
+          margin-right: 0.3in;
+        }
+        @page :right {
+          margin-left: 0.3in;
+          margin-right: 0.4in;
         }
         /* Note: Landscape orientation injected dynamically via JavaScript for overview pages */
 
         html, body {
           margin: 0 !important;
           padding: 0 !important;
-          font-size: 11px !important;
+          font-size: 10px !important;
           overflow: visible !important;
           height: auto !important;
         }
@@ -104,14 +117,14 @@
         }
 
         /* Reduce heading sizes */
-        h1 { font-size: 18px !important; }
-        h2 { font-size: 16px !important; }
-        h3 { font-size: 14px !important; }
-        h4 { font-size: 12px !important; }
+        h1 { font-size: 16px !important; }
+        h2 { font-size: 14px !important; }
+        h3 { font-size: 12px !important; }
+        h4 { font-size: 11px !important; }
 
         /* Smaller table text */
         table {
-          font-size: 10px !important;
+          font-size: 9px !important;
         }
         th, td {
           padding: 4px 6px !important;
@@ -1798,13 +1811,6 @@
     </div>
   </div>
 </div>
-<!-- Chart Zoom Modal -->
-  <div id="chartZoom" class="hidden fixed top-0 left-0 right-0 bottom-0 z-50" style="background: rgba(0,0,0,0.6);">
-    <div class="absolute inset-0 flex items-center justify-center">
-      <img id="chartZoomImg" alt="Chart" style="max-width: 90vw; max-height: 90vh; box-shadow: 0 10px 30px rgba(0,0,0,.4); border-radius: 8px; background: #fff;" />
-    </div>
-  </div>
-
 <!-- Modal elements dynamically created by JavaScript (see showClientDetails and showOrderDetails functions) -->
 
 <!-- Snapshot Viewer Modal -->
@@ -1825,6 +1831,23 @@
       <!-- Modal Body -->
       <div style="flex: 1; overflow: auto; padding: 1.25rem;">
         <div id="snapshotViewerContent" class="border" style="overflow: auto; border-radius: 0.375rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Chart Zoom Modal -->
+<div id="chartZoomModal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+  <div class="bg-white rounded-lg shadow-2xl max-w-7xl w-full max-h-[90vh] flex flex-col">
+    <!-- Modal Header -->
+    <div class="app-border flex items-center justify-between p-4 border-b">
+      <h3 id="chartZoomTitle" class="text-lg font-semibold"></h3>
+      <button id="btnCloseChartZoom" class="text-gray-500 hover:text-gray-700 text-2xl leading-none px-3 py-1">&times;</button>
+    </div>
+    <!-- Modal Body -->
+    <div class="flex-1 overflow-auto p-6">
+      <div class="w-full h-full flex items-center justify-center">
+        <canvas id="chartZoomCanvas" class="max-w-full max-h-full"></canvas>
       </div>
     </div>
   </div>

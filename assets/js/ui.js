@@ -493,24 +493,107 @@ export function exportExcelBook(filename, report, extraSheets) {
   window.XLSX.writeFile(wb, filename);
 }
 
-// Enable click-to-zoom for charts: clicking a canvas shows a large image
+// Chart zoom modal instance tracker
+let zoomedChartInstance = null;
+
+// Enable click-to-zoom for charts: clicking chart title shows enlarged chart
 export function enableChartZoom(root=document) {
   try {
-    const modal = document.getElementById('chartZoom');
-    const img = document.getElementById('chartZoomImg');
-    if (!modal || !img) return;
-    const handler = (e) => {
-      const target = e.target;
-      if (!(target instanceof HTMLCanvasElement)) return;
-      if (!target.hasAttribute('data-zoom')) return;
-      try {
-        const url = target.toDataURL('image/png');
-        img.src = url; modal.classList.remove('hidden');
-      } catch {}
-    };
-    root.addEventListener('click', handler);
-    modal.addEventListener('click', () => { modal.classList.add('hidden'); img.removeAttribute('src'); });
-  } catch {}
+    const modal = document.getElementById('chartZoomModal');
+    const modalTitle = document.getElementById('chartZoomTitle');
+    const modalCanvas = document.getElementById('chartZoomCanvas');
+    const closeBtn = document.getElementById('btnCloseChartZoom');
+
+    if (!modal || !modalCanvas || !closeBtn || !modalTitle) return;
+
+    // Make chart titles clickable with visual feedback
+    const chartTitles = root.querySelectorAll('h3.text-sm.font-semibold');
+    chartTitles.forEach(title => {
+      const nextElement = title.nextElementSibling;
+      // Check if next element contains a canvas with data-zoom attribute
+      if (nextElement && nextElement.querySelector('canvas[data-zoom]')) {
+        title.style.cursor = 'pointer';
+        title.style.transition = 'color 0.2s';
+        title.addEventListener('mouseenter', () => {
+          title.style.color = '#3b82f6'; // Blue on hover
+        });
+        title.addEventListener('mouseleave', () => {
+          title.style.color = ''; // Reset
+        });
+        title.addEventListener('click', () => {
+          const canvas = nextElement.querySelector('canvas[data-zoom]');
+          if (canvas) {
+            openChartZoomModal(title.textContent, canvas);
+          }
+        });
+      }
+    });
+
+    // Close button handler
+    closeBtn.addEventListener('click', closeChartZoomModal);
+
+    // Click outside to close
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closeChartZoomModal();
+      }
+    });
+  } catch (e) {
+    console.warn('[enableChartZoom] Error:', e);
+  }
+}
+
+function openChartZoomModal(title, sourceCanvas) {
+  const modal = document.getElementById('chartZoomModal');
+  const modalTitle = document.getElementById('chartZoomTitle');
+  const modalCanvas = document.getElementById('chartZoomCanvas');
+
+  if (!modal || !modalCanvas || !modalTitle || !sourceCanvas) return;
+
+  // Get the Chart.js instance from the source canvas
+  const sourceChart = window.Chart.getChart(sourceCanvas);
+  if (!sourceChart) return;
+
+  // Destroy previous zoomed chart if exists
+  if (zoomedChartInstance) {
+    zoomedChartInstance.destroy();
+    zoomedChartInstance = null;
+  }
+
+  // Set modal title
+  modalTitle.textContent = title;
+
+  // Clone the chart configuration
+  const config = JSON.parse(JSON.stringify({
+    type: sourceChart.config.type,
+    data: sourceChart.config.data,
+    options: sourceChart.config.options
+  }));
+
+  // Ensure maintainAspectRatio is true for modal
+  if (!config.options) config.options = {};
+  config.options.maintainAspectRatio = true;
+  config.options.aspectRatio = 2;
+
+  // Create enlarged chart
+  const ctx = modalCanvas.getContext('2d');
+  zoomedChartInstance = new window.Chart(ctx, config);
+
+  // Show modal
+  modal.classList.remove('hidden');
+}
+
+function closeChartZoomModal() {
+  const modal = document.getElementById('chartZoomModal');
+  if (modal) {
+    modal.classList.add('hidden');
+  }
+
+  // Destroy the zoomed chart
+  if (zoomedChartInstance) {
+    zoomedChartInstance.destroy();
+    zoomedChartInstance = null;
+  }
 }
 function formatCurrency(n) {
   const num = Number(n ?? 0);
