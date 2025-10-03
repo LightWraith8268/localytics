@@ -646,6 +646,11 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnEditReport')?.addEventListener('click', () => editReportConfiguration());
   qs('btnDeleteReport')?.addEventListener('click', () => deleteReportConfiguration());
 
+  // Template browser listeners
+  qs('btnToggleTemplates')?.addEventListener('click', () => toggleTemplateBrowser());
+  qs('templateCategoryFilter')?.addEventListener('change', () => filterTemplates());
+  qs('btnLoadAllTemplates')?.addEventListener('click', () => loadAllTemplatesToSaved());
+
   // Report snapshot listeners
   qs('btnSaveSnapshot')?.addEventListener('click', () => saveReportSnapshot());
 

@@ -1352,6 +1352,48 @@
               </div>
             </div>
 
+            <!-- Template Browser Section -->
+            <div class="mt-4 pt-4 border-t app-border">
+              <div class="flex items-center justify-between mb-2">
+                <h4 class="text-xs font-medium text-gray-700">Report Templates (60+)</h4>
+                <button id="btnToggleTemplates" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-medium hover:bg-indigo-700">Show Templates</button>
+              </div>
+
+              <div id="templateBrowser" class="hidden mt-3 space-y-3">
+                <!-- Category Filter -->
+                <div class="flex items-center gap-2">
+                  <label class="text-xs text-gray-600">Filter by Category:</label>
+                  <select id="templateCategoryFilter" class="flex-1 border rounded-md px-3 py-1.5 text-xs">
+                    <option value="">All Templates</option>
+                    <option value="YTD">YTD</option>
+                    <option value="QUARTERLY">Quarterly</option>
+                    <option value="MONTHLY">Monthly</option>
+                    <option value="PROFIT">Profitability</option>
+                    <option value="TOP">Top Performers</option>
+                    <option value="CUSTOMER">Customer Behavior</option>
+                    <option value="PRODUCT">Product Performance</option>
+                    <option value="STAFF">Staff Performance</option>
+                    <option value="TIME">Time Comparison</option>
+                    <option value="CATEGORY">Category Analysis</option>
+                    <option value="ORDER">Order Analysis</option>
+                    <option value="SEASONAL">Seasonal</option>
+                    <option value="ITEMS">Specific Items</option>
+                    <option value="COMPLETE">Complete Views</option>
+                  </select>
+                </div>
+
+                <!-- Template List -->
+                <div id="templateList" class="space-y-2 max-h-80 overflow-y-auto border app-border rounded-md p-3 bg-gray-50">
+                  <!-- Templates will be populated here by JavaScript -->
+                </div>
+
+                <!-- Bulk Load Button -->
+                <div class="flex justify-end">
+                  <button id="btnLoadAllTemplates" class="px-3 py-1.5 border app-border rounded-md text-xs font-medium hover:bg-gray-50">Load All 60+ Templates to Saved Reports</button>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <div class="mt-6">
