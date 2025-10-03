@@ -124,6 +124,22 @@ function showView(hash) {
 
 window.addEventListener('hashchange', () => showView(location.hash));
 window.addEventListener('DOMContentLoaded', () => {
+  // Clear all stored filter values from localStorage to ensure clean slate
+  // This prevents old filter values from previous sessions from being applied
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('filters_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    console.log('[app] Cleared stored filter values:', keysToRemove.length);
+  } catch (e) {
+    console.warn('[app] Failed to clear stored filters:', e);
+  }
+
   // Router
   showView(location.hash);
   // Simple dark mode toggle
