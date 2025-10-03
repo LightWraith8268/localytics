@@ -712,7 +712,7 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnOrdersExportCSV')?.addEventListener('click', () => {
     if (!state.byOrder) return;
     const cols = ['order','date','client','staff','revenue','profit','margin'];
-    const workingRows = getWorkingRows();
+    const workingRows = state.rows; // Use all rows for date lookup
     const rowsByOrder = new Map();
     workingRows.forEach(row => {
       const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
@@ -740,7 +740,7 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnOrdersExportExcel')?.addEventListener('click', () => {
     if (!state.byOrder) return;
     const report = { byItem: [], byDate: [], totals: {} };
-    const workingRows = getWorkingRows();
+    const workingRows = state.rows; // Use all rows for date lookup
     const rowsByOrder = new Map();
     workingRows.forEach(row => {
       const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
@@ -1529,7 +1529,9 @@ function renderOrdersView() {
     searchInput.addEventListener('input', () => renderOrdersView());
   }
 
-  const workingRows = getWorkingRows();
+  // Use ALL rows for date lookup since state.byOrder contains all orders
+  // (not just filtered ones). This ensures we can find dates for all orders.
+  const workingRows = state.rows;
   const rowsByOrder = new Map();
   workingRows.forEach(row => {
     const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
@@ -5644,8 +5646,9 @@ function renderOrdersTableOnly() {
     return;
   }
 
-  // Continue with existing orders rendering logic but with filtered data
-  const workingRows = getWorkingRows();
+  // Use ALL rows for date lookup since state.byOrder may contain orders
+  // from outside the current date filter range
+  const workingRows = state.rows;
   const rowsByOrder = new Map();
   workingRows.forEach(row => {
     const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
