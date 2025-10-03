@@ -13,9 +13,10 @@ function toDateKey(v) {
   if (!v) return '';
   const d = new Date(v);
   if (Number.isNaN(d.getTime())) return '';
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const dd = String(d.getDate()).padStart(2,'0');
+  // Use UTC methods to prevent timezone shifts (e.g., Oct 2 becoming Oct 1 in Mountain Time)
+  const yyyy = d.getUTCFullYear();
+  const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+  const dd = String(d.getUTCDate()).padStart(2,'0');
   return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -79,8 +80,8 @@ export function computeReport(rows, mapping) {
 }
 
 function weekKey(d) {
-  // ISO week number
-  const date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  // ISO week number - use UTC to prevent timezone shifts
+  const date = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   const dayNum = date.getUTCDay() || 7; // 1..7, Mon..Sun
   date.setUTCDate(date.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
@@ -90,19 +91,21 @@ function weekKey(d) {
 }
 
 function quarterKey(d) {
-  const q = Math.floor(d.getMonth()/3)+1; return `${d.getFullYear()}-Q${q}`;
+  // Use UTC to prevent timezone shifts
+  const q = Math.floor(d.getUTCMonth()/3)+1; return `${d.getUTCFullYear()}-Q${q}`;
 }
 
 export function bucketDateKey(dateStr, granularity) {
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return '';
+  // Use UTC methods throughout to prevent timezone shifts
   switch ((granularity||'day')) {
     case 'week': return weekKey(d);
-    case 'month': return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    case 'month': return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}`;
     case 'quarter': return quarterKey(d);
-    case 'year': return String(d.getFullYear());
+    case 'year': return String(d.getUTCFullYear());
     case 'day':
-    default: return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    default: return `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`;
   }
 }
 
