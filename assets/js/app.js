@@ -176,6 +176,9 @@ window.addEventListener('DOMContentLoaded', () => {
   // Initialize dark mode UI (preference loaded in loadUserSettingsAfterAuth() after authentication)
   initDarkMode();
 
+  // Populate saved reports dropdown with templates (available immediately on page load)
+  populateSavedReportsDropdown();
+
   // Load settings after authentication state is determined
   let authStateReady = false;
   async function loadUserSettingsAfterAuth() {
