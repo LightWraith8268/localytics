@@ -270,10 +270,8 @@ window.addEventListener('DOMContentLoaded', () => {
           uploadStatus.textContent = `${storedData.rowCount} rows loaded from ${uploadedDate}`;
         }
 
-        // Generate reports automatically
-        const filtered = applyFilters(state.rows, state.mapping, state.filters);
-        state.filtered = filtered;
-        state.report = computeReport(filtered, state.mapping);
+        // Generate reports from ALL data (filters are display-level only)
+        state.report = computeReport(state.rows, state.mapping);
         renderReport();
         updateCategoryMapSummary();
       } else {
@@ -400,9 +398,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   async function reapplyCategoryMap() {
     if (!state.rows.length) {
-      const filtered = applyFilters(state.rows, state.mapping, state.filters);
-      state.filtered = filtered;
-      state.report = computeReport(filtered, state.mapping);
+      state.report = computeReport(state.rows, state.mapping);
       renderReport();
       updateCategoryMapSummary();
       return;
@@ -414,9 +410,7 @@ window.addEventListener('DOMContentLoaded', () => {
         setProgress(Math.min(99, pct), `Reapplying map - ${pct}%`);
       });
       state.rows = normalized;
-      const filtered = applyFilters(state.rows, state.mapping, state.filters);
-      state.filtered = filtered;
-      state.report = computeReport(filtered, state.mapping);
+      state.report = computeReport(state.rows, state.mapping);
       renderReport();
       updateCategoryMapSummary();
     } catch (error) {
@@ -471,20 +465,9 @@ window.addEventListener('DOMContentLoaded', () => {
     // Save CSV data to Firebase/localStorage for persistence
     await saveCsvData(normalized, headers, state.mapping);
 
-    console.log('[app] Applying filters to', normalized.length, 'rows');
-    let filtered = applyFilters(normalized, state.mapping, state.filters);
-    console.log('[app] After filtering:', filtered.length, 'rows remain');
-    if (normalized.length && !filtered.length) {
-      console.warn('[app] Filters removed all rows; resetting filters to defaults.');
-      state.filters = { ...DEFAULT_FILTERS };
-      restoreFilterUI();
-      try { await saveUserSettings('filters', state.filters); } catch (e) { console.warn('[app] Failed to reset filters in storage:', e); }
-      filtered = applyFilters(normalized, state.mapping, state.filters);
-      console.log('[app] After resetting filters,', filtered.length, 'rows remain');
-    }
-    state.filtered = filtered;
-    console.log('[app] Computing report from', filtered.length, 'filtered rows');
-    state.report = computeReport(filtered, state.mapping);
+    // Compute report from ALL data (filters are display-level only)
+    console.log('[app] Computing report from', normalized.length, 'rows');
+    state.report = computeReport(normalized, state.mapping);
     console.log('[app] Report computed, rendering...');
     renderReport();
     updateCategoryMapSummary();
@@ -882,7 +865,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // Reset in-memory dataset (do not touch theme or user settings)
     try {
       state.rows = [];
-      state.filtered = [];
       state.report = null;
     } catch {}
     // Navigate to Upload and reload UI
@@ -900,7 +882,6 @@ window.addEventListener('DOMContentLoaded', () => {
       // Clear in-memory data
       state.rows = [];
       state.headers = [];
-      state.filtered = [];
       state.report = null;
 
       // Update UI
@@ -933,7 +914,6 @@ window.addEventListener('DOMContentLoaded', () => {
       // Clear all in-memory data
       state.rows = [];
       state.headers = [];
-      state.filtered = [];
       state.report = null;
       state.mapping = { date: '', item: '', qty: '', price: '', cost: '', revenue: '', category: '', order: '', client: '', staff: '' };
       state.categoryMap = {};
@@ -1278,26 +1258,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
 function renderDashboard() {
-  // Dashboard shows ALL parsed data (unfiltered), not filtered data
-  if (!state.rows || !state.rows.length) return;
-
-  // Generate report from all rows for dashboard view
-  const dashboardReport = computeReport(state.rows, state.mapping);
-
-  // Temporarily store the current report and filtered data
-  const originalReport = state.report;
-  const originalFiltered = state.filtered;
-
-  // Set dashboard data
-  state.report = dashboardReport;
-  state.filtered = state.rows; // Use all rows instead of filtered
-
-  // Render with all data
+  // Dashboard shows ALL data (state.report is always computed from all rows now)
+  if (!state.rows || !state.rows.length || !state.report) return;
   renderReport();
-
-  // Restore original data (for other views that may use filtered data)
-  state.report = originalReport;
-  state.filtered = originalFiltered;
 }
 
 function renderReport() {
@@ -1318,11 +1281,7 @@ function renderReport() {
   const topVals = top.map(r => r.revenue);
   state.chartTop = makeBarChart(document.getElementById('chart-top-items'), topLabels, topVals, 'Top Items by Revenue');
 
-  // Additional aggregates (based on filtered rows)
-  const base = state.filtered || state.rows;
-
-  // Staff, client, and category aggregations use ALL data (not filtered)
-  // This ensures these pages show complete entity lists
+  // ALL aggregations use ALL data (filters are display-level only)
   const allData = state.rows;
 
   state.byClient = aggregateByField(allData, r => {
@@ -1336,11 +1295,11 @@ function renderReport() {
     return (val !== null && val !== undefined && val !== 'undefined' && trimmed !== '') ? val : '';
   });
 
-  state.byCategory = aggregateByField(base, r => {
+  state.byCategory = aggregateByField(allData, r => {
     const val = r.__category;
     return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
   });
-  // Orders aggregation uses ALL data (like clients/staff) to show complete order list
+
   state.byOrder = aggregateByOrder(allData, state.mapping);
 
   // Items data comes from the report
@@ -4074,7 +4033,7 @@ function ingestRows(rows){
     staff: state.mapping.staff || 'Staff',
   };
   const normalized = normalizeAndDedupe(rows, state.mapping);
-  state.rows = normalized; state.filtered = normalized;
+  state.rows = normalized;
   state.report = computeReport(normalized, state.mapping);
   renderReport(); location.hash = '#/report';
   updateCategoryMapSummary();
