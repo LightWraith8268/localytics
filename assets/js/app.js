@@ -197,7 +197,9 @@ window.addEventListener('DOMContentLoaded', () => {
       console.warn('Failed to load categoryMap settings:', e);
     }
     updateCategoryMapSummary();
-    try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...DEFAULT_FILTERS, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
+    // Filters should start blank by default - users can manually apply filters as needed
+    // Keep this line commented to prevent auto-loading filters from previous sessions
+    // try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...DEFAULT_FILTERS, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
     try { const c = await loadUserSettings('customChartPrefs'); if (c) restoreCustomChartPrefs(c); } catch (e) { console.warn('Failed to load customChartPrefs settings:', e); }
 
     // Load allowed items and synonyms
