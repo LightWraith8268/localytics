@@ -3628,7 +3628,8 @@ function populateSavedReportsDropdown() {
     'ORDER': [],
     'SEASONAL': [],
     'ITEMS': [],
-    'COMPLETE': []
+    'COMPLETE': [],
+    'WINDSOR': []
   };
 
   templates.forEach(template => {
@@ -3666,7 +3667,8 @@ function populateSavedReportsDropdown() {
     'ORDER': '📋 Order Analysis',
     'SEASONAL': '🌤️ Seasonal',
     'ITEMS': '🎯 Specific Items',
-    'COMPLETE': '📂 Complete Views'
+    'COMPLETE': '📂 Complete Views',
+    'WINDSOR': '👨‍💼 Windsor Stagg'
   };
 
   Object.keys(templatesByCategory).forEach(category => {
@@ -3796,7 +3798,34 @@ function getTemplateDefinitions() {
     { name: "[COMPLETE] All Clients (Full Details)", reportType: "client", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
     { name: "[COMPLETE] All Staff (Full Details)", reportType: "staff", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
     { name: "[COMPLETE] All Orders (Full Details)", reportType: "order", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true } },
-    { name: "[COMPLETE] All Categories (Full Details)", reportType: "category", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } }
+    { name: "[COMPLETE] All Categories (Full Details)", reportType: "category", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+
+    // WINDSOR STAGG MEMBER REPORTS
+    { name: "[WINDSOR] YTD Performance", reportType: "staff", startDate: `${currentYear}-01-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] This Month Performance", reportType: "staff", startDate: `${currentYear}-${currentMonth}-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Last 30 Days", reportType: "staff", startDate: last30Days, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] All Time Performance", reportType: "staff", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Items Sold (All Time)", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Items Sold (YTD)", reportType: "item", startDate: `${currentYear}-01-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Items Sold (This Month)", reportType: "item", startDate: `${currentYear}-${currentMonth}-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Top 40 Items by Revenue", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", sortBy: "revenue", limit: "40", columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Top 40 Items by Quantity", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", sortBy: "quantity", limit: "40", columns: { item: true, quantity: true, revenue: true, cost: false, profit: true, margin: false, orders: false, date: false } },
+    { name: "[WINDSOR] Clients Served (All Time)", reportType: "client", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Clients Served (YTD)", reportType: "client", startDate: `${currentYear}-01-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Clients Served (This Month)", reportType: "client", startDate: `${currentYear}-${currentMonth}-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Top 10 Clients by Revenue", reportType: "client", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", sortBy: "revenue", limit: "10", columns: { item: true, quantity: false, revenue: true, cost: false, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Top 10 Clients by Orders", reportType: "client", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", sortBy: "orders", limit: "10", columns: { item: true, quantity: false, revenue: true, cost: false, profit: false, margin: false, orders: true, date: false } },
+    { name: "[WINDSOR] Orders (All Time)", reportType: "order", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true } },
+    { name: "[WINDSOR] Orders (YTD)", reportType: "order", startDate: `${currentYear}-01-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true } },
+    { name: "[WINDSOR] Orders (This Month)", reportType: "order", startDate: `${currentYear}-${currentMonth}-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: true } },
+    { name: "[WINDSOR] Categories Sold (All Time)", reportType: "category", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Categories Sold (YTD)", reportType: "category", startDate: `${currentYear}-01-01`, endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Q1 Performance", reportType: "staff", startDate: `${currentYear}-01-01`, endDate: `${currentYear}-03-31`, itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Q2 Performance", reportType: "staff", startDate: `${currentYear}-04-01`, endDate: `${currentYear}-06-30`, itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Q3 Performance", reportType: "staff", startDate: `${currentYear}-07-01`, endDate: `${currentYear}-09-30`, itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] Q4 Performance", reportType: "staff", startDate: `${currentYear}-10-01`, endDate: `${currentYear}-12-31`, itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", columns: { item: true, quantity: false, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } },
+    { name: "[WINDSOR] High Margin Items Sold", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", sortBy: "margin", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: false, date: false } },
+    { name: "[WINDSOR] Revenue Breakdown by Item", reportType: "item", startDate: "", endDate: "", itemFilter: "", clientFilter: "", staffFilter: "Windsor Stagg", categoryFilter: "", sortBy: "revenue", columns: { item: true, quantity: true, revenue: true, cost: true, profit: true, margin: true, orders: true, date: false } }
   ];
 }
 
