@@ -20,6 +20,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="./assets/icons/icon.svg">
     <link rel="icon" href="data:,">
+
+    <!-- Preload critical vendor libraries -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" as="script">
+
     <style>
       /* Hide scrollbar in sidebar navigation while maintaining scroll functionality */
       .sidebar-scroll {
@@ -369,6 +374,11 @@
         color: #FBBF24 !important;
       }
     </style>
+
+    <!-- Critical vendor libraries - loaded in head to ensure availability before modules -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body class="overflow-x-hidden">
     <!-- Mobile Header -->
@@ -1528,11 +1538,6 @@
 
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
-
-    <!-- Vendor libs -->
-    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
     <!-- Firebase init (loads config from assets/js/firebase.js) -->
     <script type="module" src="./assets/js/firebase-init.js"></script>

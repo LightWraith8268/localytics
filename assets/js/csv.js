@@ -1,4 +1,9 @@
 export async function parseCsv(fileOrText, options = {}) {
+  // Ensure Papa Parse is loaded
+  if (!window.Papa) {
+    throw new Error('Papa Parse library not loaded. Please refresh the page.');
+  }
+
   const cfg = {
     header: true,
     skipEmptyLines: true,
@@ -109,6 +114,10 @@ export async function parseCsvFiles(fileList, options = {}) {
 
   for (let i = 0; i < files.length; i++) {
     const f = files[i];
+    // Ensure Papa Parse is loaded
+    if (!window.Papa) {
+      throw new Error('Papa Parse library not loaded. Please refresh the page.');
+    }
     await new Promise((resolve, reject) => {
       let fileCursor = 0;
       let fileHeaders = null;
