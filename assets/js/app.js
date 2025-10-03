@@ -48,6 +48,8 @@ const state = {
   customChart: null,
   categoryMap: {},
   itemSynonyms: [],
+  // Page-specific display state (for export/print with filters)
+  displayedOrders: null, // Currently displayed orders on Orders page (after filters)
 };
 
 let categoryMapDraft = {};
@@ -693,59 +695,23 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Orders page export/print
   qs('btnOrdersExportCSV')?.addEventListener('click', () => {
-    if (!state.byOrder) return;
+    // Use currently displayed orders (with filters applied)
+    const ordersData = state.displayedOrders || [];
+    if (!ordersData.length) {
+      alert('No orders to export');
+      return;
+    }
     const cols = ['order','date','client','staff','revenue','profit','margin'];
-    const workingRows = state.rows; // Use all rows for date lookup
-    const rowsByOrder = new Map();
-    workingRows.forEach(row => {
-      const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
-      if (!rowsByOrder.has(key)) rowsByOrder.set(key, []);
-      rowsByOrder.get(key).push(row);
-    });
-    const getLatestDate = (orderId) => {
-      const rows = rowsByOrder.get(orderId) || [];
-      return rows.reduce((latest, row) => {
-        const iso = row.__dateIso || '';
-        return iso && (!latest || iso > latest) ? iso : latest;
-      }, '');
-    };
-    const ordersData = state.byOrder.map(order => ({
-      order: order.order,
-      date: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : '-',
-      client: order.client || 'Unassigned',
-      staff: order.staff || 'Unassigned',
-      revenue: order.revenue,
-      profit: order.profit,
-      margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
-    }));
     downloadCsv('orders.csv', cols, ordersData);
   });
   qs('btnOrdersExportExcel')?.addEventListener('click', () => {
-    if (!state.byOrder) return;
+    // Use currently displayed orders (with filters applied)
+    const ordersData = state.displayedOrders || [];
+    if (!ordersData.length) {
+      alert('No orders to export');
+      return;
+    }
     const report = { byItem: [], byDate: [], totals: {} };
-    const workingRows = state.rows; // Use all rows for date lookup
-    const rowsByOrder = new Map();
-    workingRows.forEach(row => {
-      const key = row.__order || String(row[state.mapping.order] || '').trim() || '-';
-      if (!rowsByOrder.has(key)) rowsByOrder.set(key, []);
-      rowsByOrder.get(key).push(row);
-    });
-    const getLatestDate = (orderId) => {
-      const rows = rowsByOrder.get(orderId) || [];
-      return rows.reduce((latest, row) => {
-        const iso = row.__dateIso || '';
-        return iso && (!latest || iso > latest) ? iso : latest;
-      }, '');
-    };
-    const ordersData = state.byOrder.map(order => ({
-      order: order.order,
-      date: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : '-',
-      client: order.client || 'Unassigned',
-      staff: order.staff || 'Unassigned',
-      revenue: order.revenue,
-      profit: order.profit,
-      margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
-    }));
     exportExcelBook('orders.xlsx', report, { Orders: ordersData });
   });
   qs('btnOrdersPrint')?.addEventListener('click', () => printCurrentView());
@@ -1531,6 +1497,9 @@ function renderOrdersView() {
     displayDate: getLatestDate(order.order) ? toPrettyDate(getLatestDate(order.order)) : 'No Date',
     margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
   }));
+
+  // Store for export/print (with current filters applied)
+  state.displayedOrders = ordersWithDates;
 
   // DEBUG: Log orders with missing dates
   const missingDateOrders = ordersWithDates.filter(o => o.displayDate === 'No Date');
@@ -5652,6 +5621,17 @@ function renderOrdersTableOnly(ordersToDisplay = null) {
   const ordersWithDates = orders.map(order => ({
     ...order,
     date: getLatestDate(order.label) || '-'
+  }));
+
+  // Store for export/print (with current filters applied)
+  state.displayedOrders = ordersWithDates.map(order => ({
+    order: order.label || 'Untitled',
+    date: order.date,
+    client: order.client || 'Unassigned',
+    staff: order.staff || 'Unassigned',
+    revenue: order.revenue,
+    profit: order.profit,
+    margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
   }));
 
   renderSortableClickableTable(tableEl, ['order','date','client','staff','items','revenue','profit','margin'], ordersWithDates.map(order => ({
