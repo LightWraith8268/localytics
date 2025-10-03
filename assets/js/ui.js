@@ -504,14 +504,24 @@ export function enableChartZoom(root=document) {
     const modalCanvas = document.getElementById('chartZoomCanvas');
     const closeBtn = document.getElementById('btnCloseChartZoom');
 
-    if (!modal || !modalCanvas || !closeBtn || !modalTitle) return;
+    console.log('[enableChartZoom] Modal elements:', { modal: !!modal, modalTitle: !!modalTitle, modalCanvas: !!modalCanvas, closeBtn: !!closeBtn });
+
+    if (!modal || !modalCanvas || !closeBtn || !modalTitle) {
+      console.warn('[enableChartZoom] Missing required modal elements');
+      return;
+    }
 
     // Make chart titles clickable with visual feedback
     const chartTitles = root.querySelectorAll('h3.text-sm.font-semibold');
+    console.log('[enableChartZoom] Found h3 titles:', chartTitles.length);
+
+    let zoomableCount = 0;
     chartTitles.forEach(title => {
       const nextElement = title.nextElementSibling;
       // Check if next element contains a canvas with data-zoom attribute
-      if (nextElement && nextElement.querySelector('canvas[data-zoom]')) {
+      const canvas = nextElement ? nextElement.querySelector('canvas[data-zoom]') : null;
+      if (canvas) {
+        zoomableCount++;
         title.style.cursor = 'pointer';
         title.style.transition = 'color 0.2s';
         title.addEventListener('mouseenter', () => {
@@ -521,13 +531,13 @@ export function enableChartZoom(root=document) {
           title.style.color = ''; // Reset
         });
         title.addEventListener('click', () => {
-          const canvas = nextElement.querySelector('canvas[data-zoom]');
-          if (canvas) {
-            openChartZoomModal(title.textContent, canvas);
-          }
+          console.log('[enableChartZoom] Chart title clicked:', title.textContent);
+          openChartZoomModal(title.textContent, canvas);
         });
       }
     });
+
+    console.log('[enableChartZoom] Made', zoomableCount, 'chart titles clickable');
 
     // Close button handler
     closeBtn.addEventListener('click', closeChartZoomModal);
@@ -544,15 +554,24 @@ export function enableChartZoom(root=document) {
 }
 
 function openChartZoomModal(title, sourceCanvas) {
+  console.log('[openChartZoomModal] Called with title:', title, 'canvas:', sourceCanvas);
+
   const modal = document.getElementById('chartZoomModal');
   const modalTitle = document.getElementById('chartZoomTitle');
   const modalCanvas = document.getElementById('chartZoomCanvas');
 
-  if (!modal || !modalCanvas || !modalTitle || !sourceCanvas) return;
+  if (!modal || !modalCanvas || !modalTitle || !sourceCanvas) {
+    console.warn('[openChartZoomModal] Missing elements:', { modal: !!modal, modalTitle: !!modalTitle, modalCanvas: !!modalCanvas, sourceCanvas: !!sourceCanvas });
+    return;
+  }
 
   // Get the Chart.js instance from the source canvas
   const sourceChart = window.Chart.getChart(sourceCanvas);
-  if (!sourceChart) return;
+  console.log('[openChartZoomModal] Source chart:', sourceChart);
+  if (!sourceChart) {
+    console.warn('[openChartZoomModal] No Chart.js instance found on canvas');
+    return;
+  }
 
   // Destroy previous zoomed chart if exists
   if (zoomedChartInstance) {
