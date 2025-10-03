@@ -251,6 +251,18 @@ window.addEventListener('DOMContentLoaded', () => {
         state.headers = storedData.headers || [];
         state.mapping = storedData.mapping || state.mapping;
 
+        // DEBUG: Expose state to window and check for missing dates
+        window.APP_STATE = state;
+        const missingDates = state.rows.filter(r => !r.__dateIso);
+        console.log('[app] Loaded data - total rows:', state.rows.length, 'rows missing __dateIso:', missingDates.length);
+        if (missingDates.length > 0) {
+          console.warn('[app] Sample rows with missing __dateIso:', missingDates.slice(0, 5).map(r => ({
+            order: r['Order Number'],
+            dateColumn: r[state.mapping.date],
+            item: r[state.mapping.item]?.substring(0, 30)
+          })));
+        }
+
         // Show data info in upload status
         const uploadStatus = qs('uploadStatus');
         if (uploadStatus) {
@@ -452,6 +464,9 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     console.log('[app] Normalization complete, setting state.rows to', normalized.length, 'rows');
     state.rows = normalized;
+
+    // DEBUG: Expose state to window for console inspection
+    window.APP_STATE = state;
 
     // Save CSV data to Firebase/localStorage for persistence
     await saveCsvData(normalized, headers, state.mapping);
