@@ -1571,6 +1571,22 @@ function renderOrdersView() {
     margin: order.revenue ? ((order.profit / order.revenue) * 100) : 0
   }));
 
+  // DEBUG: Log orders with missing dates
+  const missingDateOrders = ordersWithDates.filter(o => o.displayDate === 'No Date');
+  if (missingDateOrders.length > 0) {
+    console.warn('[renderOrdersView] Orders with missing dates:', missingDateOrders.length, 'of', ordersWithDates.length);
+    const samples = missingDateOrders.slice(0, 3);
+    samples.forEach(o => {
+      const orderRows = rowsByOrder.get(o.order) || [];
+      console.warn('[renderOrdersView] Order', o.order, ':', {
+        rowsFound: orderRows.length,
+        firstRowDateIso: orderRows[0]?.__dateIso,
+        firstRowDateCol: orderRows[0]?.[state.mapping.date],
+        allDateIsos: orderRows.map(r => r.__dateIso)
+      });
+    });
+  }
+
   const totals = orders.reduce((acc, order) => {
     acc.revenue += Number(order.revenue || 0);
     acc.profit += Number(order.profit || 0);
