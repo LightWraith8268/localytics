@@ -4536,7 +4536,30 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
 function canonicalizeItemName(raw) {
   if (!raw) return '';
   let s = String(raw);
-  // Apply synonyms first (user-defined)
+
+  // STEP 1: Normalize quotes and dashes first
+  s = s.replace(/[\u2018\u2019\u2032]/g, "'").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2013\u2014]/g, '-');
+
+  // STEP 2: Normalize fractions and decimal inch patterns for .75 and 1.5
+  // Replace ¾ with .75, ½ with .5, ¼ with .25
+  s = s.replace(/¾/g, '.75').replace(/½/g, '.5').replace(/¼/g, '.25');
+  // Convert common fraction text patterns
+  s = s.replace(/\b3\s*\/\s*4\b/g, '.75').replace(/\b1\s*[\-\s]?1\s*\/\s*2\b/g, '1.5');
+  // Normalize decimals with leading zero
+  s = s.replace(/\b0\.75\b/g, '.75');
+  // Ensure inch symbol is a straight quote right after number if inches are implied
+  s = s.replace(/(\.75|1\.5)\s*(?:in(ch)?|"|"|\b)/gi, (m, num) => `${num}" `);
+
+  // STEP 3: Collapse multiple spaces
+  s = s.replace(/\s+/g, ' ').trim();
+
+  // STEP 4: Fix known wording variants (standardize format before applying synonyms)
+  s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
+       .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
+       .replace(/\bsqueegee\b/gi, 'Squeege')
+       .replace(/^planters mix\b.*$/i, 'Planters Mix');
+
+  // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {
     if (Array.isArray(state.itemSynonyms)) {
       state.itemSynonyms.forEach(({from, to}) => {
@@ -4546,28 +4569,10 @@ function canonicalizeItemName(raw) {
       });
     }
   } catch {}
-  // Normalize quotes and dashes
-  s = s.replace(/[\u2018\u2019\u2032]/g, "'").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2013\u2014]/g, '-');
-  // Normalize fractions and decimal inch patterns for .75 and 1.5
-  // Replace ¾ with .75, ½ with .5, ¼ with .25
-  s = s.replace(/¾/g, '.75').replace(/½/g, '.5').replace(/¼/g, '.25');
-  // Convert common fraction text patterns
-  s = s.replace(/\b3\s*\/\s*4\b/g, '.75').replace(/\b1\s*[\-\s]?1\s*\/\s*2\b/g, '1.5');
-  // Normalize decimals with leading zero
-  s = s.replace(/\b0\.75\b/g, '.75');
-  // Ensure inch symbol is a straight quote right after number if inches are implied
-  s = s.replace(/(\.75|1\.5)\s*(?:in(ch)?|”|"|\b)/gi, (m, num) => `${num}" `);
-  // Collapse multiple spaces
-  s = s.replace(/\s+/g, ' ').trim();
-  // Fix known wording variants
-  s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
-       .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
-       .replace(/\bsqueegee\b/gi, 'Squeege')
-       .replace(/^planters mix\b.*$/i, 'Planters Mix');
-  // Handle rebrand: display as Northern (Tri Color -> Northern)
+
+  // STEP 6: Handle hardcoded rebrands (keep these for specific compound names that synonyms might miss)
   s = s.replace(/\bTri[\-\s]?Color\s+River\s+Rock\b/gi, 'Northern River Rock')
-       .replace(/\bTri[\-\s]?Color\s+Cobble\b/gi, 'Northern Cobble')
-       .replace(/\bTri[\-\s]?Color\b/gi, 'Northern');
+       .replace(/\bTri[\-\s]?Color\s+Cobble\b/gi, 'Northern Cobble');
   // Title case words except those with quotes/numbers preserved
   s = s.split(' ').map(w => {
     if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
