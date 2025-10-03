@@ -224,12 +224,24 @@ for (const size of sizes) {
 
 #### 3. Firestore Permission Errors
 
-**Symptoms**: "Missing or insufficient permissions"
+**Symptoms**: "Missing or insufficient permissions" or "loadCsvData failed to read Firestore chunks"
 
 **Solutions**:
-- Start Firestore in test mode initially
-- Check Firestore rules allow authenticated reads/writes
+- **Apply proper Security Rules**: See [FIREBASE_RULES.md](./FIREBASE_RULES.md) for required rules
+- **Critical**: CSV chunks require explicit subcollection rules - parent rules don't inherit
+- Start Firestore in test mode initially for development
 - Ensure user is signed in before storage operations
+- Wait 1-2 minutes after publishing rules for changes to propagate
+
+**Quick Fix**:
+```javascript
+// Add this rule to Firestore Rules in Firebase Console:
+match /userData/{userId}/csvChunks/{chunkId} {
+  allow read, write: if request.auth != null && request.auth.uid == userId;
+}
+```
+
+See [FIREBASE_RULES.md](./FIREBASE_RULES.md) for complete rule configuration.
 
 #### 4. Network/Offline Issues
 

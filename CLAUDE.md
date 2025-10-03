@@ -71,6 +71,10 @@ This is a static web application with no build process dependencies. The codebas
 - **Optional**: App works without Firebase (uses localStorage)
 - **CI Integration**: `FIREBASE_CONFIG_JSON` secret injects `assets/js/firebase.js`
 - **Auth**: Google Sign-In for report persistence across devices
+- **Security Rules**: Required for CSV data sync - see [FIREBASE_RULES.md](./FIREBASE_RULES.md)
+  - Subcollection `csvChunks` requires explicit rules (parent rules don't inherit)
+  - Without proper rules, users get "Missing or insufficient permissions" errors
+  - Testing guide available in [FIREBASE_TESTING.md](./FIREBASE_TESTING.md)
 
 ### PWA Update Flow
 The app implements proper PWA update UX:
