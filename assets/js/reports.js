@@ -57,7 +57,11 @@ export function computeReport(rows, mapping) {
   }
 
   const byItemArr = [...byItem.values()].sort((a,b)=> b.revenue - a.revenue);
-  const byDateArr = [...byDate.values()].sort((a,b)=> a.date.localeCompare(b.date));
+  // Sort dates chronologically using ISO format comparison (not alphabetically by display format)
+  const byDateArr = [...byDate.values()].sort((a,b)=> {
+    // Date keys are already in ISO format (YYYY-MM-DD), which sorts correctly
+    return a.date < b.date ? -1 : a.date > b.date ? 1 : 0;
+  });
 
   return {
     totals: {
@@ -119,7 +123,8 @@ export function aggregateCustom(rows, mapping, opts) {
   }
   let arr = Array.from(map.values());
   if (groupBy === 'date') {
-    arr.sort((a,b) => a.label.localeCompare(b.label));
+    // Sort dates chronologically (labels are in ISO format YYYY-MM-DD)
+    arr.sort((a,b) => a.label < b.label ? -1 : a.label > b.label ? 1 : 0);
   } else {
     arr.sort((
       (a,b) => b.revenue - a.revenue
@@ -141,7 +146,8 @@ export function aggregateByGranularity(rows, mapping, granularity = 'month') {
     const cur = map.get(key) || { period: key, quantity: 0, revenue: 0 };
     cur.quantity += q; cur.revenue += rev; map.set(key, cur);
   }
-  return Array.from(map.values()).sort((a,b)=> a.period.localeCompare(b.period)).map(x => ({ period: x.period, quantity: round2(x.quantity), revenue: round2(x.revenue) }));
+  // Sort periods chronologically (periods are in ISO-like format YYYY-MM, YYYY-Wxx, etc.)
+  return Array.from(map.values()).sort((a,b)=> a.period < b.period ? -1 : a.period > b.period ? 1 : 0).map(x => ({ period: x.period, quantity: round2(x.quantity), revenue: round2(x.revenue) }));
 }
 
 export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month', metric = 'revenue', topN = 0) {
@@ -160,10 +166,11 @@ export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month'
     cats.set(cat, m);
     totals.set(cat, (totals.get(cat) || 0) + val);
   }
-  // Determine labels
+  // Determine labels (time periods in chronological order)
   const labelSet = new Set();
   for (const m of cats.values()) for (const p of m.keys()) labelSet.add(p);
-  const labels = Array.from(labelSet).sort();
+  // Sort chronologically (labels are in ISO-like format: YYYY-MM, YYYY-Wxx, etc.)
+  const labels = Array.from(labelSet).sort((a,b) => a < b ? -1 : a > b ? 1 : 0);
   // Optionally limit to top N categories
   let entries = Array.from(cats.entries());
   if (topN && topN > 0) {
