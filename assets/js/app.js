@@ -4410,6 +4410,26 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   console.log('[app] normalizeAndDedupeAsync complete - output rows:', out.length);
   if (out.length > 0) {
     console.log('[app] Sample normalized row:', out[0]);
+
+    // DEBUG: Log actual date range in normalized data
+    const allDates = out.map(r => r.__dateIso).filter(Boolean).sort();
+    const uniqueDates = [...new Set(allDates)];
+    console.log('[app] Date range in normalized data:', {
+      earliest: allDates[0],
+      latest: allDates[allDates.length - 1],
+      totalDates: allDates.length,
+      uniqueDates: uniqueDates.length,
+      first5: uniqueDates.slice(0, 5),
+      last5: uniqueDates.slice(-5)
+    });
+
+    // Count rows by month
+    const monthCounts = {};
+    allDates.forEach(iso => {
+      const month = iso.substring(0, 7); // YYYY-MM
+      monthCounts[month] = (monthCounts[month] || 0) + 1;
+    });
+    console.log('[app] Rows by month:', monthCounts);
   } else {
     console.warn('[app] WARNING: No rows in normalized output!');
   }
