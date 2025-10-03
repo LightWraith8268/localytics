@@ -1557,7 +1557,7 @@ function renderOrdersView() {
 
   renderSortableClickableTable(tableEl, ['order','date','client','staff','items','revenue','profit','margin'], ordersWithDates.map(order => ({
     order: order.order,
-    date: order.displayDate,
+    date: order.latestDate, // Use ISO date for proper chronological sorting
     client: order.client || 'Unassigned',
     staff: order.staff || 'Unassigned',
     items: order.items || 0,
@@ -5414,6 +5414,11 @@ function formatTableCell(column, value) {
     return Number(value || 0).toFixed(0);
   }
 
+  // Format ISO dates (YYYY-MM-DD) to pretty format
+  if (columnLower.includes('date') && value && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return toPrettyDate(value);
+  }
+
   // For other numeric values, show with 2 decimal places
   if (typeof value === 'number' || (!isNaN(value) && value !== null && value !== '')) {
     return formatNumber(value);
@@ -5682,7 +5687,7 @@ function renderOrdersTableOnly(ordersToDisplay = null) {
     profit: order.profit,
     margin: order.margin
   })), {
-    defaultSort: { column: 'revenue', direction: 'desc' },
+    defaultSort: { column: 'date', direction: 'desc' },
     clickHandlers: {
       order: 'showOrderDetails'
     }
