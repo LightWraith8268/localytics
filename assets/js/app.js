@@ -4297,12 +4297,13 @@ function normalizeAndDedupe(rows, mapping) {
     const pretty = toPrettyDate(originalDateVal);
     const dFull = parseFullDate(originalDateVal);
 
-    // Debug: Log when date parsing fails
-    if (!iso && originalDateVal) {
-      console.warn('[normalize] Date parsing failed:', {
+    // Debug: Log ALL cases where __dateIso will be empty
+    if (!iso) {
+      console.warn('[normalize] Missing date ISO:', {
         dateCol,
         originalDateVal,
-        type: typeof originalDateVal,
+        originalDateValType: typeof originalDateVal,
+        originalDateValEmpty: !originalDateVal,
         order: r[state.mapping.order] || 'no-order',
         item: (r[itemCol] || '').substring(0, 30)
       });
@@ -4378,12 +4379,13 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     const pretty = toPrettyDate(originalDateVal);
     const dFull = parseFullDate(originalDateVal);
 
-    // Debug: Log when date parsing fails
-    if (!iso && originalDateVal) {
-      console.warn('[normalize-async] Date parsing failed:', {
+    // Debug: Log ALL cases where __dateIso will be empty
+    if (!iso) {
+      console.warn('[normalize-async] Missing date ISO:', {
         dateCol,
         originalDateVal,
-        type: typeof originalDateVal,
+        originalDateValType: typeof originalDateVal,
+        originalDateValEmpty: !originalDateVal,
         order: r[state.mapping.order] || 'no-order',
         item: (r[itemCol] || '').substring(0, 30)
       });
