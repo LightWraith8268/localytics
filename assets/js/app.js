@@ -5626,27 +5626,31 @@ function applyOrdersFilters() {
     });
   }
 
-  // Update orders aggregation with filtered data
-  state.byOrder = aggregateByOrder(filteredRows, state.mapping);
+  // Create filtered orders WITHOUT overwriting global state.byOrder
+  // This keeps each page's filters independent
+  const filteredOrders = aggregateByOrder(filteredRows, state.mapping);
 
   // Re-render the view with filtered data
-  renderOrdersTableOnly();
+  renderOrdersTableOnly(filteredOrders);
 }
 
-function renderOrdersTableOnly() {
+function renderOrdersTableOnly(ordersToDisplay = null) {
   const summaryEl = qs('ordersSummary');
   const tableEl = qs('ordersTrackingTable');
   const searchInput = qs('ordersSearch');
 
   if (!summaryEl || !tableEl) return;
 
-  if (!state.byOrder || !state.byOrder.length) {
+  // Use provided filtered orders, or fall back to global state.byOrder
+  const baseOrders = ordersToDisplay || state.byOrder;
+
+  if (!baseOrders || !baseOrders.length) {
     summaryEl.textContent = 'No orders match the current filters.';
     tableEl.innerHTML = '<div class="text-sm text-gray-500">No orders available.</div>';
     return;
   }
 
-  // Use ALL rows for date lookup since state.byOrder may contain orders
+  // Use ALL rows for date lookup since orders may contain data
   // from outside the current date filter range
   const workingRows = state.rows;
   const rowsByOrder = new Map();
@@ -5666,7 +5670,7 @@ function renderOrdersTableOnly() {
 
   // Apply search filter
   const searchTerm = (searchInput?.value || '').toLowerCase().trim();
-  let orders = [...state.byOrder];
+  let orders = [...baseOrders];
   if (searchTerm) {
     orders = orders.filter(order => {
       const clientRows = rowsByOrder.get(order.label) || [];
