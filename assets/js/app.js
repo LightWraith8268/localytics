@@ -1317,13 +1317,13 @@ function renderReport() {
 
   // Trends
   if (state.chartOrders) { state.chartOrders.destroy(); state.chartOrders = null; }
-  const ordersByDate = aggregateOrdersByDate(base);
+  const ordersByDate = aggregateOrdersByDate(allData);
   state.chartOrders = makeChart(document.getElementById('chart-orders'), ordersByDate.labels, ordersByDate.values, 'Orders');
   if (state.chartRevRolling) { state.chartRevRolling.destroy(); state.chartRevRolling = null; }
   const rolling = rollingAverage(state.report.byDate.map(x=>({label:x.date,value:x.revenue})), 7);
   state.chartRevRolling = makeChart(document.getElementById('chart-rev-rolling'), rolling.labels, rolling.values, '7d Avg Revenue');
   if (state.chartRevMoM) { state.chartRevMoM.destroy(); state.chartRevMoM = null; }
-  const month = aggregateByGranularity(base, state.mapping, 'month');
+  const month = aggregateByGranularity(allData, state.mapping, 'month');
   const mom = monthOverMonthChange(month);
   state.chartRevMoM = makeChart(document.getElementById('chart-rev-mom'), mom.labels, mom.values, 'MoM Change %');
 
@@ -1365,7 +1365,7 @@ function renderReport() {
 
   // Hour-of-day revenue (sum)
   const hourAgg = new Array(24).fill(0);
-  for (const r of base) { const h = (r.__hour ?? -1); if (h>=0) hourAgg[h] += Number(r.__revenue||0); }
+  for (const r of allData) { const h = (r.__hour ?? -1); if (h>=0) hourAgg[h] += Number(r.__revenue||0); }
   const hourLabels = Array.from({length:24},(_,i)=> i.toString().padStart(2,'0'));
   if (state.chartHourRevenue) { state.chartHourRevenue.destroy(); state.chartHourRevenue = null; }
   const chartHour = document.getElementById('chart-hour-revenue'); if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
@@ -1379,7 +1379,7 @@ function renderReport() {
   const catTrendCanvas = document.getElementById('chart-cat-trend');
   if (catTrendCanvas && state.byCategory && state.byCategory.length) {
     if (state.chartCatTrend) { state.chartCatTrend.destroy(); state.chartCatTrend = null; }
-    const catTrend = aggregateByCategoryOverTime(base, state.mapping, 'month', 'revenue', 8);
+    const catTrend = aggregateByCategoryOverTime(allData, state.mapping, 'month', 'revenue', 8);
     state.chartCatTrend = makeStackedBarChart(catTrendCanvas, catTrend.labels, catTrend.datasets);
   }
 
