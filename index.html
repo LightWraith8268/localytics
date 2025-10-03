@@ -1339,58 +1339,16 @@
               <button id="btnSaveSnapshot" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700 hidden">Save Report Snapshot</button>
             </div>
 
-            <!-- Saved Reports Section -->
+            <!-- Saved Reports & Templates Section -->
             <div class="mt-4 pt-4 border-t app-border">
-              <h4 class="text-xs font-medium text-gray-700 mb-2">Saved Report Configurations</h4>
+              <h4 class="text-xs font-medium text-gray-700 mb-2">Saved Reports & Templates (60+)</h4>
               <div class="flex flex-wrap gap-2 items-center">
                 <select id="savedReportsDropdown" class="flex-1 min-w-[200px] border rounded-md px-3 py-2 text-sm">
-                  <option value="">-- Select a saved report --</option>
+                  <option value="">-- Select a report or template --</option>
                 </select>
                 <button id="btnLoadReport" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Load & Run</button>
                 <button id="btnEditReport" class="px-4 py-2 bg-yellow-600 text-white rounded-md text-sm font-medium hover:bg-yellow-700">Edit</button>
                 <button id="btnDeleteReport" class="px-4 py-2 bg-red-600 text-white rounded-md text-sm font-medium hover:bg-red-700">Delete</button>
-              </div>
-            </div>
-
-            <!-- Template Browser Section -->
-            <div class="mt-4 pt-4 border-t app-border">
-              <div class="flex items-center justify-between mb-2">
-                <h4 class="text-xs font-medium text-gray-700">Report Templates (60+)</h4>
-                <button id="btnToggleTemplates" class="px-3 py-1.5 bg-indigo-600 text-white rounded-md text-xs font-medium hover:bg-indigo-700">Show Templates</button>
-              </div>
-
-              <div id="templateBrowser" class="hidden mt-3 space-y-3">
-                <!-- Category Filter -->
-                <div class="flex items-center gap-2">
-                  <label class="text-xs text-gray-600">Filter by Category:</label>
-                  <select id="templateCategoryFilter" class="flex-1 border rounded-md px-3 py-1.5 text-xs">
-                    <option value="">All Templates</option>
-                    <option value="YTD">YTD</option>
-                    <option value="QUARTERLY">Quarterly</option>
-                    <option value="MONTHLY">Monthly</option>
-                    <option value="PROFIT">Profitability</option>
-                    <option value="TOP">Top Performers</option>
-                    <option value="CUSTOMER">Customer Behavior</option>
-                    <option value="PRODUCT">Product Performance</option>
-                    <option value="STAFF">Staff Performance</option>
-                    <option value="TIME">Time Comparison</option>
-                    <option value="CATEGORY">Category Analysis</option>
-                    <option value="ORDER">Order Analysis</option>
-                    <option value="SEASONAL">Seasonal</option>
-                    <option value="ITEMS">Specific Items</option>
-                    <option value="COMPLETE">Complete Views</option>
-                  </select>
-                </div>
-
-                <!-- Template List -->
-                <div id="templateList" class="space-y-2 max-h-80 overflow-y-auto border app-border rounded-md p-3 bg-gray-50">
-                  <!-- Templates will be populated here by JavaScript -->
-                </div>
-
-                <!-- Bulk Load Button -->
-                <div class="flex justify-end">
-                  <button id="btnLoadAllTemplates" class="px-3 py-1.5 border app-border rounded-md text-xs font-medium hover:bg-gray-50">Load All 60+ Templates to Saved Reports</button>
-                </div>
               </div>
             </div>
 

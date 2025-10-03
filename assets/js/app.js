@@ -646,11 +646,6 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnEditReport')?.addEventListener('click', () => editReportConfiguration());
   qs('btnDeleteReport')?.addEventListener('click', () => deleteReportConfiguration());
 
-  // Template browser listeners
-  qs('btnToggleTemplates')?.addEventListener('click', () => toggleTemplateBrowser());
-  qs('templateCategoryFilter')?.addEventListener('change', () => filterTemplates());
-  qs('btnLoadAllTemplates')?.addEventListener('click', () => loadAllTemplatesToSaved());
-
   // Report snapshot listeners
   qs('btnSaveSnapshot')?.addEventListener('click', () => saveReportSnapshot());
 
@@ -2659,24 +2654,29 @@ function saveReportConfiguration() {
 function loadReportConfiguration() {
   const dropdown = qs('savedReportsDropdown');
   if (!dropdown || !dropdown.value) {
-    alert('Please select a saved report to load.');
+    alert('Please select a report or template to load.');
     return;
   }
 
   const reportName = dropdown.value;
 
-  // Get saved reports
+  // Try to find in saved reports first
   let savedReports = [];
   try {
     const stored = localStorage.getItem('savedReportConfigs');
     if (stored) savedReports = JSON.parse(stored);
   } catch (e) {
     console.error('Error loading saved reports:', e);
-    return;
   }
 
-  // Find the selected report
-  const config = savedReports.find(r => r.name === reportName);
+  let config = savedReports.find(r => r.name === reportName);
+
+  // If not found in saved reports, check templates
+  if (!config) {
+    const templates = getTemplateDefinitions();
+    config = templates.find(t => t.name === reportName);
+  }
+
   if (!config) {
     alert('Report configuration not found.');
     return;
@@ -2718,10 +2718,6 @@ function deleteReportConfiguration() {
 
   const reportName = dropdown.value;
 
-  if (!confirm(`Are you sure you want to delete the report configuration "${reportName}"?`)) {
-    return;
-  }
-
   // Get saved reports
   let savedReports = [];
   try {
@@ -2729,6 +2725,17 @@ function deleteReportConfiguration() {
     if (stored) savedReports = JSON.parse(stored);
   } catch (e) {
     console.error('Error loading saved reports:', e);
+    return;
+  }
+
+  // Check if this is a user-saved report (not a built-in template)
+  const isSavedReport = savedReports.some(r => r.name === reportName);
+  if (!isSavedReport) {
+    alert('Cannot delete built-in templates. You can only delete your saved reports.');
+    return;
+  }
+
+  if (!confirm(`Are you sure you want to delete the report configuration "${reportName}"?`)) {
     return;
   }
 
@@ -2749,24 +2756,31 @@ function deleteReportConfiguration() {
 function editReportConfiguration() {
   const dropdown = qs('savedReportsDropdown');
   if (!dropdown || !dropdown.value) {
-    alert('Please select a saved report to edit.');
+    alert('Please select a report or template to edit.');
     return;
   }
 
   const reportName = dropdown.value;
 
-  // Get saved reports
+  // Try to find in saved reports first
   let savedReports = [];
   try {
     const stored = localStorage.getItem('savedReportConfigs');
     if (stored) savedReports = JSON.parse(stored);
   } catch (e) {
     console.error('Error loading saved reports:', e);
-    return;
   }
 
-  // Find the selected report
-  const config = savedReports.find(r => r.name === reportName);
+  let config = savedReports.find(r => r.name === reportName);
+  let isTemplate = false;
+
+  // If not found in saved reports, check templates
+  if (!config) {
+    const templates = getTemplateDefinitions();
+    config = templates.find(t => t.name === reportName);
+    isTemplate = true;
+  }
+
   if (!config) {
     alert('Report configuration not found.');
     return;
@@ -2794,16 +2808,19 @@ function editReportConfiguration() {
     if (qs('colDate')) qs('colDate').checked = config.columns.date === true;
   }
 
-  // Delete the old version
-  savedReports = savedReports.filter(r => r.name !== reportName);
-  try {
-    localStorage.setItem('savedReportConfigs', JSON.stringify(savedReports));
-    populateSavedReportsDropdown();
-  } catch (e) {
-    console.error('Error updating saved reports:', e);
+  // Delete the old version (only if it's a saved report, not a template)
+  if (!isTemplate) {
+    savedReports = savedReports.filter(r => r.name !== reportName);
+    try {
+      localStorage.setItem('savedReportConfigs', JSON.stringify(savedReports));
+      populateSavedReportsDropdown();
+    } catch (e) {
+      console.error('Error updating saved reports:', e);
+    }
+    alert(`Report "${reportName}" loaded for editing. Modify the settings and click "Save Report Config" to save your changes.`);
+  } else {
+    alert(`Template "${reportName}" loaded. Modify the settings and click "Save Report Config" to save as a new report.`);
   }
-
-  alert(`Report "${reportName}" loaded for editing. Modify the settings and click "Save Report Config" to save your changes.`);
 }
 
 function loadReportTemplates() {
@@ -3613,9 +3630,73 @@ function populateSavedReportsDropdown() {
     console.error('Error loading saved reports:', e);
   }
 
-  // Populate dropdown
-  dropdown.innerHTML = '<option value="">-- Select a saved report --</option>' +
-    savedReports.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
+  // Get templates organized by category
+  const templates = getTemplateDefinitions();
+  const templatesByCategory = {
+    'YTD': [],
+    'QUARTERLY': [],
+    'MONTHLY': [],
+    'PROFIT': [],
+    'TOP': [],
+    'CUSTOMER': [],
+    'PRODUCT': [],
+    'STAFF': [],
+    'TIME': [],
+    'CATEGORY': [],
+    'ORDER': [],
+    'SEASONAL': [],
+    'ITEMS': [],
+    'COMPLETE': []
+  };
+
+  templates.forEach(template => {
+    const match = template.name.match(/^\[([^\]]+)\]/);
+    if (match) {
+      const category = match[1];
+      if (templatesByCategory[category]) {
+        templatesByCategory[category].push(template);
+      }
+    }
+  });
+
+  // Build dropdown with optgroups
+  let html = '<option value="">-- Select a report or template --</option>';
+
+  // Add user saved reports first
+  if (savedReports.length > 0) {
+    html += '<optgroup label="📁 Your Saved Reports">';
+    html += savedReports.map(r => `<option value="${escapeHtml(r.name)}">${escapeHtml(r.name)}</option>`).join('');
+    html += '</optgroup>';
+  }
+
+  // Add template categories
+  const categoryLabels = {
+    'YTD': '📅 Year-to-Date',
+    'QUARTERLY': '📊 Quarterly',
+    'MONTHLY': '📆 Monthly',
+    'PROFIT': '💰 Profitability',
+    'TOP': '🏆 Top Performers',
+    'CUSTOMER': '👥 Customer Behavior',
+    'PRODUCT': '📦 Product Performance',
+    'STAFF': '👤 Staff Performance',
+    'TIME': '⏰ Time Comparison',
+    'CATEGORY': '🏷️ Category Analysis',
+    'ORDER': '📋 Order Analysis',
+    'SEASONAL': '🌤️ Seasonal',
+    'ITEMS': '🎯 Specific Items',
+    'COMPLETE': '📂 Complete Views'
+  };
+
+  Object.keys(templatesByCategory).forEach(category => {
+    const categoryTemplates = templatesByCategory[category];
+    if (categoryTemplates.length > 0) {
+      html += `<optgroup label="${categoryLabels[category]}">`;
+      html += categoryTemplates.map(t => `<option value="${escapeHtml(t.name)}">${escapeHtml(t.name)}</option>`).join('');
+      html += '</optgroup>';
+    }
+  });
+
+  dropdown.innerHTML = html;
 }
 
 // ============================================
