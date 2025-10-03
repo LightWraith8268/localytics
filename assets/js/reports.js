@@ -29,7 +29,7 @@ export function computeReport(rows, mapping) {
   let totalQty = 0; let totalRev = 0; let totalCost = 0; let items = new Set(); let orders = new Set();
 
   for (const r of rows) {
-    const item = (r[itemCol] ?? '').toString().trim();
+    const item = (r.__item ?? r[itemCol] ?? '').toString().trim(); // Prefer canonicalized name for synonym support
     const order = (r[orderCol] ?? '').toString().trim();
     const q = (r.__quantity != null) ? Number(r.__quantity) : toNumber(r[qtyCol]);
     const price = toNumber(r[priceCol]);
@@ -114,7 +114,7 @@ export function aggregateCustom(rows, mapping, opts) {
   const topN = Number(opts.topN || 0);
   const map = new Map();
   for (const r of rows) {
-    const key = groupBy === 'item' ? String(r[mapping.item] || '').trim() : bucketDateKey(r[mapping.date], gran);
+    const key = groupBy === 'item' ? String(r.__item || r[mapping.item] || '').trim() : bucketDateKey(r[mapping.date], gran);
     if (!key) continue;
     const q = Number(r[mapping.qty] || 0) || 0;
     const price = mapping.revenue ? 0 : Number((r[mapping.price] || '').toString().replace(/[$,\s]/g,'')) || 0;

@@ -1504,7 +1504,7 @@ function renderOrdersView() {
       // Search in items within the order
       const orderRows = rowsByOrder.get(order.order) || [];
       return orderRows.some(row => {
-        const itemName = String(row[state.mapping.item] || row.item || '').toLowerCase();
+        const itemName = String(row.__item || row[state.mapping.item] || row.item || '').toLowerCase();
         return itemName.includes(searchTerm);
       });
     });
@@ -1820,7 +1820,7 @@ function applyFilters(rows, mapping, filters) {
       if (end && iso > end) ok = false;
     }
     if (itemQ) {
-      const it = (r[mapping.item] || '').toString().toLowerCase();
+      const it = (r.__item || r[mapping.item] || '').toString().toLowerCase();
       if (!it.includes(itemQ)) ok = false;
     }
     if (filters.client) {
@@ -2057,7 +2057,7 @@ function generateAdvancedReport() {
   if (itemFilter) {
     const items = itemFilter.split(',').map(s => s.trim().toLowerCase()).filter(s => s);
     filteredRows = filteredRows.filter(row => {
-      const itemName = String(row[state.mapping.item] || '').toLowerCase();
+      const itemName = String(row.__item || row[state.mapping.item] || '').toLowerCase();
       return items.some(filterItem => itemName.includes(filterItem));
     });
   }
@@ -4847,7 +4847,7 @@ function showClientDetails(clientName) {
   let totalOrders = new Set();
 
   clientTransactions.forEach(row => {
-    const itemName = row[state.mapping.item] || 'Unknown Item';
+    const itemName = row.__item || row[state.mapping.item] || 'Unknown Item';
     const quantity = row.__quantity || 0;
     const revenue = row.__revenue || 0;
     const cost = row.__cost || 0;
@@ -5108,7 +5108,7 @@ function showOrderDetails(orderNumber) {
     totalCost += cost;
 
     return {
-      item: row[state.mapping.item] || 'Unknown Item',
+      item: row.__item || row[state.mapping.item] || 'Unknown Item',
       quantity: quantity,
       price: price,
       revenue: revenue,
@@ -5564,7 +5564,7 @@ function populateDropdownFilters() {
   console.log('[populateDropdownFilters] Staff after filtering:', staff);
 
   const categories = [...new Set(base.map(row => row.__category).filter(val => val && val !== 'undefined'))].sort();
-  const items = [...new Set(base.map(row => row[state.mapping.item]).filter(Boolean))].sort();
+  const items = [...new Set(base.map(row => row.__item || row[state.mapping.item]).filter(Boolean))].sort();
   const orders = [...new Set(base.map(row => row.__order).filter(Boolean))].sort();
 
   console.log('Populating dropdowns with data:', { clients: clients.length, staff: staff.length, categories: categories.length, items: items.length, orders: orders.length });
@@ -5684,7 +5684,7 @@ function applyOrdersFilters() {
   // Text-based filtering
   if (item) {
     filteredRows = filteredRows.filter(row => {
-      const itemValue = (row[state.mapping.item] || '').toString().toLowerCase();
+      const itemValue = (row.__item || row[state.mapping.item] || '').toString().toLowerCase();
       return itemValue.includes(item.toLowerCase());
     });
   }
@@ -5769,7 +5769,7 @@ function renderOrdersTableOnly(ordersToDisplay = null) {
              clientRows.some(row => {
                const client = (row.__client || '').toLowerCase();
                const staff = (row.__staff || '').toLowerCase();
-               const item = (row[state.mapping.item] || '').toLowerCase();
+               const item = (row.__item || row[state.mapping.item] || '').toLowerCase();
                return client.includes(searchTerm) || staff.includes(searchTerm) || item.includes(searchTerm);
              });
     });
@@ -5969,7 +5969,7 @@ function applyClientsFilters() {
   // Text-based filtering
   if (item) {
     filteredRows = filteredRows.filter(row => {
-      const itemValue = (row[state.mapping.item] || '').toString().toLowerCase();
+      const itemValue = (row.__item || row[state.mapping.item] || '').toString().toLowerCase();
       return itemValue.includes(item.toLowerCase());
     });
   }
@@ -6028,7 +6028,7 @@ function applyStaffFilters() {
   // Text-based filtering
   if (item) {
     filteredRows = filteredRows.filter(row => {
-      const itemValue = (row[state.mapping.item] || '').toString().toLowerCase();
+      const itemValue = (row.__item || row[state.mapping.item] || '').toString().toLowerCase();
       return itemValue.includes(item.toLowerCase());
     });
   }
