@@ -1159,6 +1159,7 @@ window.addEventListener('DOMContentLoaded', () => {
         Papa.parse(text, {
           header: true,
           skipEmptyLines: true,
+          worker: false, // Disable worker mode to avoid "p1 is not defined" error
           complete: async (results) => {
             console.log('[CategoryMapUpload] Full parse results:', results);
             console.log('[CategoryMapUpload] Parsed CSV data:', results.data);
@@ -4469,6 +4470,7 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
 
     const obj = { ...r };
     if (dateCol) obj[dateCol] = pretty;
+    obj.__item = canonName; // Store canonicalized item name for synonym support
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
     obj.__hour = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
