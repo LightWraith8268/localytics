@@ -4211,7 +4211,7 @@ function normalizeAndDedupe(rows, mapping) {
     if (dateCol) obj[dateCol] = pretty; // replace display date
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
-    obj.__hour = (dFull ? dFull.getHours() : null);
+    obj.__hour = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
     obj.__quantity = q || 0;
     obj.__price = p || 0;
     obj.__unitCost = c || 0;
@@ -4280,7 +4280,7 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     if (dateCol) obj[dateCol] = pretty;
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
-    obj.__hour = (dFull ? dFull.getHours() : null);
+    obj.__hour = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
     obj.__quantity = q || 0;
     obj.__price = p || 0;
     obj.__unitCost = c || 0;
@@ -4374,6 +4374,7 @@ function num(v){ if (v==null) return 0; if (typeof v==='number') return v; const
 function toIsoDate(v){ if(!v) return ''; try{ const m=String(v).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/); if(m){ const months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; const mm=String(months[m[1]]).padStart(2,'0'); const dd=String(m[2]).padStart(2,'0'); const yyyy=m[3]; return `${yyyy}-${mm}-${dd}`;} const d=new Date(v); if(!Number.isNaN(d.getTime())){ const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } }catch{} return ''; }
 function toPrettyDate(v){ if(!v) return ''; const m=String(v).match(/^([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/); if(m) return m[1]; try { return new Date(v).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'}); } catch { return String(v); } }
 function parseFullDate(v){ try { const d = new Date(v); return Number.isNaN(d.getTime()) ? null : d; } catch { return null; } }
+function extractHourFromString(v){ if(!v) return null; try{ const m=String(v).match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i); if(m){ let hour=parseInt(m[1]); const period=m[3].toUpperCase(); if(period==='PM' && hour!==12) hour+=12; else if(period==='AM' && hour===12) hour=0; return hour; } }catch{} return null; }
 
 // Chart rendering functions for new pages
 function renderTrendsCharts() {
