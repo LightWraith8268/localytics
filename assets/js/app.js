@@ -1,6 +1,6 @@
 import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
 import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime, aggregateByField, aggregateByOrder } from './reports.js';
-import { renderTotals, renderTable, renderSortableTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook } from './ui.js';
+import { renderTotals, renderTable, renderSortableTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook, enableChartZoom } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings, saveCsvData, loadCsvData, deleteCsvData, deleteAllUserData, testFirebaseSettings } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
@@ -4223,7 +4223,6 @@ async function saveBranding() {
 }
 
 function preparePrintCover() {
-  const elDate = document.getElementById('printDate'); if (elDate) elDate.textContent = new Date().toLocaleString();
   const brand = document.getElementById('brandName')?.value || 'Localytics';
   const logo = document.getElementById('brandLogo')?.value || '';
   const elBrand = document.getElementById('printBrand'); if (elBrand) elBrand.textContent = brand;
