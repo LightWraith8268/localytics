@@ -338,89 +338,99 @@ export async function saveCsvData(rows, headers, mapping) {
 
 
 export async function loadCsvData() {
-  try {
-    const local = localStorage.getItem('csvData');
-    if (local) {
-      return JSON.parse(local);
-    }
-  } catch (e) {
-    console.warn('[storage] loadCsvData localStorage failed', e);
-  }
-
+  // Priority 1: If authenticated, load from Firebase (latest synced data)
   try {
     const mod = await ensureAuth();
     if (mod && mod.auth.currentUser) {
       const uid = mod.auth.currentUser.uid;
       const db = await ensureDb();
       if (!db) {
-        console.warn('[storage] loadCsvData Firestore not available');
-        return null;
-      }
-      const m = await import(FIRESTORE_URL);
+        console.warn('[storage] loadCsvData Firestore not available, falling back to localStorage');
+      } else {
+        const m = await import(FIRESTORE_URL);
 
-      const userDoc = await m.getDoc(m.doc(db, 'userData', uid));
-      if (userDoc.exists()) {
-        const data = userDoc.data();
+        const userDoc = await m.getDoc(m.doc(db, 'userData', uid));
+        if (userDoc.exists()) {
+          const data = userDoc.data();
 
-        if (data.csvData) {
-          const csvData = data.csvData;
-          try {
-            localStorage.setItem('csvData', JSON.stringify(csvData));
-          } catch (e) {
-            console.warn('[storage] Failed to migrate legacy data to localStorage', e);
+          // Handle legacy format
+          if (data.csvData) {
+            const csvData = data.csvData;
+            try {
+              localStorage.setItem('csvData', JSON.stringify(csvData));
+            } catch (e) {
+              console.warn('[storage] Failed to update localStorage with Firebase data', e);
+            }
+            console.log('[storage] loadCsvData: Loaded from Firebase (legacy format)');
+            return csvData;
           }
-          return csvData;
-        }
 
-        const metadata = data.csvMetadata;
-        if (metadata) {
-          const rows = [];
-          const expectedChunks = metadata.chunks?.count ?? null;
-          try {
-            const chunkSnap = await m.getDocs(m.collection(db, 'userData', uid, 'csvChunks'));
-            if (!chunkSnap.empty) {
-              const sorted = chunkSnap.docs.sort((a, b) => {
-                const ai = a.data().index ?? 0;
-                const bi = b.data().index ?? 0;
-                return ai - bi;
-              });
-              for (const docSnap of sorted) {
-                const docData = docSnap.data();
-                if (Array.isArray(docData.rows)) {
-                  for (const row of docData.rows) {
-                    rows.push(hydrateRowFromFirestore(row));
+          // Handle chunked format
+          const metadata = data.csvMetadata;
+          if (metadata) {
+            const rows = [];
+            const expectedChunks = metadata.chunks?.count ?? null;
+            try {
+              const chunkSnap = await m.getDocs(m.collection(db, 'userData', uid, 'csvChunks'));
+              if (!chunkSnap.empty) {
+                const sorted = chunkSnap.docs.sort((a, b) => {
+                  const ai = a.data().index ?? 0;
+                  const bi = b.data().index ?? 0;
+                  return ai - bi;
+                });
+                for (const docSnap of sorted) {
+                  const docData = docSnap.data();
+                  if (Array.isArray(docData.rows)) {
+                    for (const row of docData.rows) {
+                      rows.push(hydrateRowFromFirestore(row));
+                    }
                   }
                 }
               }
+            } catch (e) {
+              console.warn('[storage] loadCsvData failed to read Firestore chunks', e);
             }
-          } catch (e) {
-            console.warn('[storage] loadCsvData failed to read Firestore chunks', e);
-          }
 
-          if (expectedChunks != null && rows.length === 0) {
-            console.warn('[storage] loadCsvData expected chunk data but none was retrieved');
-          }
+            if (expectedChunks != null && rows.length === 0) {
+              console.warn('[storage] loadCsvData expected chunk data but none was retrieved');
+            }
 
-          const payload = {
-            rows,
-            headers: metadata.headers || [],
-            mapping: metadata.mapping || {},
-            uploadedAt: metadata.uploadedAt || new Date().toISOString(),
-            rowCount: rows.length || metadata.rowCount || 0
-          };
-          try {
-            localStorage.setItem('csvData', JSON.stringify(payload));
-          } catch (e) {
-            console.warn('[storage] loadCsvData failed to write hydrated data to localStorage', e);
+            const payload = {
+              rows,
+              headers: metadata.headers || [],
+              mapping: metadata.mapping || {},
+              uploadedAt: metadata.uploadedAt || new Date().toISOString(),
+              rowCount: rows.length || metadata.rowCount || 0
+            };
+            try {
+              localStorage.setItem('csvData', JSON.stringify(payload));
+            } catch (e) {
+              console.warn('[storage] loadCsvData failed to update localStorage with Firebase data', e);
+            }
+            console.log('[storage] loadCsvData: Loaded from Firebase (chunked format),', rows.length, 'rows');
+            return payload;
           }
-          return payload;
         }
+        // No data in Firebase for authenticated user
+        console.log('[storage] loadCsvData: No data in Firebase, falling back to localStorage');
       }
     }
   } catch (e) {
-    console.warn('[storage] loadCsvData Firestore failed', e);
+    console.warn('[storage] loadCsvData Firestore failed, falling back to localStorage:', e);
   }
 
+  // Priority 2: Fallback to localStorage (offline or Firebase unavailable)
+  try {
+    const local = localStorage.getItem('csvData');
+    if (local) {
+      console.log('[storage] loadCsvData: Loaded from localStorage');
+      return JSON.parse(local);
+    }
+  } catch (e) {
+    console.warn('[storage] loadCsvData localStorage failed', e);
+  }
+
+  console.log('[storage] loadCsvData: No data found in Firebase or localStorage');
   return null;
 }
 
