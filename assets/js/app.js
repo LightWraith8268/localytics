@@ -924,8 +924,9 @@ window.addEventListener('DOMContentLoaded', () => {
       return null;
     }).filter(Boolean);
     state.itemSynonyms = map;
+    console.log('[btnSaveSynonyms] Saving synonyms:', map);
     await saveUserSettings('itemSynonyms', map);
-    alert('Synonyms saved. They will apply to new ingested data.');
+    alert(`Synonyms saved (${map.length} rules). They will apply to new ingested data. Current synonyms in memory:` + JSON.stringify(map));
   });
   qs('btnClearSynonyms')?.addEventListener('click', async () => {
     state.itemSynonyms = [];
@@ -4537,6 +4538,12 @@ function canonicalizeItemName(raw) {
   if (!raw) return '';
   let s = String(raw);
 
+  // Debug: Log what's coming in and what synonyms are available
+  const debugSynonyms = raw && (raw.toLowerCase().includes('tri') || raw.toLowerCase().includes('northern'));
+  if (debugSynonyms) {
+    console.log(`[canonicalizeItemName] Input: "${raw}", Synonyms loaded:`, state.itemSynonyms);
+  }
+
   // STEP 1: Normalize quotes and dashes first
   s = s.replace(/[\u2018\u2019\u2032]/g, "'").replace(/[\u201C\u201D\u2033]/g, '"').replace(/[\u2013\u2014]/g, '-');
 
@@ -4561,14 +4568,24 @@ function canonicalizeItemName(raw) {
 
   // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {
-    if (Array.isArray(state.itemSynonyms)) {
+    if (Array.isArray(state.itemSynonyms) && state.itemSynonyms.length > 0) {
+      const originalName = s;
       state.itemSynonyms.forEach(({from, to}) => {
         if (!from) return;
         const re = new RegExp(`\\b${escapeRegExp(from)}\\b`, 'gi');
+        const beforeReplace = s;
         s = s.replace(re, to);
+        if (s !== beforeReplace) {
+          console.log(`[canonicalizeItemName] Synonym applied: "${beforeReplace}" → "${s}" (rule: "${from}" => "${to}")`);
+        }
       });
+      if (s !== originalName) {
+        console.log(`[canonicalizeItemName] Final after synonyms: "${originalName}" → "${s}"`);
+      }
     }
-  } catch {}
+  } catch (e) {
+    console.warn('[canonicalizeItemName] Error applying synonyms:', e);
+  }
 
   // STEP 6: Handle hardcoded rebrands (keep these for specific compound names that synonyms might miss)
   s = s.replace(/\bTri[\-\s]?Color\s+River\s+Rock\b/gi, 'Northern River Rock')
