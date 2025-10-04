@@ -190,6 +190,38 @@ export function makeChart(canvas, labels, data, label='Series') {
         mode: 'index'
       },
       plugins: {
+        tooltip: {
+          enabled: true,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          titleFont: { size: 14, weight: 'bold' },
+          bodyFont: { size: 13 },
+          padding: 12,
+          displayColors: true,
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              if (context.parsed.y !== null) {
+                // Format large numbers with commas
+                const value = context.parsed.y;
+                const formatted = Math.abs(value) >= 1000
+                  ? value.toLocaleString('en-US', { maximumFractionDigits: 2 })
+                  : value.toFixed(2);
+                label += formatted;
+              }
+              return label;
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: label,
+          font: { size: 16, weight: 'bold' },
+          padding: { top: 10, bottom: 20 },
+          color: '#1F2937'
+        },
         legend: {
           display: true,
           labels: {
@@ -197,16 +229,6 @@ export function makeChart(canvas, labels, data, label='Series') {
             padding: 20,
             font: { size: 12, weight: '500' }
           }
-        },
-        tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#ffffff',
-          bodyColor: '#ffffff',
-          borderColor: '#3B82F6',
-          borderWidth: 1,
-          cornerRadius: 8,
-          displayColors: false,
-          callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` }
         }
       },
       scales: {
@@ -554,22 +576,41 @@ export function enableChartZoom(root=document) {
 }
 
 function openChartZoomModal(title, sourceCanvas) {
-  console.log('[openChartZoomModal] Called with title:', title, 'canvas:', sourceCanvas);
+  console.log('[openChartZoomModal] === FUNCTION START ===');
+  console.log('[openChartZoomModal] Title:', title);
+  console.log('[openChartZoomModal] Source canvas:', sourceCanvas);
+  console.log('[openChartZoomModal] Canvas ID:', sourceCanvas?.id);
 
   const modal = document.getElementById('chartZoomModal');
   const modalTitle = document.getElementById('chartZoomTitle');
   const modalCanvas = document.getElementById('chartZoomCanvas');
 
+  console.log('[openChartZoomModal] Modal elements check:', {
+    modal: !!modal,
+    modalTitle: !!modalTitle,
+    modalCanvas: !!modalCanvas,
+    sourceCanvas: !!sourceCanvas,
+    modalDisplay: modal?.style?.display,
+    modalClasses: modal?.classList?.toString()
+  });
+
   if (!modal || !modalCanvas || !modalTitle || !sourceCanvas) {
-    console.warn('[openChartZoomModal] Missing elements:', { modal: !!modal, modalTitle: !!modalTitle, modalCanvas: !!modalCanvas, sourceCanvas: !!sourceCanvas });
+    const msg = 'Missing required elements for zoom modal';
+    console.error('[openChartZoomModal]', msg);
+    alert(msg);
     return;
   }
 
   // Get the Chart.js instance from the source canvas
-  const sourceChart = window.Chart.getChart(sourceCanvas);
-  console.log('[openChartZoomModal] Source chart:', sourceChart);
+  const sourceChart = window.Chart?.getChart(sourceCanvas);
+  console.log('[openChartZoomModal] Chart.js available:', !!window.Chart);
+  console.log('[openChartZoomModal] Source chart instance:', sourceChart);
+  console.log('[openChartZoomModal] Source chart type:', sourceChart?.config?.type);
+
   if (!sourceChart) {
-    console.warn('[openChartZoomModal] No Chart.js instance found on canvas');
+    const msg = 'No Chart.js instance found on canvas: ' + (sourceCanvas.id || 'unknown');
+    console.error('[openChartZoomModal]', msg);
+    alert(msg);
     return;
   }
 
@@ -618,15 +659,36 @@ function openChartZoomModal(title, sourceCanvas) {
     const ctx = modalCanvas.getContext('2d');
     zoomedChartInstance = new window.Chart(ctx, config);
 
-    // Show modal - ensure flex display is active
+    console.log('[openChartZoomModal] About to show modal...');
+
+    // Show modal - multiple approaches to ensure visibility
     modal.classList.remove('hidden');
     modal.style.display = 'flex';
-    console.log('[openChartZoomModal] Modal shown successfully', {
+    modal.style.visibility = 'visible';
+    modal.style.opacity = '1';
+
+    // Force a reflow to ensure styles are applied
+    void modal.offsetHeight;
+
+    const computedStyle = window.getComputedStyle(modal);
+    console.log('[openChartZoomModal] Modal shown - final state:', {
       classList: modal.classList.toString(),
-      display: modal.style.display
+      styleDisplay: modal.style.display,
+      computedDisplay: computedStyle.display,
+      computedVisibility: computedStyle.visibility,
+      computedOpacity: computedStyle.opacity,
+      computedZIndex: computedStyle.zIndex
     });
+
+    if (computedStyle.display === 'none') {
+      console.error('[openChartZoomModal] Modal still has display:none after showing!');
+      alert('Modal display issue detected. Check console for details.');
+    } else {
+      console.log('[openChartZoomModal] === MODAL SUCCESSFULLY DISPLAYED ===');
+    }
   } catch (error) {
     console.error('[openChartZoomModal] Error creating zoomed chart:', error);
+    console.error('[openChartZoomModal] Stack trace:', error.stack);
     alert('Unable to zoom chart: ' + error.message);
   }
 }
