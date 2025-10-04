@@ -661,11 +661,9 @@ function openChartZoomModal(title, sourceCanvas) {
 
     console.log('[openChartZoomModal] About to show modal...');
 
-    // Show modal - multiple approaches to ensure visibility
+    // Show modal using Tailwind classes (cleaner than inline styles)
     modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    modal.style.visibility = 'visible';
-    modal.style.opacity = '1';
+    modal.classList.add('flex');
 
     // Force a reflow to ensure styles are applied
     void modal.offsetHeight;
@@ -696,7 +694,7 @@ function openChartZoomModal(title, sourceCanvas) {
 function closeChartZoomModal() {
   const modal = document.getElementById('chartZoomModal');
   if (modal) {
-    modal.style.display = 'none';
+    modal.classList.remove('flex');
     modal.classList.add('hidden');
   }
 
