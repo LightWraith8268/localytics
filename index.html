@@ -490,7 +490,7 @@
     <!-- Desktop Layout Container -->
     <div class="lg:flex">
       <!-- Desktop Sidebar -->
-      <nav class="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden app-card border-r app-border no-print">
+      <nav class="hidden lg:flex lg:flex-col lg:fixed lg:left-0 lg:top-0 lg:w-64 lg:h-screen lg:overflow-hidden app-card border-r app-border no-print z-10">
         <!-- Sidebar Header - Fixed -->
         <div class="flex items-center gap-3 p-6 border-b app-border flex-shrink-0 app-card">
           <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -572,7 +572,7 @@
       </nav>
 
       <!-- Main Content -->
-      <main class="flex-1 min-h-screen overflow-x-hidden">
+      <main class="flex-1 min-h-screen overflow-x-hidden lg:ml-64">
         <div class="container mx-auto py-4 md:py-6 px-4 max-w-7xl">
       <!-- Upload View -->
       <section id="view-upload" class="view">
@@ -1525,8 +1525,10 @@
               <textarea id="itemSynonyms" rows="6" class="w-full border app-border rounded-md px-3 py-2 text-sm monospace" placeholder="Tri Color => Northern&#10;Tri-Color => Northern"></textarea>
               <div class="flex flex-col sm:flex-row gap-2">
                 <button id="btnSaveSynonyms" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Synonyms</button>
+                <button id="btnReapplySynonyms" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">Reapply to Current Data</button>
                 <button id="btnClearSynonyms" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear Synonyms</button>
               </div>
+              <p class="text-xs text-gray-500">💡 Tip: After saving synonyms, click "Reapply to Current Data" to update existing data without re-uploading.</p>
             </div>
           </div>
 

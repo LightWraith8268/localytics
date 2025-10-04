@@ -246,9 +246,14 @@ window.addEventListener('DOMContentLoaded', () => {
         if (synonymsTextarea) synonymsTextarea.value = syn.map(p => `${p.from} => ${p.to}`).join('\n');
       } else {
         // Default include Tri Color => Northern
+        const defaultSynonyms = [
+          { from: 'Tri Color', to: 'Northern' },
+          { from: 'Tri-Color', to: 'Northern' }
+        ];
+        state.itemSynonyms = defaultSynonyms;
         const synonymsTextarea = document.getElementById('itemSynonyms');
         if (synonymsTextarea && !synonymsTextarea.value.trim()) {
-          synonymsTextarea.value = 'Tri Color => Northern\nTri-Color => Northern';
+          synonymsTextarea.value = defaultSynonyms.map(p => `${p.from} => ${p.to}`).join('\n');
         }
       }
     } catch (e) { console.warn('Failed to load allowed items settings:', e); }
@@ -933,6 +938,39 @@ window.addEventListener('DOMContentLoaded', () => {
     const ta = document.getElementById('itemSynonyms'); if (ta) ta.value = '';
     await saveUserSettings('itemSynonyms', []);
   });
+
+  // Reapply synonyms to existing data
+  qs('btnReapplySynonyms')?.addEventListener('click', async () => {
+    if (!state.rows || state.rows.length === 0) {
+      alert('No data loaded. Please upload a CSV file first.');
+      return;
+    }
+
+    console.log(`[btnReapplySynonyms] Reapplying ${state.itemSynonyms.length} synonym rules to ${state.rows.length} rows`);
+
+    // Reprocess all rows to update __item with current synonyms
+    state.rows = state.rows.map(row => {
+      const itemCol = state.mapping.item;
+      const originalName = row[itemCol] || '';
+      const canonicalizedName = canonicalizeItemName(originalName);
+      return {
+        ...row,
+        __item: canonicalizedName
+      };
+    });
+
+    // Recompute reports with updated data
+    state.report = computeReport(state.rows, state.mapping);
+
+    // Save updated data
+    await saveCsvData(state.rows);
+
+    // Refresh current view
+    route();
+
+    alert(`Synonyms reapplied! Processed ${state.rows.length} rows with ${state.itemSynonyms.length} synonym rules.`);
+  });
+
   // Print: ensure canvases are printable
   window.addEventListener('beforeprint', freezeChartsForPrint);
   window.addEventListener('afterprint', restoreChartsAfterPrint);

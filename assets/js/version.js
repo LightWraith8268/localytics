@@ -11,19 +11,19 @@ async function loadVersionConfig() {
     return versionConfig;
   } catch (error) {
     console.warn('Failed to load version config, using fallback:', error);
-    versionConfig = { version: '1.16.8', timestamp: '20251003' };
+    versionConfig = { version: '1.16.9', timestamp: '20251004' };
     return versionConfig;
   }
 }
 
 // Get version immediately (for synchronous use)
 function getVersion() {
-  return versionConfig?.version || '1.16.8';
+  return versionConfig?.version || '1.16.9';
 }
 
 // Get timestamp immediately (for synchronous use)
 function getTimestamp() {
-  return versionConfig?.timestamp || '20251003';
+  return versionConfig?.timestamp || '20251004';
 }
 
 // Get service worker version format
