@@ -231,22 +231,7 @@ export function makeChart(canvas, labels, data, label='Series') {
           }
         },
         datalabels: {
-          display: labels.length <= 15, // Only show labels when 15 or fewer data points
-          align: 'top',
-          anchor: 'end',
-          offset: -4,
-          clamp: true,
-          color: '#1F2937',
-          font: {
-            size: 10,
-            weight: 'bold'
-          },
-          formatter: (value) => {
-            if (value === null || value === undefined) return '';
-            return Math.abs(value) >= 1000
-              ? value.toLocaleString('en-US', { maximumFractionDigits: 0 })
-              : value.toFixed(0);
-          }
+          display: false // Disabled - causing chart height issues
         }
       },
       scales: {
@@ -331,22 +316,7 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
           }
         },
         datalabels: {
-          display: labels.length <= 20, // Show labels when 20 or fewer bars
-          align: isHorizontal ? 'end' : 'top',
-          anchor: isHorizontal ? 'end' : 'end',
-          offset: isHorizontal ? 4 : -4,
-          clamp: true,
-          color: '#1F2937',
-          font: {
-            size: 10,
-            weight: 'bold'
-          },
-          formatter: (value) => {
-            if (value === null || value === undefined) return '';
-            return Math.abs(value) >= 1000
-              ? value.toLocaleString('en-US', { maximumFractionDigits: 0 })
-              : value.toFixed(0);
-          }
+          display: false // Disabled - causing chart height issues
         },
         tooltip: {
           enabled: true,
