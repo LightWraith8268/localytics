@@ -71,6 +71,7 @@ function applyHourOffset(hour) {
 
 let categoryMapDraft = {};
 let previousBodyOverflow = '';
+let pendingCategoryMapSync = false;
 
 
 
@@ -241,6 +242,12 @@ window.addEventListener('DOMContentLoaded', () => {
       console.warn('Failed to load categoryMap settings:', e);
     }
     updateCategoryMapSummary();
+    if (state.categoryMap && Object.keys(state.categoryMap).length && (state.rows?.length || pendingCategoryMapSync)) {
+      const changed = applyCategoryMapToExistingRows();
+      if (changed) {
+        pendingCategoryMapSync = false;
+      }
+    }
     // Filters should start blank by default - users can manually apply filters as needed
     // Keep this line commented to prevent auto-loading filters from previous sessions
     // try { const f = await loadUserSettings('filters'); if (f) { state.filters = { ...DEFAULT_FILTERS, ...f }; restoreFilterUI(); } } catch (e) { console.warn('Failed to load filters settings:', e); }
@@ -457,6 +464,41 @@ window.addEventListener('DOMContentLoaded', () => {
     if (lbl) lbl.textContent = text || `${percent}%`;
   };
 
+  function applyCategoryMapToExistingRows({ rows = state.rows, recompute = true } = {}) {
+    if (!rows || !rows.length) return false;
+    const map = state.categoryMap;
+    if (!map || typeof map !== 'object' || !Object.keys(map).length) {
+      return false;
+    }
+
+    const itemCol = state.mapping?.item;
+    const categoryCol = state.mapping?.category;
+    let changed = false;
+
+    rows.forEach((row) => {
+      if (!row) return;
+      const rawNameSource = itemCol ? (row[itemCol] ?? row.__itemRaw ?? row.__item) : (row.__itemRaw ?? row.__item);
+      const rawName = rawNameSource != null ? String(rawNameSource) : '';
+      const canon = canonicalizeItemName(rawName);
+      const manualCat = map[rawName] || map[canon] || '';
+      const csvCat = categoryCol ? (row[categoryCol] || '') : '';
+      const newCategory = (manualCat || csvCat || '').toString().trim() || 'Uncategorized';
+      if (row.__category !== newCategory) {
+        row.__category = newCategory;
+        changed = true;
+      }
+    });
+
+    if (changed && recompute) {
+      state.rows = rows;
+      state.report = computeReport(state.rows, state.mapping);
+      renderReport();
+      updateCategoryMapSummary();
+    }
+
+    return changed;
+  }
+
   async function reapplyCategoryMap() {
     if (!state.rows.length) {
       state.report = computeReport(state.rows, state.mapping);
@@ -474,6 +516,7 @@ window.addEventListener('DOMContentLoaded', () => {
       state.rawInspector.rows = normalized;
       state.rawInspector.lastLoaded = Date.now();
       state.rawInspector.error = null;
+      pendingCategoryMapSync = false;
       state.report = computeReport(state.rows, state.mapping);
       renderReport();
       updateCategoryMapSummary();
@@ -528,6 +571,14 @@ window.addEventListener('DOMContentLoaded', () => {
     state.rawInspector.rows = normalized;
     state.rawInspector.lastLoaded = Date.now();
     state.rawInspector.error = null;
+
+    const hasCategoryMap = state.categoryMap && Object.keys(state.categoryMap).length > 0;
+    if (hasCategoryMap) {
+      applyCategoryMapToExistingRows({ rows: normalized, recompute: false });
+      pendingCategoryMapSync = false;
+    } else {
+      pendingCategoryMapSync = true;
+    }
 
     // DEBUG: Expose state to window for console inspection
     window.APP_STATE = state;
