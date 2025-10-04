@@ -4433,6 +4433,11 @@ function normalizeAndDedupe(rows, mapping) {
   let rowIndex = 0;
   for (const r of rows) {
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
+    const clientValue = clientCol ? String(r[clientCol] ?? '').trim() : '';
+
+    // Filter out Windsor Cash from all processing
+    if (clientValue === 'Windsor Cash') continue;
+
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
     const canonName = canonicalizeItemName(name);
     const q = num(r[qtyCol]);
@@ -4515,6 +4520,11 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
+    const clientValue = clientCol ? String(r[clientCol] ?? '').trim() : '';
+
+    // Filter out Windsor Cash from all processing
+    if (clientValue === 'Windsor Cash') continue;
+
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
     const canonName = canonicalizeItemName(name);
     const q = num(r[qtyCol]);
@@ -4801,13 +4811,54 @@ function renderTrendAnalysisCharts(labels, revenueData, qtyData) {
 }
 
 function renderTimePatternCharts() {
-  // Day of week and hour analysis would require processing the raw data
-  // For now, create placeholder charts
-  const dowLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  const dowData = [100, 120, 110, 130, 140, 90, 80]; // Placeholder data
+  const allData = state.rows;
+
+  // Day of week analysis
+  const dowMap = new Map();
+  for (const r of allData) {
+    if (r.__client === 'Windsor Cash') continue; // Filter out Windsor Cash
+    const dow = r.__dow;
+    if (dow !== null && dow !== undefined) {
+      const existing = dowMap.get(dow) || { sum: 0, count: 0 };
+      existing.sum += Number(r.__revenue || 0);
+      existing.count++;
+      dowMap.set(dow, existing);
+    }
+  }
+
+  const dowLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dowData = dowLabels.map((_, i) => {
+    const data = dowMap.get(i);
+    return data && data.count > 0 ? data.sum / data.count : 0;
+  });
 
   if (state.chartDowRevenue) state.chartDowRevenue.destroy();
   state.chartDowRevenue = makeBarChart(document.getElementById('trends-chart-dow-revenue'), dowLabels, dowData, 'Avg Revenue by Day of Week');
+
+  // Hour of day analysis (business hours 7am-5pm)
+  const businessHourStart = 7;
+  const businessHourEnd = 17;
+  const businessHours = businessHourEnd - businessHourStart + 1;
+  const hourAgg = new Array(businessHours).fill(0);
+
+  for (const r of allData) {
+    if (r.__client === 'Windsor Cash') continue; // Filter out Windsor Cash
+    const h = r.__hour;
+    if (h >= businessHourStart && h <= businessHourEnd) {
+      const index = h - businessHourStart;
+      hourAgg[index] += Number(r.__revenue || 0);
+    }
+  }
+
+  const hourLabels = Array.from({length: businessHours}, (_, i) => {
+    const hour = businessHourStart + i;
+    const period = hour < 12 ? 'AM' : 'PM';
+    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
+    return `${displayHour}${period}`;
+  });
+
+  if (state.chartHourRevenue) state.chartHourRevenue.destroy();
+  state.chartHourRevenue = makeBarChart(document.getElementById('trends-chart-hour-revenue'), hourLabels, hourAgg, 'Revenue (Business Hours)');
 }
 
 function renderProfitabilityCharts() {

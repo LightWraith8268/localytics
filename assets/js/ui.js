@@ -229,9 +229,6 @@ export function makeChart(canvas, labels, data, label='Series') {
             padding: 20,
             font: { size: 12, weight: '500' }
           }
-        },
-        datalabels: {
-          display: false // Disabled - causing chart height issues
         }
       },
       scales: {
@@ -242,7 +239,7 @@ export function makeChart(canvas, labels, data, label='Series') {
           },
           ticks: {
             color: '#6B7280',
-            font: { size: 11 }
+            font: { size: 13, weight: '500' }
           }
         },
         y: {
@@ -315,9 +312,6 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             font: { size: 12, weight: '500' }
           }
         },
-        datalabels: {
-          display: false // Disabled - causing chart height issues
-        },
         tooltip: {
           enabled: true,
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
@@ -353,15 +347,9 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
-            callback: isHorizontal
-              ? (v) => formatNumberTwo(v)
-              : function(value, index, ticks) {
-                  // Truncate long labels for vertical bars
-                  const label = this.getLabelForValue(value);
-                  return label.length > 20 ? label.substring(0, 17) + '...' : label;
-                },
+            callback: isHorizontal ? (v) => formatNumberTwo(v) : undefined,
             color: '#6B7280',
-            font: { size: 11 },
+            font: { size: 13, weight: '500' },
             maxRotation: isHorizontal ? 0 : 45,
             minRotation: isHorizontal ? 0 : 0,
             autoSkip: false, // Show all labels, don't skip
@@ -375,15 +363,9 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
-            callback: !isHorizontal
-              ? (v) => formatNumberTwo(v)
-              : function(value, index, ticks) {
-                  // Truncate long labels for horizontal bars
-                  const label = this.getLabelForValue(value);
-                  return label.length > 30 ? label.substring(0, 27) + '...' : label;
-                },
+            callback: !isHorizontal ? (v) => formatNumberTwo(v) : undefined,
             color: '#6B7280',
-            font: { size: 11 },
+            font: { size: 13, weight: '500' },
             autoSkip: false // Show all labels for horizontal bars
           }
         }
@@ -477,7 +459,7 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
           },
           ticks: {
             color: '#6B7280',
-            font: { size: 11 }
+            font: { size: 13, weight: '500' }
           }
         },
         y: {
