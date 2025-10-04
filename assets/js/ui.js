@@ -618,9 +618,13 @@ function openChartZoomModal(title, sourceCanvas) {
     const ctx = modalCanvas.getContext('2d');
     zoomedChartInstance = new window.Chart(ctx, config);
 
-    // Show modal
+    // Show modal - ensure flex display is active
     modal.classList.remove('hidden');
-    console.log('[openChartZoomModal] Modal shown successfully');
+    modal.style.display = 'flex';
+    console.log('[openChartZoomModal] Modal shown successfully', {
+      classList: modal.classList.toString(),
+      display: modal.style.display
+    });
   } catch (error) {
     console.error('[openChartZoomModal] Error creating zoomed chart:', error);
     alert('Unable to zoom chart: ' + error.message);
@@ -630,6 +634,7 @@ function openChartZoomModal(title, sourceCanvas) {
 function closeChartZoomModal() {
   const modal = document.getElementById('chartZoomModal');
   if (modal) {
+    modal.style.display = 'none';
     modal.classList.add('hidden');
   }
 

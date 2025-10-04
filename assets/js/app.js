@@ -4775,15 +4775,30 @@ function renderTimePatternCharts() {
 function renderProfitabilityCharts() {
   if (!state.report) return;
 
-  const labels = state.report.byDate.map(r => r.date);
-  const profitData = state.report.byDate.map(r => r.profit || (r.revenue - (r.cost || 0)));
-  const marginData = state.report.byDate.map(r => r.margin || 0);
+  // Aggregate by month
+  const monthlyData = new Map();
+  state.report.byDate.forEach(r => {
+    const monthKey = r.date.substring(0, 7); // Extract YYYY-MM
+    const existing = monthlyData.get(monthKey) || { revenue: 0, cost: 0, profit: 0, count: 0 };
+    existing.revenue += r.revenue;
+    existing.cost += (r.cost || 0);
+    existing.profit += (r.profit || (r.revenue - (r.cost || 0)));
+    existing.count++;
+    monthlyData.set(monthKey, existing);
+  });
+
+  const labels = Array.from(monthlyData.keys()).sort();
+  const profitData = labels.map(l => monthlyData.get(l).profit);
+  const marginData = labels.map(l => {
+    const d = monthlyData.get(l);
+    return d.revenue > 0 ? ((d.revenue - d.cost) / d.revenue * 100) : 0;
+  });
 
   if (state.chartProfit) state.chartProfit.destroy();
   if (state.chartMargin) state.chartMargin.destroy();
 
-  state.chartProfit = makeChart(document.getElementById('analytics-chart-profit'), labels, profitData, 'Profit by Date');
-  state.chartMargin = makeChart(document.getElementById('analytics-chart-margin'), labels, marginData, 'Margin % by Date');
+  state.chartProfit = makeChart(document.getElementById('analytics-chart-profit'), labels, profitData, 'Profit by Month');
+  state.chartMargin = makeChart(document.getElementById('analytics-chart-margin'), labels, marginData, 'Margin % by Month');
 
   // AOV and IPO would require order-level calculations
   const aovData = labels.map(() => Math.random() * 100 + 50); // Placeholder
