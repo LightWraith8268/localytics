@@ -378,6 +378,7 @@
     <!-- Critical vendor libraries - loaded in head to ensure availability before modules -->
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
   <body class="overflow-x-hidden">
@@ -1105,16 +1106,16 @@
             <h4 class="text-base font-medium text-blue-800 mb-4 border-b border-blue-200 pb-2">📊 Core Time Series</h4>
             <div>
               <h3 class="text-sm font-semibold mb-2">Revenue by Date</h3>
-              <div class="h-64"><canvas id="trends-chart-revenue" data-zoom="1"></canvas></div>
+              <div class="h-96"><canvas id="trends-chart-revenue" data-zoom="1"></canvas></div>
             </div>
             <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h3 class="text-sm font-semibold mb-2">Quantity by Date</h3>
-                <div class="h-64"><canvas id="trends-chart-qty" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-qty" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Orders by Date</h3>
-                <div class="h-64"><canvas id="trends-chart-orders" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-orders" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>
@@ -1125,27 +1126,27 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h3 class="text-sm font-semibold mb-2">Rolling 7-day Avg Revenue</h3>
-                <div class="h-64"><canvas id="trends-chart-rev-rolling" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-rev-rolling" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">7-day Rolling Quantity</h3>
-                <div class="h-64"><canvas id="trends-chart-qty-rolling" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-qty-rolling" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">30-day Rolling Revenue</h3>
-                <div class="h-64"><canvas id="trends-chart-rev-rolling-30" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-rev-rolling-30" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Revenue Month-over-Month Change %</h3>
-                <div class="h-64"><canvas id="trends-chart-rev-mom" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-rev-mom" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
-                <div class="h-64"><canvas id="trends-chart-rev-yoy" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-rev-yoy" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
-                <div class="h-64"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>
@@ -1156,11 +1157,11 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h3 class="text-sm font-semibold mb-2">Average Revenue by Day of Week</h3>
-                <div class="h-64"><canvas id="trends-chart-dow-revenue" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-dow-revenue" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Revenue by Hour of Day</h3>
-                <div class="h-64"><canvas id="trends-chart-hour-revenue" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="trends-chart-hour-revenue" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>
@@ -1183,11 +1184,11 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h3 class="text-sm font-semibold mb-2">Top Items by Revenue</h3>
-                <div class="h-64"><canvas id="analytics-chart-top-items" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-top-items" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Top Clients by Revenue</h3>
-                <div class="h-64"><canvas id="analytics-chart-top-clients" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-top-clients" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>
@@ -1198,19 +1199,19 @@
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h3 class="text-sm font-semibold mb-2">Profit by Date</h3>
-                <div class="h-64"><canvas id="analytics-chart-profit" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-profit" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Margin % by Date</h3>
-                <div class="h-64"><canvas id="analytics-chart-margin" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-margin" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Average Order Value (AOV)</h3>
-                <div class="h-64"><canvas id="analytics-chart-aov" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-aov" data-zoom="1"></canvas></div>
               </div>
               <div>
                 <h3 class="text-sm font-semibold mb-2">Items per Order</h3>
-                <div class="h-64"><canvas id="analytics-chart-ipo" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-ipo" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>
@@ -1219,9 +1220,9 @@
           <div class="mt-8">
             <h4 class="text-base font-medium text-red-800 mb-4 border-b border-red-200 pb-2">👥 Segment Analysis</h4>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <div>
+              <div class="lg:col-span-2">
                 <h3 class="text-sm font-semibold mb-2">Category Share</h3>
-                <div class="h-64"><canvas id="analytics-chart-category-share" data-zoom="1"></canvas></div>
+                <div class="h-96"><canvas id="analytics-chart-category-share" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>

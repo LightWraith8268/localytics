@@ -11,14 +11,14 @@ async function loadVersionConfig() {
     return versionConfig;
   } catch (error) {
     console.warn('Failed to load version config, using fallback:', error);
-    versionConfig = { version: '1.17.5', timestamp: '20251004' };
+    versionConfig = { version: '1.17.6', timestamp: '20251004' };
     return versionConfig;
   }
 }
 
 // Get version immediately (for synchronous use)
 function getVersion() {
-  return versionConfig?.version || '1.17.5';
+  return versionConfig?.version || '1.17.6';
 }
 
 // Get timestamp immediately (for synchronous use)

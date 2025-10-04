@@ -1424,14 +1424,23 @@ function renderReport() {
   const businessHourEnd = 17;
   const businessHours = businessHourEnd - businessHourStart + 1; // 11 hours
   const hourAgg = new Array(businessHours).fill(0);
+  let rowsWithHour = 0;
 
   for (const r of allData) {
     const h = (r.__hour ?? -1);
+    if (h !== -1 && h !== null && h !== undefined) rowsWithHour++;
     if (h >= businessHourStart && h <= businessHourEnd) {
       const index = h - businessHourStart;
       hourAgg[index] += Number(r.__revenue || 0);
     }
   }
+
+  console.log('[renderReport] Hour chart data:', {
+    totalRows: allData.length,
+    rowsWithHour,
+    businessHours: hourAgg,
+    sampleRows: allData.slice(0, 3).map(r => ({ __hour: r.__hour, __revenue: r.__revenue }))
+  });
 
   const hourLabels = Array.from({length: businessHours}, (_, i) => {
     const hour = businessHourStart + i;
@@ -1442,7 +1451,12 @@ function renderReport() {
 
   if (state.chartHourRevenue) { state.chartHourRevenue.destroy(); state.chartHourRevenue = null; }
   const chartHour = document.getElementById('trends-chart-hour-revenue');
-  if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v => Number(v.toFixed(2))), 'Revenue (Business Hours)');
+  if (chartHour) {
+    state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v => Number(v.toFixed(2))), 'Revenue (Business Hours)');
+    console.log('[renderReport] Hour chart created:', !!state.chartHourRevenue);
+  } else {
+    console.warn('[renderReport] Hour chart canvas not found');
+  }
 
   // YoY change (monthly)
   const yoy = monthYearOverYearChange(month);
@@ -1450,11 +1464,17 @@ function renderReport() {
   const chartYoy = document.getElementById('chart-rev-yoy'); if (chartYoy) state.chartRevYoy = makeChart(chartYoy, yoy.labels, yoy.values, 'YoY Change %');
 
   // Category trend by month (stacked)
-  const catTrendCanvas = document.getElementById('chart-cat-trend');
+  const catTrendCanvas = document.getElementById('trends-chart-cat-trend');
   if (catTrendCanvas && state.byCategory && state.byCategory.length) {
     if (state.chartCatTrend) { state.chartCatTrend.destroy(); state.chartCatTrend = null; }
     const catTrend = aggregateByCategoryOverTime(allData, state.mapping, 'month', 'revenue', 8);
+    console.log('[renderReport] Category trend data:', catTrend);
     state.chartCatTrend = makeStackedBarChart(catTrendCanvas, catTrend.labels, catTrend.datasets);
+  } else {
+    console.warn('[renderReport] Category trend chart skipped:', {
+      canvas: !!catTrendCanvas,
+      byCategory: state.byCategory?.length || 0
+    });
   }
 
   // Enable click-to-zoom on charts

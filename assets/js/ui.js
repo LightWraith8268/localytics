@@ -229,6 +229,22 @@ export function makeChart(canvas, labels, data, label='Series') {
             padding: 20,
             font: { size: 12, weight: '500' }
           }
+        },
+        datalabels: {
+          display: labels.length <= 15, // Only show labels when 15 or fewer data points
+          align: 'top',
+          anchor: 'end',
+          color: '#1F2937',
+          font: {
+            size: 10,
+            weight: 'bold'
+          },
+          formatter: (value) => {
+            if (value === null || value === undefined) return '';
+            return Math.abs(value) >= 1000
+              ? value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+              : value.toFixed(0);
+          }
         }
       },
       scales: {
@@ -311,6 +327,23 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             padding: 20,
             font: { size: 12, weight: '500' }
           }
+        },
+        datalabels: {
+          display: labels.length <= 20, // Show labels when 20 or fewer bars
+          align: isHorizontal ? 'end' : 'top',
+          anchor: isHorizontal ? 'end' : 'end',
+          color: '#1F2937',
+          font: {
+            size: 10,
+            weight: 'bold'
+          },
+          formatter: (value) => {
+            if (value === null || value === undefined) return '';
+            return Math.abs(value) >= 1000
+              ? value.toLocaleString('en-US', { maximumFractionDigits: 0 })
+              : value.toFixed(0);
+          },
+          offset: isHorizontal ? 4 : 0
         },
         tooltip: {
           enabled: true,
