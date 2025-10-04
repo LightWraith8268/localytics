@@ -295,10 +295,10 @@ window.addEventListener('DOMContentLoaded', () => {
           uploadStatus.textContent = `${storedData.rowCount} rows loaded from ${uploadedDate}`;
         }
 
-        // Generate reports from ALL data (filters are display-level only)
-        state.report = computeReport(state.rows, state.mapping);
-        renderReport();
-        updateCategoryMapSummary();
+        // Reapply categoryMap to ensure categories reflect current mappings
+        // (stored rows have old __category values from when they were saved)
+        console.log('[app] Reapplying categoryMap after loading CSV data...');
+        await reapplyCategoryMap();
       } else {
         // No stored data, load sample data for demo (but only after checking demo state)
         try {
@@ -1424,7 +1424,7 @@ function renderReport() {
   for (const r of allData) { const h = (r.__hour ?? -1); if (h>=0) hourAgg[h] += Number(r.__revenue||0); }
   const hourLabels = Array.from({length:24},(_,i)=> i.toString().padStart(2,'0'));
   if (state.chartHourRevenue) { state.chartHourRevenue.destroy(); state.chartHourRevenue = null; }
-  const chartHour = document.getElementById('chart-hour-revenue'); if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
+  const chartHour = document.getElementById('trends-chart-hour-revenue'); if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
 
   // YoY change (monthly)
   const yoy = monthYearOverYearChange(month);
