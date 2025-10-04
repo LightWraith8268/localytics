@@ -487,10 +487,8 @@
       </div>
     </nav>
 
-    <!-- Desktop Layout Container -->
-    <div>
-      <!-- Desktop Sidebar -->
-      <nav class="hidden lg:flex lg:flex-col lg:fixed lg:left-0 lg:top-0 lg:w-64 lg:h-screen lg:overflow-hidden app-card border-r app-border no-print z-10">
+    <!-- Desktop Sidebar (fixed, outside main flow) -->
+    <nav class="hidden lg:flex lg:flex-col lg:fixed lg:left-0 lg:top-0 lg:w-64 lg:h-screen lg:overflow-hidden app-card border-r app-border no-print z-10">
         <!-- Sidebar Header - Fixed -->
         <div class="flex items-center gap-3 p-6 border-b app-border flex-shrink-0 app-card">
           <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -1536,7 +1534,6 @@
       </section>
         </div>
       </main>
-    </div>
 
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
