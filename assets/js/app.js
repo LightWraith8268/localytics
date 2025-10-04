@@ -4736,7 +4736,6 @@ function normalizeAndDedupe(rows, mapping) {
     }
 
     const obj = { ...r };
-    if (dateCol) obj[dateCol] = pretty; // replace display date
     obj.__dateRaw = originalDateVal;
     obj.__datePretty = pretty;
     obj.__dateIso = iso || '';
@@ -4755,6 +4754,7 @@ function normalizeAndDedupe(rows, mapping) {
     obj.__order = order || 'undefined';
     obj.__orderRaw = rawOrderVal != null ? String(rawOrderVal) : '';
     obj.__itemRaw = rawItemVal != null ? String(rawItemVal) : '';
+    obj.__item = canonName;
     obj.__client = clientCol ? (r[clientCol] || 'undefined') : 'undefined';
     obj.__staff = staffCol ? (r[staffCol] || 'undefined') : 'undefined';
     // Category: manual mapping overrides CSV
@@ -4828,7 +4828,6 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     }
 
     const obj = { ...r };
-    if (dateCol) obj[dateCol] = pretty;
     obj.__dateRaw = originalDateVal;
     obj.__datePretty = pretty;
     obj.__item = canonName; // Store canonicalized item name for synonym support
