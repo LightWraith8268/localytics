@@ -185,14 +185,6 @@ export function makeChart(canvas, labels, data, label='Series') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      layout: {
-        padding: {
-          top: 25, // Space for data labels above points
-          right: 10,
-          bottom: 0,
-          left: 10
-        }
-      },
       interaction: {
         intersect: false,
         mode: 'index'
@@ -242,6 +234,8 @@ export function makeChart(canvas, labels, data, label='Series') {
           display: labels.length <= 15, // Only show labels when 15 or fewer data points
           align: 'top',
           anchor: 'end',
+          offset: -4,
+          clamp: true,
           color: '#1F2937',
           font: {
             size: 10,
@@ -316,14 +310,6 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
       indexAxis: opts.indexAxis || 'x',
       responsive: true,
       maintainAspectRatio: false,
-      layout: {
-        padding: {
-          top: isHorizontal ? 5 : 25, // More top space for vertical bars with labels
-          right: isHorizontal ? 30 : 10, // More right space for horizontal bars with labels
-          bottom: 0,
-          left: 10
-        }
-      },
       interaction: {
         intersect: false,
         mode: 'index'
@@ -348,6 +334,8 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
           display: labels.length <= 20, // Show labels when 20 or fewer bars
           align: isHorizontal ? 'end' : 'top',
           anchor: isHorizontal ? 'end' : 'end',
+          offset: isHorizontal ? 4 : -4,
+          clamp: true,
           color: '#1F2937',
           font: {
             size: 10,
@@ -358,8 +346,7 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             return Math.abs(value) >= 1000
               ? value.toLocaleString('en-US', { maximumFractionDigits: 0 })
               : value.toFixed(0);
-          },
-          offset: isHorizontal ? 4 : 0
+          }
         },
         tooltip: {
           enabled: true,
