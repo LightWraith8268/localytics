@@ -1355,12 +1355,14 @@ function renderReport() {
   }
   renderTable(qs('table-order-main'), ['order','date','client','staff','quantity','revenue','cost','profit','margin'], state.byOrder);
   if (state.chartTopClients) { state.chartTopClients.destroy(); state.chartTopClients = null; }
-  const topClients = state.byClient.slice(0, 10);
+  // Filter Windsor Cash from chart display (but keep in totals)
+  const topClients = state.byClient.filter(c => c.label !== 'Windsor Cash').slice(0, 10);
   state.chartTopClients = makeBarChart(document.getElementById('chart-top-clients'), topClients.map(x=>x.label), topClients.map(x=>x.revenue), 'Top Clients by Revenue');
 
   // Additional summary charts
   try {
-    const byClientTop = state.byClient.slice(0, 10);
+    // Filter Windsor Cash from chart display (but keep in totals)
+    const byClientTop = state.byClient.filter(c => c.label !== 'Windsor Cash').slice(0, 10);
     const byStaffTop = state.byStaff.slice(0, 10);
     const byOrderTop = state.byOrder.slice(0, 10);
     const cClient = document.getElementById('chart-by-client');
@@ -4433,11 +4435,6 @@ function normalizeAndDedupe(rows, mapping) {
   let rowIndex = 0;
   for (const r of rows) {
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
-    const clientValue = clientCol ? String(r[clientCol] ?? '').trim() : '';
-
-    // Filter out Windsor Cash from all processing
-    if (clientValue === 'Windsor Cash') continue;
-
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
     const canonName = canonicalizeItemName(name);
     const q = num(r[qtyCol]);
@@ -4520,11 +4517,6 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
     const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
-    const clientValue = clientCol ? String(r[clientCol] ?? '').trim() : '';
-
-    // Filter out Windsor Cash from all processing
-    if (clientValue === 'Windsor Cash') continue;
-
     const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
     const canonName = canonicalizeItemName(name);
     const q = num(r[qtyCol]);
@@ -4761,7 +4753,8 @@ function renderAnalyticsCharts() {
 
   // Top Rankings
   const topItems = state.report.byItem.slice(0, 10);
-  const topClients = state.byClient ? state.byClient.slice(0, 10) : [];
+  // Filter Windsor Cash from chart display (but keep in totals)
+  const topClients = state.byClient ? state.byClient.filter(c => c.label !== 'Windsor Cash').slice(0, 10) : [];
 
   console.log('Rendering analytics charts:', { topItemsCount: topItems.length, topClientsCount: topClients.length });
 
