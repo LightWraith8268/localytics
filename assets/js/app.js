@@ -845,16 +845,6 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Close snapshot viewer modal on ESC key
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      const modal = qs('snapshotViewerModal');
-      if (modal && !modal.classList.contains('hidden')) {
-        modal.style.display = 'none';
-        modal.classList.add('hidden');
-      }
-    }
-  });
 
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
@@ -1155,11 +1145,33 @@ window.addEventListener('DOMContentLoaded', () => {
     console.warn('[app] categoryMapModalBackdrop not found in DOM');
   }
 
-  document.addEventListener('keydown', (evt) => {
-    if (evt.key === 'Escape') {
-      const modal = qs('categoryMapModal');
-      if (modal && !modal.classList.contains('hidden')) {
+  // Global ESC key handler for all modals
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      // Check modals in priority order (most specific to least specific)
+
+      // Chart zoom modal (imported from ui.js)
+      const chartZoomModal = document.getElementById('chartZoomModal');
+      if (chartZoomModal && !chartZoomModal.classList.contains('hidden')) {
+        // Call the close function from ui.js
+        const closeEvent = new CustomEvent('closeChartZoom');
+        document.dispatchEvent(closeEvent);
+        return;
+      }
+
+      // Snapshot viewer modal
+      const snapshotModal = qs('snapshotViewerModal');
+      if (snapshotModal && !snapshotModal.classList.contains('hidden')) {
+        snapshotModal.style.display = 'none';
+        snapshotModal.classList.add('hidden');
+        return;
+      }
+
+      // Category map modal
+      const categoryModal = qs('categoryMapModal');
+      if (categoryModal && !categoryModal.classList.contains('hidden')) {
         closeCategoryMapModal();
+        return;
       }
     }
   });
