@@ -1419,12 +1419,30 @@ function renderReport() {
   if (state.chartDowRevenue) { state.chartDowRevenue.destroy(); state.chartDowRevenue = null; }
   const chartDow = document.getElementById('chart-dow-revenue'); if (chartDow) state.chartDowRevenue = makeBarChart(chartDow, dowLabels, dowValues, 'Avg Revenue');
 
-  // Hour-of-day revenue (sum)
-  const hourAgg = new Array(24).fill(0);
-  for (const r of allData) { const h = (r.__hour ?? -1); if (h>=0) hourAgg[h] += Number(r.__revenue||0); }
-  const hourLabels = Array.from({length:24},(_,i)=> i.toString().padStart(2,'0'));
+  // Hour-of-day revenue (sum) - business hours only (7am-5pm)
+  const businessHourStart = 7;
+  const businessHourEnd = 17;
+  const businessHours = businessHourEnd - businessHourStart + 1; // 11 hours
+  const hourAgg = new Array(businessHours).fill(0);
+
+  for (const r of allData) {
+    const h = (r.__hour ?? -1);
+    if (h >= businessHourStart && h <= businessHourEnd) {
+      const index = h - businessHourStart;
+      hourAgg[index] += Number(r.__revenue || 0);
+    }
+  }
+
+  const hourLabels = Array.from({length: businessHours}, (_, i) => {
+    const hour = businessHourStart + i;
+    const period = hour < 12 ? 'AM' : 'PM';
+    const displayHour = hour > 12 ? hour - 12 : hour;
+    return `${displayHour}${period}`;
+  });
+
   if (state.chartHourRevenue) { state.chartHourRevenue.destroy(); state.chartHourRevenue = null; }
-  const chartHour = document.getElementById('trends-chart-hour-revenue'); if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v=>Number(v.toFixed(2))), 'Revenue');
+  const chartHour = document.getElementById('trends-chart-hour-revenue');
+  if (chartHour) state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v => Number(v.toFixed(2))), 'Revenue (Business Hours)');
 
   // YoY change (monthly)
   const yoy = monthYearOverYearChange(month);
