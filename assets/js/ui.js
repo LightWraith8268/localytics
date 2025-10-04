@@ -805,18 +805,30 @@ function closeChartZoomModal() {
 }
 
 function printChartFromModal() {
+  console.log('[printChartFromModal] Starting chart print...');
+
   if (!zoomedChartInstance) {
+    console.error('[printChartFromModal] No chart instance available');
     alert('No chart available to print');
     return;
   }
+
+  console.log('[printChartFromModal] Chart instance found:', zoomedChartInstance);
 
   try {
     // Get chart title
     const titleElement = document.getElementById('chartZoomTitle');
     const chartTitle = titleElement ? titleElement.textContent : 'Chart';
+    console.log('[printChartFromModal] Chart title:', chartTitle);
 
     // Export chart as base64 image
+    console.log('[printChartFromModal] Exporting chart to image...');
     const chartImage = zoomedChartInstance.toBase64Image('image/png', 1);
+    console.log('[printChartFromModal] Chart image length:', chartImage?.length);
+
+    if (!chartImage || chartImage.length < 100) {
+      throw new Error('Failed to generate chart image');
+    }
 
     // Open new window with just the chart image
     const printWindow = window.open('', '_blank');
@@ -825,7 +837,9 @@ function printChartFromModal() {
       return;
     }
 
-    printWindow.document.write(`
+    console.log('[printChartFromModal] New window opened, writing content...');
+
+    const htmlContent = `
       <!DOCTYPE html>
       <html>
       <head>
@@ -859,30 +873,40 @@ function printChartFromModal() {
             body {
               padding: 0;
             }
+            h1 {
+              margin-top: 10px;
+            }
           }
         </style>
       </head>
       <body>
         <h1>${chartTitle}</h1>
-        <img src="${chartImage}" alt="${chartTitle}" />
+        <img src="${chartImage}" alt="${chartTitle}" onload="console.log('Image loaded'); window.imageLoaded = true;" onerror="console.error('Image failed to load');" />
+        <script>
+          console.log('Print window loaded');
+          console.log('Image data URI length:', '${chartImage}'.length);
+
+          // Wait for image to load before printing
+          window.addEventListener('load', function() {
+            console.log('Window load event fired');
+            setTimeout(function() {
+              console.log('Triggering print dialog...');
+              window.print();
+            }, 500);
+          });
+        </script>
       </body>
       </html>
-    `);
+    `;
 
+    printWindow.document.write(htmlContent);
     printWindow.document.close();
 
-    // Wait for image to load, then print
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-        // Close window after printing (user can cancel)
-        setTimeout(() => {
-          printWindow.close();
-        }, 100);
-      }, 250);
-    };
+    console.log('[printChartFromModal] Content written to new window');
+
   } catch (error) {
-    console.error('Error printing chart:', error);
+    console.error('[printChartFromModal] Error:', error);
+    console.error('[printChartFromModal] Stack:', error.stack);
     alert('Unable to print chart: ' + error.message);
   }
 }
