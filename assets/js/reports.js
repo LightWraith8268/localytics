@@ -213,28 +213,28 @@ export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month'
 }
 
 function palette(n) {
-  // Enhanced color palette with better distinction and accessibility
+  // Enhanced color palette with maximum visual distinction and contrast
   const base = [
-    '#2563eb', // Blue
-    '#dc2626', // Red
-    '#16a34a', // Green
-    '#ea580c', // Orange
-    '#9333ea', // Purple
-    '#0891b2', // Cyan
-    '#e11d48', // Rose
-    '#65a30d', // Lime
-    '#7c3aed', // Violet
-    '#0d9488', // Teal
-    '#c2410c', // Orange-red
-    '#be123c', // Deep pink
-    '#059669', // Emerald
-    '#7c2d12', // Brown
-    '#1e40af', // Deep blue
-    '#991b1b', // Dark red
-    '#15803d', // Dark green
-    '#9f1239', // Dark rose
-    '#6d28d9', // Dark purple
-    '#0f766e'  // Dark teal
+    '#dc2626', // Bright Red
+    '#2563eb', // Bright Blue
+    '#16a34a', // Bright Green
+    '#f59e0b', // Amber/Gold
+    '#9333ea', // Bright Purple
+    '#06b6d4', // Bright Cyan
+    '#ec4899', // Bright Pink
+    '#84cc16', // Lime Green
+    '#f97316', // Bright Orange
+    '#8b5cf6', // Bright Violet
+    '#14b8a6', // Bright Teal
+    '#ef4444', // Light Red
+    '#3b82f6', // Light Blue
+    '#22c55e', // Light Green
+    '#eab308', // Yellow
+    '#a855f7', // Light Purple
+    '#0ea5e9', // Sky Blue
+    '#f43f5e', // Rose
+    '#10b981', // Emerald
+    '#6366f1'  // Indigo
   ];
   const out = [];
   for (let i=0;i<n;i++) out.push(base[i%base.length]);

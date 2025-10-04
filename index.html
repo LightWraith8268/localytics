@@ -1127,72 +1127,21 @@
             </div>
           </div>
 
-          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h3 class="text-sm font-semibold">Filters</h3>
-              <button id="trendsClearFilters" class="px-3 py-2 border app-border rounded-md text-xs font-medium">Clear Filters</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Start date</label>
-                <input type="date" id="trendsFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">End date</label>
-                <input type="date" id="trendsFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Item</label>
-                <select id="trendsFilterItem" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Items</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Category</label>
-                <select id="trendsFilterCategory" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Categories</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Client</label>
-                <select id="trendsFilterClient" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Clients</option>
-                </select>
-              </div>
-              <div>
+          <details class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6 mb-6">
+            <summary class="cursor-pointer text-sm font-semibold flex items-center justify-between">
+              <span>Filters</span>
+              <span class="text-xs text-gray-500">Click to expand</span>
+            </summary>
+            <div class="mt-4 flex flex-wrap items-end gap-4">
+              <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs text-gray-500 mb-1">Staff</label>
                 <select id="trendsFilterStaff" class="w-full border rounded-md px-3 py-2 text-sm">
                   <option value="">All Staff</option>
                 </select>
               </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Order</label>
-                <select id="trendsFilterOrder" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Orders</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Revenue Min</label>
-                <input type="number" step="0.01" id="trendsFilterRevMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0.00">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Revenue Max</label>
-                <input type="number" step="0.01" id="trendsFilterRevMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Quantity Min</label>
-                <input type="number" step="0.01" id="trendsFilterQtyMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Quantity Max</label>
-                <input type="number" step="0.01" id="trendsFilterQtyMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="trendsFilterNoZero" class="h-4 w-4">
-                <label for="trendsFilterNoZero" class="text-xs text-gray-600">Hide zero revenue/quantity rows</label>
-              </div>
+              <button id="trendsClearFilters" class="px-3 py-2 border app-border rounded-md text-xs font-medium">Clear Filter</button>
             </div>
-          </div>
+          </details>
 
           <!-- Core Time Series Section -->
           <div class="mt-6">
@@ -1237,10 +1186,6 @@
                 <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
                 <div class="h-96"><canvas id="trends-chart-rev-yoy" data-zoom="1"></canvas></div>
               </div>
-              <div class="lg:col-span-2">
-                <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
-                <div class="h-96 chart-tall"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
-              </div>
             </div>
           </div>
 
@@ -1258,6 +1203,15 @@
               </div>
             </div>
           </div>
+
+          <!-- Category Trend Analysis Section -->
+          <div class="mt-8">
+            <h4 class="text-base font-medium text-purple-800 mb-4 border-b border-purple-200 pb-2">📊 Category Trends</h4>
+            <div>
+              <h3 class="text-sm font-semibold mb-2">Category Trend by Month (Last 12 Months)</h3>
+              <div class="h-[48rem]"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1271,72 +1225,21 @@
             </div>
           </div>
 
-          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6 mb-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-              <h3 class="text-sm font-semibold">Filters</h3>
-              <button id="analyticsClearFilters" class="px-3 py-2 border app-border rounded-md text-xs font-medium">Clear Filters</button>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Start date</label>
-                <input type="date" id="analyticsFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">End date</label>
-                <input type="date" id="analyticsFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Item</label>
-                <select id="analyticsFilterItem" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Items</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Category</label>
-                <select id="analyticsFilterCategory" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Categories</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Client</label>
-                <select id="analyticsFilterClient" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Clients</option>
-                </select>
-              </div>
-              <div>
+          <details class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6 mb-6">
+            <summary class="cursor-pointer text-sm font-semibold flex items-center justify-between">
+              <span>Filters</span>
+              <span class="text-xs text-gray-500">Click to expand</span>
+            </summary>
+            <div class="mt-4 flex flex-wrap items-end gap-4">
+              <div class="flex-1 min-w-[200px]">
                 <label class="block text-xs text-gray-500 mb-1">Staff</label>
                 <select id="analyticsFilterStaff" class="w-full border rounded-md px-3 py-2 text-sm">
                   <option value="">All Staff</option>
                 </select>
               </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Order</label>
-                <select id="analyticsFilterOrder" class="w-full border rounded-md px-3 py-2 text-sm">
-                  <option value="">All Orders</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Revenue Min</label>
-                <input type="number" step="0.01" id="analyticsFilterRevMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0.00">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Revenue Max</label>
-                <input type="number" step="0.01" id="analyticsFilterRevMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Quantity Min</label>
-                <input type="number" step="0.01" id="analyticsFilterQtyMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0">
-              </div>
-              <div>
-                <label class="block text-xs text-gray-500 mb-1">Quantity Max</label>
-                <input type="number" step="0.01" id="analyticsFilterQtyMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
-              </div>
-              <div class="flex items-center gap-2">
-                <input type="checkbox" id="analyticsFilterNoZero" class="h-4 w-4">
-                <label for="analyticsFilterNoZero" class="text-xs text-gray-600">Hide zero revenue/quantity rows</label>
-              </div>
+              <button id="analyticsClearFilters" class="px-3 py-2 border app-border rounded-md text-xs font-medium">Clear Filter</button>
             </div>
-          </div>
+          </details>
 
           <!-- Top Rankings Section -->
           <div class="mt-6">
@@ -1606,26 +1509,30 @@
           </div>
 
           <!-- Raw Data Inspector -->
-          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <details class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <summary class="cursor-pointer flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div>
                 <h2 class="text-lg md:text-xl font-medium">Raw Data Inspector</h2>
                 <p class="text-sm text-gray-600 mt-1">Inspect the first 200 rows exactly as they are stored in Firebase or local storage to debug timestamp parsing.</p>
               </div>
-              <div class="flex flex-wrap gap-2">
+              <span class="text-xs text-gray-500">Click to expand</span>
+            </summary>
+
+            <div class="mt-4">
+              <div class="flex flex-wrap gap-2 mb-3">
                 <button id="btnRefreshRawData" class="px-3 py-2 border app-border rounded-md text-xs font-medium hover:bg-gray-50">Refresh</button>
                 <button id="btnCopyRawData" class="px-3 py-2 border app-border rounded-md text-xs font-medium hover:bg-gray-50">Copy Sample JSON</button>
               </div>
+
+              <div id="rawDataSummary" class="mt-3 text-xs text-gray-500">Not loaded yet. Click Refresh to fetch the latest stored rows.</div>
+
+              <div id="rawDataMissing" class="hidden mt-3 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-3"></div>
+
+              <div id="rawDataTableWrap" class="mt-3 overflow-auto border app-border rounded-md">
+                <!-- Table populated via app.js -->
+              </div>
             </div>
-
-            <div id="rawDataSummary" class="mt-3 text-xs text-gray-500">Not loaded yet. Click Refresh to fetch the latest stored rows.</div>
-
-            <div id="rawDataMissing" class="hidden mt-3 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-3"></div>
-
-            <div id="rawDataTableWrap" class="mt-3 overflow-auto border app-border rounded-md">
-              <!-- Table populated via app.js -->
-            </div>
-          </div>
+          </details>
 
           <!-- Branding Section -->
           <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">

@@ -20,6 +20,12 @@ const DEFAULT_FILTERS = {
   qtyMax: '',
   noZero: false,
 };
+
+// Simplified filters for Trends and Analytics pages (staff-only)
+const SIMPLE_DEFAULT_FILTERS = {
+  staff: '',
+};
+
 const state = {
   rows: [],
   headers: [],
@@ -5093,6 +5099,15 @@ function extractHourFromString(v){
 function collectFilterValues(prefix) {
   const getInput = (suffix) => document.getElementById(`${prefix}Filter${suffix}`);
   const value = (suffix) => (getInput(suffix)?.value || '').trim();
+
+  // For trends and analytics, only collect staff filter
+  if (prefix === 'trends' || prefix === 'analytics') {
+    return {
+      staff: value('Staff'),
+    };
+  }
+
+  // For other pages, collect all filters
   return {
     start: value('Start'),
     end: value('End'),
@@ -5111,8 +5126,13 @@ function collectFilterValues(prefix) {
 
 function filtersMatchDefault(filters) {
   if (!filters) return true;
-  return Object.keys(DEFAULT_FILTERS).every(key => {
-    const defaultVal = DEFAULT_FILTERS[key];
+
+  // Check if these are simple filters (trends/analytics)
+  const isSimple = Object.keys(filters).length === 1 && 'staff' in filters;
+  const defaultToUse = isSimple ? SIMPLE_DEFAULT_FILTERS : DEFAULT_FILTERS;
+
+  return Object.keys(defaultToUse).every(key => {
+    const defaultVal = defaultToUse[key];
     const current = filters[key];
     if (key === 'noZero') {
       return !!current === !!defaultVal;
@@ -5339,7 +5359,9 @@ function renderTrendsCharts() {
     monthlyData.set(monthKey, existing);
   });
 
-  const monthLabels = Array.from(monthlyData.keys()).sort();
+  // Limit to last 12 months
+  const allMonthLabels = Array.from(monthlyData.keys()).sort();
+  const monthLabels = allMonthLabels.slice(-12); // Last 12 months only
   const revenueSeries = monthLabels.map(label => round2(monthlyData.get(label).revenue));
   const qtySeries = monthLabels.map(label => round2(monthlyData.get(label).quantity));
   const ordersSeries = monthLabels.map(label => round2(monthlyData.get(label).orders));
@@ -5527,7 +5549,9 @@ function renderProfitabilityCharts(reportOverride) {
     monthlyData.set(monthKey, existing);
   });
 
-  const labels = Array.from(monthlyData.keys()).sort();
+  // Limit to last 12 months
+  const allLabels = Array.from(monthlyData.keys()).sort();
+  const labels = allLabels.slice(-12); // Last 12 months only
   const profitData = labels.map(l => monthlyData.get(l).profit);
   const marginData = labels.map(l => {
     const d = monthlyData.get(l);
@@ -6413,18 +6437,9 @@ function populateDropdownFilters() {
   populateDropdown('#itemsFilterOrder', orders.slice(0, 100), 'All Orders');
   populateDropdown('#itemsFilterCategory', categories, 'All Categories');
 
-  // Trends / Analytics filters
-  populateDropdown('#trendsFilterClient', clients, 'All Clients');
+  // Trends / Analytics filters (staff-only)
   populateDropdown('#trendsFilterStaff', staff, 'All Staff');
-  populateDropdown('#trendsFilterItem', items.slice(0, 100), 'All Items');
-  populateDropdown('#trendsFilterOrder', orders.slice(0, 100), 'All Orders');
-  populateDropdown('#trendsFilterCategory', categories, 'All Categories');
-
-  populateDropdown('#analyticsFilterClient', clients, 'All Clients');
   populateDropdown('#analyticsFilterStaff', staff, 'All Staff');
-  populateDropdown('#analyticsFilterItem', items.slice(0, 100), 'All Items');
-  populateDropdown('#analyticsFilterOrder', orders.slice(0, 100), 'All Orders');
-  populateDropdown('#analyticsFilterCategory', categories, 'All Categories');
 }
 
 // ================================
@@ -6938,56 +6953,42 @@ function applyItemsFilters() {
 }
 
 function setupTrendsFilters() {
-  const ids = ['Start','End','Item','Client','Staff','Order','Category','RevMin','RevMax','QtyMin','QtyMax'];
-  const inputs = ids.map(suffix => document.getElementById(`trendsFilter${suffix}`)).filter(Boolean);
-  const noZero = document.getElementById('trendsFilterNoZero');
+  // Simplified: Only staff filter
+  const staffInput = document.getElementById('trendsFilterStaff');
   const clearBtn = document.getElementById('trendsClearFilters');
 
   const handler = () => applyTrendsFilters();
-  inputs.forEach(input => {
-    if (input && !input.hasAttribute('data-trends-filter')) {
-      input.setAttribute('data-trends-filter', 'true');
-      input.addEventListener('input', handler);
-      input.addEventListener('change', handler);
-    }
-  });
-  if (noZero && !noZero.hasAttribute('data-trends-filter')) {
-    noZero.setAttribute('data-trends-filter', 'true');
-    noZero.addEventListener('change', handler);
+
+  if (staffInput && !staffInput.hasAttribute('data-trends-filter')) {
+    staffInput.setAttribute('data-trends-filter', 'true');
+    staffInput.addEventListener('change', handler);
   }
+
   if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
     clearBtn.setAttribute('data-clear-handler', 'true');
     clearBtn.addEventListener('click', () => {
-      inputs.forEach(input => { if (input) input.value = ''; });
-      if (noZero) noZero.checked = false;
+      if (staffInput) staffInput.value = '';
       applyTrendsFilters();
     });
   }
 }
 
 function setupAnalyticsFilters() {
-  const ids = ['Start','End','Item','Client','Staff','Order','Category','RevMin','RevMax','QtyMin','QtyMax'];
-  const inputs = ids.map(suffix => document.getElementById(`analyticsFilter${suffix}`)).filter(Boolean);
-  const noZero = document.getElementById('analyticsFilterNoZero');
+  // Simplified: Only staff filter
+  const staffInput = document.getElementById('analyticsFilterStaff');
   const clearBtn = document.getElementById('analyticsClearFilters');
 
   const handler = () => applyAnalyticsFilters();
-  inputs.forEach(input => {
-    if (input && !input.hasAttribute('data-analytics-filter')) {
-      input.setAttribute('data-analytics-filter', 'true');
-      input.addEventListener('input', handler);
-      input.addEventListener('change', handler);
-    }
-  });
-  if (noZero && !noZero.hasAttribute('data-analytics-filter')) {
-    noZero.setAttribute('data-analytics-filter', 'true');
-    noZero.addEventListener('change', handler);
+
+  if (staffInput && !staffInput.hasAttribute('data-analytics-filter')) {
+    staffInput.setAttribute('data-analytics-filter', 'true');
+    staffInput.addEventListener('change', handler);
   }
+
   if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
     clearBtn.setAttribute('data-clear-handler', 'true');
     clearBtn.addEventListener('click', () => {
-      inputs.forEach(input => { if (input) input.value = ''; });
-      if (noZero) noZero.checked = false;
+      if (staffInput) staffInput.value = '';
       applyAnalyticsFilters();
     });
   }
@@ -6995,7 +6996,7 @@ function setupAnalyticsFilters() {
 
 function applyTrendsFilters(opts = {}) {
   const collected = collectFilterValues('trends');
-  const merged = { ...DEFAULT_FILTERS, ...collected };
+  const merged = { ...SIMPLE_DEFAULT_FILTERS, ...collected };
   state.trendsFilters = merged;
   const filteredRows = applyFilters(state.rows || [], state.mapping, merged);
   const hasFilters = !filtersMatchDefault(merged);
@@ -7007,7 +7008,7 @@ function applyTrendsFilters(opts = {}) {
 
 function applyAnalyticsFilters(opts = {}) {
   const collected = collectFilterValues('analytics');
-  const merged = { ...DEFAULT_FILTERS, ...collected };
+  const merged = { ...SIMPLE_DEFAULT_FILTERS, ...collected };
   state.analyticsFilters = merged;
   const filteredRows = applyFilters(state.rows || [], state.mapping, merged);
   const hasFilters = !filtersMatchDefault(merged);
