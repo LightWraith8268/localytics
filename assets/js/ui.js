@@ -185,6 +185,14 @@ export function makeChart(canvas, labels, data, label='Series') {
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: 25, // Space for data labels above points
+          right: 10,
+          bottom: 0,
+          left: 10
+        }
+      },
       interaction: {
         intersect: false,
         mode: 'index'
@@ -308,6 +316,14 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
       indexAxis: opts.indexAxis || 'x',
       responsive: true,
       maintainAspectRatio: false,
+      layout: {
+        padding: {
+          top: isHorizontal ? 5 : 25, // More top space for vertical bars with labels
+          right: isHorizontal ? 30 : 10, // More right space for horizontal bars with labels
+          bottom: 0,
+          left: 10
+        }
+      },
       interaction: {
         intersect: false,
         mode: 'index'
@@ -391,7 +407,7 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             font: { size: 11 },
             maxRotation: isHorizontal ? 0 : 45,
             minRotation: isHorizontal ? 0 : 0,
-            autoSkip: true,
+            autoSkip: false, // Show all labels, don't skip
             autoSkipPadding: 10
           }
         },
