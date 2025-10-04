@@ -487,8 +487,10 @@
       </div>
     </nav>
 
-    <!-- Desktop Sidebar (fixed, outside main flow) -->
-    <nav class="hidden lg:flex lg:flex-col lg:fixed lg:left-0 lg:top-0 lg:w-64 lg:h-screen lg:overflow-hidden app-card border-r app-border no-print z-10">
+    <!-- Desktop Layout Wrapper -->
+    <div class="hidden lg:flex lg:h-screen lg:overflow-hidden">
+      <!-- Desktop Sidebar -->
+      <nav class="lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 app-card border-r app-border no-print">
         <!-- Sidebar Header - Fixed -->
         <div class="flex items-center gap-3 p-6 border-b app-border flex-shrink-0 app-card">
           <div class="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
@@ -567,10 +569,10 @@
             <span>Toggle Dark Mode</span>
           </button>
         </div>
-    </nav>
+      </nav>
 
-    <!-- Main Content -->
-    <main class="min-h-screen overflow-x-hidden lg:ml-64">
+      <!-- Main Content -->
+      <main class="flex-1 overflow-y-auto overflow-x-hidden">
         <div class="container mx-auto py-4 md:py-6 px-4 max-w-7xl">
       <!-- Upload View -->
       <section id="view-upload" class="view">
@@ -1534,6 +1536,7 @@
       </section>
         </div>
       </main>
+    </div>
 
     <!-- Mobile Sidebar Overlay -->
     <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden hidden"></div>
