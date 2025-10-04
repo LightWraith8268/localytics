@@ -102,7 +102,14 @@
         }
 
         /* Enable double-sided (duplex) printing - not all browsers support this */
-        @page { marks: none; }
+        /* Note: Most browsers require user to manually select duplex in print dialog */
+        @page {
+          marks: none;
+          /* Request duplex (double-sided) printing where supported */
+          prince-pdf-duplex: duplex-flip-long-edge;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
 
         /* Left/right pages for duplex printing */
         @page :left {

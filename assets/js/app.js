@@ -359,6 +359,31 @@ window.addEventListener('DOMContentLoaded', () => {
 
         applyTrendsFilters({ silent: true });
         applyAnalyticsFilters({ silent: true });
+
+        // Compute report from loaded data
+        console.log('[app] Computing report from loaded data:', state.rows.length, 'rows');
+        state.report = computeReport(state.rows, state.mapping);
+
+        // Re-render current view to display charts with loaded data
+        const currentRoute = (location.hash || '#/upload').replace('#', '');
+        const [ , currentView = 'upload' ] = currentRoute.split('/');
+        console.log('[app] Data loaded, re-rendering current view:', currentView);
+
+        if (currentView === 'trends') {
+          renderTrendsCharts();
+        } else if (currentView === 'analytics') {
+          renderAnalyticsCharts();
+        } else if (currentView === 'dashboard') {
+          renderDashboard();
+        } else if (currentView === 'orders') {
+          renderOrdersView();
+        } else if (currentView === 'clients') {
+          renderClientTrackingView();
+        } else if (currentView === 'staff') {
+          renderStaffTrackingView();
+        } else if (currentView === 'items') {
+          renderItemTrackingView();
+        }
       } else {
         // No stored data, load sample data for demo (but only after checking demo state)
         try {
