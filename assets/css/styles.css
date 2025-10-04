@@ -42,6 +42,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .h-8{height:2rem}
 .h-10{height:2.5rem}
 .h-64{height:16rem}
+.h-96{height:24rem}
 .overflow-auto{overflow:auto}
 .fixed{position:fixed}
 .relative{position:relative}
@@ -475,6 +476,7 @@ input[type="file"]::file-selector-button {
   th, td { border: 1px solid #e5e7eb; padding: 6px 8px; }
   .border { break-inside: avoid; }
   .h-64 { height: 320px !important; }
+  .h-96 { height: 384px !important; }
   canvas { max-width: 100% !important; height: auto !important; }
   img.print-canvas-img { max-width: 100% !important; height: auto !important; page-break-inside: avoid; }
   details { break-inside: avoid; }
