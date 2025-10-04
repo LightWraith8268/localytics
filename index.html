@@ -188,6 +188,33 @@
         .hidden {
           display: none !important;
         }
+
+        /* Exception: Show chart zoom modal when printing from it */
+        #chartZoomModal:not(.hidden) {
+          display: block !important;
+          background: white !important;
+          position: static !important;
+        }
+
+        /* Hide everything except chart zoom modal when it's open */
+        body:has(#chartZoomModal:not(.hidden)) > *:not(#chartZoomModal) {
+          display: none !important;
+        }
+
+        /* Hide modal chrome when printing, show only chart */
+        #chartZoomModal:not(.hidden) button,
+        #chartZoomModal:not(.hidden) h3 {
+          display: none !important;
+        }
+
+        /* Make chart full width when printing */
+        #chartZoomModal:not(.hidden) canvas {
+          max-width: 100% !important;
+          max-height: 100% !important;
+          width: 100% !important;
+          height: auto !important;
+        }
+
         #print-cover {
           display: none !important;
         }

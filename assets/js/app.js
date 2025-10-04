@@ -845,6 +845,17 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Close snapshot viewer modal on ESC key
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      const modal = qs('snapshotViewerModal');
+      if (modal && !modal.classList.contains('hidden')) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+      }
+    }
+  });
+
   // Additional exports
   qs('btnExportClient')?.addEventListener('click', () => {
     if (!state.byClient) return; const cols = ['client','orders','quantity','revenue','cost','profit','margin'];

@@ -677,6 +677,16 @@ export function enableChartZoom(root=document) {
         }
       });
     }
+
+    // ESC key to close chart zoom modal (only add once globally)
+    if (!document.hasAttribute('data-esc-chart-zoom')) {
+      document.setAttribute('data-esc-chart-zoom', 'true');
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeChartZoomModal();
+        }
+      });
+    }
   } catch (e) {
     console.warn('[enableChartZoom] Error:', e);
   }
