@@ -611,37 +611,50 @@ export function enableChartZoom(root=document) {
 
     let zoomableCount = 0;
     chartTitles.forEach(title => {
+      // Skip if already enabled
+      if (title.hasAttribute('data-zoom-enabled')) {
+        return;
+      }
+
       const nextElement = title.nextElementSibling;
       // Check if next element contains a canvas with data-zoom attribute
       const canvas = nextElement ? nextElement.querySelector('canvas[data-zoom]') : null;
       if (canvas) {
         zoomableCount++;
+        title.setAttribute('data-zoom-enabled', 'true');
         title.style.cursor = 'pointer';
         title.style.transition = 'color 0.2s';
-        title.addEventListener('mouseenter', () => {
-          title.style.color = '#3b82f6'; // Blue on hover
-        });
-        title.addEventListener('mouseleave', () => {
-          title.style.color = ''; // Reset
-        });
-        title.addEventListener('click', () => {
+
+        const hoverEnter = () => { title.style.color = '#3b82f6'; };
+        const hoverLeave = () => { title.style.color = ''; };
+        const clickHandler = () => {
           console.log('[enableChartZoom] Chart title clicked:', title.textContent);
           openChartZoomModal(title.textContent, canvas);
-        });
+        };
+
+        title.addEventListener('mouseenter', hoverEnter);
+        title.addEventListener('mouseleave', hoverLeave);
+        title.addEventListener('click', clickHandler);
       }
     });
 
     console.log('[enableChartZoom] Made', zoomableCount, 'chart titles clickable');
 
-    // Close button handler
-    closeBtn.addEventListener('click', closeChartZoomModal);
+    // Close button handler (only add once)
+    if (!closeBtn.hasAttribute('data-zoom-handler')) {
+      closeBtn.setAttribute('data-zoom-handler', 'true');
+      closeBtn.addEventListener('click', closeChartZoomModal);
+    }
 
-    // Click outside to close
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) {
-        closeChartZoomModal();
-      }
-    });
+    // Click outside to close (only add once)
+    if (!modal.hasAttribute('data-zoom-handler')) {
+      modal.setAttribute('data-zoom-handler', 'true');
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          closeChartZoomModal();
+        }
+      });
+    }
   } catch (e) {
     console.warn('[enableChartZoom] Error:', e);
   }
