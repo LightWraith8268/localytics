@@ -5,7 +5,7 @@ function toNumber(v) {
   const n = Number(cleaned);
   return Number.isFinite(n) ? n : 0;
 }
-function round2(value) { const num = Number(value || 0); return Number.isFinite(num) ? Number(num.toFixed(2)) : 0; }
+export function round2(value) { const num = Number(value || 0); return Number.isFinite(num) ? Number(num.toFixed(2)) : 0; }
 
 
 
@@ -153,44 +153,65 @@ export function aggregateByGranularity(rows, mapping, granularity = 'month') {
   return Array.from(map.values()).sort((a,b)=> a.period < b.period ? -1 : a.period > b.period ? 1 : 0).map(x => ({ period: x.period, quantity: round2(x.quantity), revenue: round2(x.revenue) }));
 }
 
-export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month', metric = 'revenue', topN = 0) {
-  const cats = new Map(); // cat -> Map(period -> value)
-  const totals = new Map(); // cat -> total metric
-  for (const r of rows) {
-    const dateSource = r.__dateIso || r[mapping.date];
-    const period = bucketDateKey(dateSource, granularity);
-    if (!period) continue;
-    const cat = (r.__category || r[mapping.category] || 'Uncategorized').toString().trim() || 'Uncategorized';
-    const q = Number(r[mapping.qty] || 0) || 0;
-    const price = mapping.revenue ? 0 : Number((r[mapping.price] || '').toString().replace(/[$,\s]/g,'')) || 0;
-    const rev = mapping.revenue ? (Number((r[mapping.revenue] || '').toString().replace(/[$,\s]/g,'')) || 0) : (price * q);
-    const val = (metric === 'quantity') ? q : rev;
-    const m = cats.get(cat) || new Map();
-    m.set(period, (m.get(period) || 0) + val);
-    cats.set(cat, m);
-    totals.set(cat, (totals.get(cat) || 0) + val);
-  }
-  // Determine labels (time periods in chronological order)
-  const labelSet = new Set();
-  for (const m of cats.values()) for (const p of m.keys()) labelSet.add(p);
-  // Sort chronologically (labels are in ISO-like format: YYYY-MM, YYYY-Wxx, etc.)
-  const labels = Array.from(labelSet).sort((a,b) => a < b ? -1 : a > b ? 1 : 0);
-  // Optionally limit to top N categories
-  let entries = Array.from(cats.entries());
-  if (topN && topN > 0) {
-    entries.sort((a,b)=> (totals.get(b[0]) - totals.get(a[0])));
-    entries = entries.slice(0, topN);
-  }
-  // Build datasets
-  const colors = palette(entries.length);
-  const datasets = entries.map(([cat, m], i) => ({
-    label: cat,
-    data: labels.map(p => round2(m.get(p) || 0)),
-    backgroundColor: colors[i % colors.length]
-  }));
-  return { labels, datasets };
-}
-
+export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month', metric = 'revenue', topN = 0) {
+  const cats = new Map(); // cat -> Map(period -> value)
+  const totals = new Map(); // cat -> total metric
+  const safeRows = Array.isArray(rows) ? rows : [];
+  const safeMapping = mapping || {};
+
+  for (const r of safeRows) {
+    if (!r) continue;
+    const dateSource = r.__dateIso || (safeMapping.date ? r[safeMapping.date] : null);
+    const period = bucketDateKey(dateSource, granularity);
+    if (!period) continue;
+
+    const rawCategory = (r.__category ?? (safeMapping.category ? r[safeMapping.category] : '') ?? '').toString().trim();
+    const category = rawCategory || 'Uncategorized';
+
+    const quantityRaw = r.__quantity ?? (safeMapping.qty ? r[safeMapping.qty] : 0);
+    const quantityNumber = Number(quantityRaw);
+    const quantity = Number.isFinite(quantityNumber) ? quantityNumber : toNumber(quantityRaw);
+
+    let revenue = 0;
+    if (r.__revenue !== undefined && r.__revenue !== null) {
+      const maybeRevenue = Number(r.__revenue);
+      revenue = Number.isFinite(maybeRevenue) ? maybeRevenue : 0;
+    } else if (safeMapping.revenue) {
+      revenue = toNumber(r[safeMapping.revenue]);
+    } else {
+      const priceRaw = r.__price ?? (safeMapping.price ? r[safeMapping.price] : 0);
+      const priceNumber = Number(priceRaw);
+      const unitPrice = Number.isFinite(priceNumber) ? priceNumber : toNumber(priceRaw);
+      revenue = quantity * unitPrice;
+    }
+
+    const value = metric === 'quantity' ? quantity : revenue;
+    const series = cats.get(category) || new Map();
+    series.set(period, (series.get(period) || 0) + value);
+    cats.set(category, series);
+    totals.set(category, (totals.get(category) || 0) + value);
+  }
+  // Determine labels (time periods in chronological order)
+  const labelSet = new Set();
+  for (const m of cats.values()) for (const p of m.keys()) labelSet.add(p);
+  // Sort chronologically (labels are in ISO-like format: YYYY-MM, YYYY-Wxx, etc.)
+  const labels = Array.from(labelSet).sort((a,b) => a < b ? -1 : a > b ? 1 : 0);
+  // Optionally limit to top N categories
+  let entries = Array.from(cats.entries());
+  if (topN && topN > 0) {
+    entries.sort((a,b)=> (totals.get(b[0]) - totals.get(a[0])));
+    entries = entries.slice(0, topN);
+  }
+  // Build datasets
+  const colors = palette(entries.length);
+  const datasets = entries.map(([cat, m], i) => ({
+    label: cat,
+    data: labels.map(p => round2(m.get(p) || 0)),
+    backgroundColor: colors[i % colors.length]
+  }));
+  return { labels, datasets };
+}
+
 function palette(n) {
   // Enhanced color palette with better distinction and accessibility
   const base = [

@@ -1,5 +1,5 @@
 import { parseCsv, detectColumns, parseCsvFiles } from './csv.js';
-import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime, aggregateByField, aggregateByOrder } from './reports.js';
+import { computeReport, aggregateCustom, aggregateByGranularity, aggregateByCategoryOverTime, aggregateByField, aggregateByOrder, round2 } from './reports.js';
 import { renderTotals, renderTable, renderSortableTable, makeChart, makeBarChart, makeChartTyped, makeStackedBarChart, downloadCsv, setActiveNav, exportExcelBook, enableChartZoom } from './ui.js';
 import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInWithGoogle, signOutUser, loadUserSettings, saveUserSettings, saveCsvData, loadCsvData, deleteCsvData, deleteAllUserData, testFirebaseSettings } from './storage.js';
 import { SAMPLE_ROWS } from './sample-data.js';
@@ -26,8 +26,10 @@ const state = {
   mapping: { date: '', item: '', qty: '', price: '', cost: '', revenue: '', category: '', order: '', client: '', staff: '' },
   report: null,
   chart: null,
+  chartRevenue: null,
   chartQty: null,
   chartTop: null,
+  chartTopItems: null,
   chartTopClients: null,
   chartCatShare: null,
   chartOrders: null,
