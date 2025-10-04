@@ -5675,6 +5675,7 @@ function renderSegmentAnalysisCharts(categoryDataOverride) {
             labels: {
               padding: 10,
               font: { size: 11 },
+              color: '#f3f4f6', // Very light grey for better visibility
               generateLabels: (chart) => {
                 const data = chart.data;
                 return data.labels.map((label, i) => ({
@@ -5683,7 +5684,8 @@ function renderSegmentAnalysisCharts(categoryDataOverride) {
                   strokeStyle: data.datasets[0].borderColor,
                   lineWidth: data.datasets[0].borderWidth,
                   hidden: false,
-                  index: i
+                  index: i,
+                  fontColor: '#f3f4f6' // Very light grey for better visibility
                 }));
               }
             }

@@ -269,7 +269,8 @@ export function makeChart(canvas, labels, data, label='Series', opts = {}) {
           labels: {
             usePointStyle: true,
             padding: 20,
-            font: { size: 12, weight: '500' }
+            font: { size: 12, weight: '500' },
+            color: '#f3f4f6' // Very light grey for better visibility
           }
         }
       },
@@ -352,7 +353,8 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
           labels: {
             usePointStyle: true,
             padding: 20,
-            font: { size: 12, weight: '500' }
+            font: { size: 12, weight: '500' },
+            color: '#f3f4f6' // Very light grey for better visibility
           }
         },
         tooltip: {
@@ -480,7 +482,8 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
           labels: {
             usePointStyle: true,
             padding: 20,
-            font: { size: 12, weight: '500' }
+            font: { size: 12, weight: '500' },
+            color: '#f3f4f6' // Very light grey for better visibility
           }
         },
         tooltip: {
@@ -540,7 +543,12 @@ export function makeStackedBarChart(canvas, labels, datasets) {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { display: true },
+        legend: {
+          display: true,
+          labels: {
+            color: '#f3f4f6' // Very light grey for better visibility
+          }
+        },
         tooltip: { callbacks: { label: (ctx) => `${ctx.dataset.label ?? ''}: ${formatNumberTwo(ctx.parsed.y)}` } }
       },
       scales: {
