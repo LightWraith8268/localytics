@@ -749,31 +749,11 @@ function openChartZoomModal(title, sourceCanvas) {
     const ctx = modalCanvas.getContext('2d');
     zoomedChartInstance = new window.Chart(ctx, config);
 
-    console.log('[openChartZoomModal] About to show modal...');
-
-    // Show modal using Tailwind classes (cleaner than inline styles)
+    // Show modal using the same pattern as snapshotViewerModal
+    modal.style.display = 'block';
     modal.classList.remove('hidden');
-    modal.classList.add('flex');
 
-    // Force a reflow to ensure styles are applied
-    void modal.offsetHeight;
-
-    const computedStyle = window.getComputedStyle(modal);
-    console.log('[openChartZoomModal] Modal shown - final state:', {
-      classList: modal.classList.toString(),
-      styleDisplay: modal.style.display,
-      computedDisplay: computedStyle.display,
-      computedVisibility: computedStyle.visibility,
-      computedOpacity: computedStyle.opacity,
-      computedZIndex: computedStyle.zIndex
-    });
-
-    if (computedStyle.display === 'none') {
-      console.error('[openChartZoomModal] Modal still has display:none after showing!');
-      alert('Modal display issue detected. Check console for details.');
-    } else {
-      console.log('[openChartZoomModal] === MODAL SUCCESSFULLY DISPLAYED ===');
-    }
+    console.log('[openChartZoomModal] Modal opened successfully');
   } catch (error) {
     console.error('[openChartZoomModal] Error creating zoomed chart:', error);
     console.error('[openChartZoomModal] Stack trace:', error.stack);
@@ -784,7 +764,7 @@ function openChartZoomModal(title, sourceCanvas) {
 function closeChartZoomModal() {
   const modal = document.getElementById('chartZoomModal');
   if (modal) {
-    modal.classList.remove('flex');
+    modal.style.display = 'none';
     modal.classList.add('hidden');
   }
 
