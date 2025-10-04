@@ -664,7 +664,7 @@ export function enableChartZoom(root=document) {
     if (printBtn && !printBtn.hasAttribute('data-zoom-handler')) {
       printBtn.setAttribute('data-zoom-handler', 'true');
       printBtn.addEventListener('click', () => {
-        window.print();
+        printChartFromModal();
       });
     }
 
@@ -801,6 +801,89 @@ function closeChartZoomModal() {
   if (zoomedChartInstance) {
     zoomedChartInstance.destroy();
     zoomedChartInstance = null;
+  }
+}
+
+function printChartFromModal() {
+  if (!zoomedChartInstance) {
+    alert('No chart available to print');
+    return;
+  }
+
+  try {
+    // Get chart title
+    const titleElement = document.getElementById('chartZoomTitle');
+    const chartTitle = titleElement ? titleElement.textContent : 'Chart';
+
+    // Export chart as base64 image
+    const chartImage = zoomedChartInstance.toBase64Image('image/png', 1);
+
+    // Open new window with just the chart image
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      alert('Please allow popups to print charts');
+      return;
+    }
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>${chartTitle}</title>
+        <style>
+          @page {
+            size: landscape;
+            margin: 0.5in;
+          }
+          body {
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+          }
+          h1 {
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            margin-bottom: 20px;
+            text-align: center;
+          }
+          img {
+            max-width: 100%;
+            height: auto;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          }
+          @media print {
+            body {
+              padding: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>${chartTitle}</h1>
+        <img src="${chartImage}" alt="${chartTitle}" />
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+
+    // Wait for image to load, then print
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+        // Close window after printing (user can cancel)
+        setTimeout(() => {
+          printWindow.close();
+        }, 100);
+      }, 250);
+    };
+  } catch (error) {
+    console.error('Error printing chart:', error);
+    alert('Unable to print chart: ' + error.message);
   }
 }
 function formatCurrency(n) {

@@ -3,7 +3,7 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-sw.js');
 
 // Load version from centralized config
-let VERSION = 'wb-1.18.21-20251004'; // fallback
+let VERSION = 'wb-1.18.22-20251004'; // fallback
 
 // Load version from JSON config
 fetch('./version.json')
