@@ -52,8 +52,10 @@ export function computeReport(rows, mapping) {
 
     // Date agg
     if (dateKey) {
-      const dt = byDate.get(dateKey) || { date: dateKey, quantity: 0, revenue: 0, cost: 0, profit: 0 };
-      dt.quantity += q; dt.revenue += rev; dt.cost += cst; dt.profit = dt.revenue - dt.cost; byDate.set(dateKey, dt);
+      const dt = byDate.get(dateKey) || { date: dateKey, quantity: 0, revenue: 0, cost: 0, profit: 0, orders: new Set() };
+      dt.quantity += q; dt.revenue += rev; dt.cost += cst; dt.profit = dt.revenue - dt.cost;
+      if (order) dt.orders.add(order);
+      byDate.set(dateKey, dt);
     }
   }
 
@@ -75,7 +77,7 @@ export function computeReport(rows, mapping) {
       totalOrders: orders.size,
     },
     byItem: byItemArr.map(x => ({ item:x.item, quantity: round2(x.quantity), revenue: round2(x.revenue), cost: round2(x.cost), profit: round2(x.revenue - x.cost), margin: x.revenue>0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0 })),
-    byDate: byDateArr.map(x => ({ date:x.date, quantity: round2(x.quantity), revenue: round2(x.revenue), cost: round2(x.cost), profit: round2(x.revenue - x.cost), margin: x.revenue>0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0 })),
+    byDate: byDateArr.map(x => ({ date:x.date, quantity: round2(x.quantity), revenue: round2(x.revenue), cost: round2(x.cost), profit: round2(x.revenue - x.cost), margin: x.revenue>0 ? round2(((x.revenue - x.cost) / x.revenue) * 100) : 0, orders: x.orders?.size || 0 })),
   };
 }
 

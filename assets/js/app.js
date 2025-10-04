@@ -4647,19 +4647,30 @@ function extractHourFromString(v){ if(!v) return null; try{ const m=String(v).ma
 function renderTrendsCharts() {
   if (!state.report) return;
 
-  // Core Time Series - reuse existing chart rendering logic
+  // Core Time Series - aggregate by month for better readability
   if (state.chartRevenue) state.chartRevenue.destroy();
   if (state.chartQty) state.chartQty.destroy();
   if (state.chartOrders) state.chartOrders.destroy();
 
-  const labels = state.report.byDate.map(r => r.date);
-  const revenueData = state.report.byDate.map(r => r.revenue);
-  const qtyData = state.report.byDate.map(r => r.quantity);
-  const ordersData = state.report.byDate.map(r => r.orders || 0);
+  // Aggregate by month
+  const monthlyData = new Map();
+  state.report.byDate.forEach(r => {
+    const monthKey = r.date.substring(0, 7); // Extract YYYY-MM from YYYY-MM-DD
+    const existing = monthlyData.get(monthKey) || { revenue: 0, quantity: 0, orders: 0 };
+    existing.revenue += r.revenue;
+    existing.quantity += r.quantity;
+    existing.orders += (r.orders || 0);
+    monthlyData.set(monthKey, existing);
+  });
 
-  state.chartRevenue = makeChart(document.getElementById('trends-chart-revenue'), labels, revenueData, 'Revenue by Date');
-  state.chartQty = makeChart(document.getElementById('trends-chart-qty'), labels, qtyData, 'Quantity by Date');
-  state.chartOrders = makeChart(document.getElementById('trends-chart-orders'), labels, ordersData, 'Orders by Date');
+  const labels = Array.from(monthlyData.keys()).sort();
+  const revenueData = labels.map(l => monthlyData.get(l).revenue);
+  const qtyData = labels.map(l => monthlyData.get(l).quantity);
+  const ordersData = labels.map(l => monthlyData.get(l).orders);
+
+  state.chartRevenue = makeChart(document.getElementById('trends-chart-revenue'), labels, revenueData, 'Revenue by Month');
+  state.chartQty = makeChart(document.getElementById('trends-chart-qty'), labels, qtyData, 'Quantity by Month');
+  state.chartOrders = makeChart(document.getElementById('trends-chart-orders'), labels, ordersData, 'Orders by Month');
 
   // Trend Analysis charts - these would use more complex calculations
   renderTrendAnalysisCharts(labels, revenueData, qtyData);

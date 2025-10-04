@@ -582,24 +582,49 @@ function openChartZoomModal(title, sourceCanvas) {
   // Set modal title
   modalTitle.textContent = title;
 
-  // Clone the chart configuration
-  const config = JSON.parse(JSON.stringify({
-    type: sourceChart.config.type,
-    data: sourceChart.config.data,
-    options: sourceChart.config.options
-  }));
+  try {
+    // Clone the chart configuration safely
+    const config = {
+      type: sourceChart.config.type,
+      data: {
+        labels: [...(sourceChart.config.data.labels || [])],
+        datasets: sourceChart.config.data.datasets.map(ds => ({
+          label: ds.label,
+          data: [...(ds.data || [])],
+          backgroundColor: ds.backgroundColor,
+          borderColor: ds.borderColor,
+          borderWidth: ds.borderWidth,
+          fill: ds.fill
+        }))
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 2,
+        plugins: {
+          legend: sourceChart.config.options?.plugins?.legend || {},
+          title: {
+            display: true,
+            text: title
+          }
+        },
+        scales: sourceChart.config.options?.scales || {}
+      }
+    };
 
-  // Ensure maintainAspectRatio is true for modal
-  if (!config.options) config.options = {};
-  config.options.maintainAspectRatio = true;
-  config.options.aspectRatio = 2;
+    console.log('[openChartZoomModal] Creating chart with config:', config);
 
-  // Create enlarged chart
-  const ctx = modalCanvas.getContext('2d');
-  zoomedChartInstance = new window.Chart(ctx, config);
+    // Create enlarged chart
+    const ctx = modalCanvas.getContext('2d');
+    zoomedChartInstance = new window.Chart(ctx, config);
 
-  // Show modal
-  modal.classList.remove('hidden');
+    // Show modal
+    modal.classList.remove('hidden');
+    console.log('[openChartZoomModal] Modal shown successfully');
+  } catch (error) {
+    console.error('[openChartZoomModal] Error creating zoomed chart:', error);
+    alert('Unable to zoom chart: ' + error.message);
+  }
 }
 
 function closeChartZoomModal() {
