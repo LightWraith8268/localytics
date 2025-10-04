@@ -48,7 +48,7 @@ CSV Parsing
 
 ---
 2025-10-04 - Hourly Revenue Fallback & Repo Status
-- App version loads from `version.json` (currently 1.18.8 / timestamp 20251005); service worker fallback string set to `wb-1.18.8-20251005`.
+- App version loads from `version.json` (currently 1.18.9 / timestamp 20251005); service worker fallback string set to `wb-1.18.9-20251005`.
 - `index.html` defers to dynamic cache-busting for `assets/js/app.js` and `assets/css/styles.css` once the version module resolves.
 - Working tree currently has local edits in `assets/js/app.js` to improve hourly revenue aggregation.
 - Revenue-by-hour charts now parse 24-hour timestamps and fall back to full-day ranges when business-hour buckets are empty, preventing empty visualizations.
@@ -59,3 +59,4 @@ CSV Parsing
 - Settings now include a Raw Data Inspector card that lists the first 200 stored rows (with `__dateRaw`, `__hour`, etc.) and highlights records missing hour data for quick timestamp debugging.
 - Hour parsing now stores both `__hourRaw` and an offset-adjusted `__hour` (currently shifting -6 hours to convert GMT-1 source stamps to local GMT-7 business time); inspector summaries show the applied offset.
 - Category mappings automatically reapply to freshly uploaded datasets once the saved map is available, so manual reapply clicks are no longer required after each upload.
+- Category Trend by Month chart now spans the full width with increased height for clearer multi-category month comparisons.

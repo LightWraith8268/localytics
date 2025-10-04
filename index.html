@@ -37,6 +37,7 @@
       }
       .overflow-y-auto { overflow-y: auto; }
       .overflow-x-hidden { overflow-x: hidden; }
+      .chart-tall { height: 480px; min-height: 480px; }
       /* Dark mode hover states for sidebar navigation */
       .dark .hover\:bg-gray-50:hover {
         background-color: var(--hover-bg) !important;
@@ -1169,9 +1170,9 @@
                 <h3 class="text-sm font-semibold mb-2">Revenue YoY Change (Monthly)</h3>
                 <div class="h-96"><canvas id="trends-chart-rev-yoy" data-zoom="1"></canvas></div>
               </div>
-              <div>
+              <div class="lg:col-span-2">
                 <h3 class="text-sm font-semibold mb-2">Category Trend by Month</h3>
-                <div class="h-96"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
+                <div class="h-96 chart-tall"><canvas id="trends-chart-cat-trend" data-zoom="1"></canvas></div>
               </div>
             </div>
           </div>
