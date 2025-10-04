@@ -5606,8 +5606,17 @@ function renderSegmentAnalysisCharts(categoryDataOverride) {
     return;
   }
 
-  const catLabels = categoryData.map(x => x.label);
-  const catData = categoryData.map(x => x.revenue);
+  // Sort category data by revenue (descending) for organized legend
+  const sortedCategoryData = categoryData.slice().sort((a, b) => b.revenue - a.revenue);
+
+  // Calculate total revenue for percentage calculations
+  const totalRevenue = sortedCategoryData.reduce((sum, x) => sum + x.revenue, 0);
+
+  const catLabels = sortedCategoryData.map(x => x.label);
+  const catData = sortedCategoryData.map(x => x.revenue);
+  const catPercentages = sortedCategoryData.map(x =>
+    totalRevenue > 0 ? ((x.revenue / totalRevenue) * 100).toFixed(1) : 0
+  );
 
   if (state.chartCatShare) state.chartCatShare.destroy();
 
@@ -5638,7 +5647,21 @@ function renderSegmentAnalysisCharts(categoryDataOverride) {
         plugins: {
           legend: {
             position: 'right',
-            labels: { padding: 10, font: { size: 11 } }
+            labels: {
+              padding: 10,
+              font: { size: 11 },
+              generateLabels: (chart) => {
+                const data = chart.data;
+                return data.labels.map((label, i) => ({
+                  text: `${label} (${catPercentages[i]}%)`,
+                  fillStyle: data.datasets[0].backgroundColor[i],
+                  strokeStyle: data.datasets[0].borderColor,
+                  lineWidth: data.datasets[0].borderWidth,
+                  hidden: false,
+                  index: i
+                }));
+              }
+            }
           },
           title: {
             display: true,
