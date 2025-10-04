@@ -6,24 +6,24 @@ async function loadVersionConfig() {
   if (versionConfig) return versionConfig;
 
   try {
-    const response = await fetch('./version.json');
+    const response = await fetch(`./version.json?ts=${Date.now()}`, { cache: 'no-store' });
     versionConfig = await response.json();
     return versionConfig;
   } catch (error) {
     console.warn('Failed to load version config, using fallback:', error);
-    versionConfig = { version: '1.18.3', timestamp: '20251004' };
+    versionConfig = { version: '1.18.4', timestamp: '20251005' };
     return versionConfig;
   }
 }
 
 // Get version immediately (for synchronous use)
 function getVersion() {
-  return versionConfig?.version || '1.18.3';
+  return versionConfig?.version || '1.18.4';
 }
 
 // Get timestamp immediately (for synchronous use)
 function getTimestamp() {
-  return versionConfig?.timestamp || '20251004';
+  return versionConfig?.timestamp || '20251005';
 }
 
 // Get service worker version format

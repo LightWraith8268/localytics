@@ -66,6 +66,30 @@
         color: #ffffff !important;
       }
 
+      .layout-main {
+        position: relative;
+      }
+
+      @media (min-width: 1024px) {
+        body.layout-lock {
+          overflow: hidden;
+        }
+        .layout-shell {
+          min-height: 100vh;
+          max-height: 100vh;
+        }
+        .layout-main {
+          max-height: 100vh;
+          overflow-y: auto;
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .layout-main::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+      }
+
       /* Print-specific styles */
       @media print {
         /* Default portrait orientation for all pages with double-sided printing */
@@ -380,7 +404,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   </head>
-  <body class="overflow-x-hidden">
+  <body class="overflow-x-hidden layout-lock">
     <!-- Mobile Header -->
     <header class="lg:hidden app-card border-b app-border sticky top-0 z-50 no-print shadow-sm">
       <div class="px-4 py-3 flex items-center justify-between">
@@ -488,7 +512,7 @@
     </nav>
 
     <!-- Desktop Layout Container -->
-    <div class="lg:flex">
+    <div class="lg:flex layout-shell">
       <!-- Desktop Sidebar -->
       <nav class="hidden lg:flex lg:flex-col lg:w-64 lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen app-card border-r app-border no-print">
         <!-- Sidebar Header - Fixed -->
@@ -498,7 +522,7 @@
           </div>
           <div>
             <h1 class="text-xl font-bold text-gray-900">Localytics</h1>
-            <p class="text-xs text-gray-500" id="sidebarVersion">v...</p>
+            <p class="text-xs text-gray-500" id="sidebarVersion">v1.18.4</p>
           </div>
         </div>
 
@@ -572,7 +596,7 @@
       </nav>
 
       <!-- Main Content -->
-      <main class="flex-1 overflow-x-hidden">
+      <main class="flex-1 overflow-x-hidden layout-main">
         <div class="container mx-auto py-4 md:py-6 px-4 max-w-7xl">
       <!-- Upload View -->
       <section id="view-upload" class="view">
@@ -1444,6 +1468,28 @@
             </div>
           </div>
 
+          <!-- Raw Data Inspector -->
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <h2 class="text-lg md:text-xl font-medium">Raw Data Inspector</h2>
+                <p class="text-sm text-gray-600 mt-1">Inspect the first 200 rows exactly as they are stored in Firebase or local storage to debug timestamp parsing.</p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <button id="btnRefreshRawData" class="px-3 py-2 border app-border rounded-md text-xs font-medium hover:bg-gray-50">Refresh</button>
+                <button id="btnCopyRawData" class="px-3 py-2 border app-border rounded-md text-xs font-medium hover:bg-gray-50">Copy Sample JSON</button>
+              </div>
+            </div>
+
+            <div id="rawDataSummary" class="mt-3 text-xs text-gray-500">Not loaded yet. Click Refresh to fetch the latest stored rows.</div>
+
+            <div id="rawDataMissing" class="hidden mt-3 text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded-md p-3"></div>
+
+            <div id="rawDataTableWrap" class="mt-3 overflow-auto border app-border rounded-md">
+              <!-- Table populated via app.js -->
+            </div>
+          </div>
+
           <!-- Branding Section -->
           <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
             <h2 class="text-lg md:text-xl font-medium mb-4">Branding & Identity</h2>
@@ -1582,6 +1628,7 @@
       });
     </script>
 
+    <script>window.APP_VERSION = '1.18.4';</script>
     <!-- Version configuration -->
     <script type="module" src="./assets/js/version.js"></script>
     <!-- Dynamic version cache-busting -->
@@ -1667,74 +1714,81 @@
     <script type="module">
       import { Workbox } from 'https://storage.googleapis.com/workbox-cdn/releases/6.5.4/workbox-window.prod.mjs';
       if ('serviceWorker' in navigator) {
-        const swUrl = './service-worker.js' + (window.APP_VERSION ? ('?v=' + window.APP_VERSION) : '');
-        const wb = new Workbox(swUrl, { updateViaCache: 'none' });
-        const banner = document.getElementById('sw-update');
-        const btn = document.getElementById('btnSwUpdate');
-        const showBanner = () => { if (banner) banner.classList.remove('hidden'); };
-        const hideBanner = () => { if (banner) banner.classList.add('hidden'); };
+        let swRegistered = false;
 
-        // Query the waiting SW for its version; only surface banner if it differs from the page APP_VERSION
-        async function maybeShowBanner() {
-          try {
-            const reg = await navigator.serviceWorker.getRegistration();
-            const waiting = reg?.waiting;
-            if (!waiting) return;
-            const swVersion = await new Promise((resolve) => {
-              const channel = new MessageChannel();
-              const timeout = setTimeout(() => resolve(null), 1500);
-              channel.port1.onmessage = (event) => { clearTimeout(timeout); resolve(event?.data?.version || null); };
-              try { waiting.postMessage({ type: 'GET_VERSION' }, [channel.port2]); } catch { clearTimeout(timeout); resolve(null); }
-            });
-            if (!swVersion) return; // Unknown -> avoid false positives
-            const swVer = String(swVersion).replace(/^wb-/, '');
-            const appVer = String(window.APP_VERSION || '');
-            if (swVer && appVer && swVer !== appVer) {
-              showBanner();
-            } else {
+        const initWorkbox = () => {
+          if (swRegistered) return;
+          const version = window.APP_VERSION || '';
+          const swUrl = './service-worker.js' + (version ? ('?v=' + version) : '');
+          const wb = new Workbox(swUrl, { updateViaCache: 'none' });
+          const banner = document.getElementById('sw-update');
+          const btn = document.getElementById('btnSwUpdate');
+          const showBanner = () => { if (banner) banner.classList.remove('hidden'); };
+          const hideBanner = () => { if (banner) banner.classList.add('hidden'); };
+
+          async function maybeShowBanner() {
+            try {
+              const reg = await navigator.serviceWorker.getRegistration();
+              const waiting = reg?.waiting;
+              if (!waiting) return;
+              const swVersion = await new Promise((resolve) => {
+                const channel = new MessageChannel();
+                const timeout = setTimeout(() => resolve(null), 1500);
+                channel.port1.onmessage = (event) => { clearTimeout(timeout); resolve(event?.data?.version || null); };
+                try { waiting.postMessage({ type: 'GET_VERSION' }, [channel.port2]); } catch { clearTimeout(timeout); resolve(null); }
+              });
+              if (!swVersion) return;
+              const swVer = String(swVersion).replace(/^wb-/, '');
+              const appVer = String(window.APP_VERSION || '');
+              if (swVer && appVer && swVer !== appVer) {
+                showBanner();
+              } else {
+                hideBanner();
+              }
+            } catch {
               hideBanner();
             }
-          } catch {
-            // If anything fails, be conservative: don't show
-            hideBanner();
           }
-        }
 
-        // Show update banner but let user manually reload
-        wb.addEventListener('waiting', () => { maybeShowBanner(); });
-        wb.addEventListener('externalwaiting', () => { maybeShowBanner(); });
-        btn?.addEventListener('click', () => {
-          wb.messageSkipWaiting();
-        });
-        wb.addEventListener('controlling', () => {
-          // Don't auto-reload - let the service worker take control
-          // User will reload manually or on next page visit
-          hideBanner();
-        });
+          wb.addEventListener('waiting', () => { maybeShowBanner(); });
+          wb.addEventListener('externalwaiting', () => { maybeShowBanner(); });
+          btn?.addEventListener('click', () => {
+            wb.messageSkipWaiting();
+          });
+          wb.addEventListener('controlling', () => {
+            hideBanner();
+          });
 
-        wb.register().then((reg) => {
-          const checkNow = () => { wb.update(); };
-          // Check immediately after registration
-          checkNow();
-          // Listen for new installing worker and surface banner once installed/waiting
-          const listenUpdateFound = (registration) => {
-            registration.addEventListener('updatefound', () => {
-              const sw = registration.installing;
-              if (!sw) return;
-              sw.addEventListener('statechange', () => {
-                if (sw.state === 'installed' && registration.waiting) { maybeShowBanner(); }
+          wb.register().then((reg) => {
+            const checkNow = () => { wb.update(); };
+            checkNow();
+            const listenUpdateFound = (registration) => {
+              registration.addEventListener('updatefound', () => {
+                const sw = registration.installing;
+                if (!sw) return;
+                sw.addEventListener('statechange', () => {
+                  if (sw.state === 'installed' && registration.waiting) { maybeShowBanner(); }
+                });
               });
-            });
-          };
-          listenUpdateFound(reg);
-          // Proactively check for updates on an interval (no manual refresh needed)
-          const intervalMs = 20_000;
-          setInterval(() => { if (document.visibilityState === 'visible') checkNow(); }, intervalMs);
-          // Also check on page focus/visibility (tab switch brings it to front)
-          window.addEventListener('focus', checkNow);
-          document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNow(); });
-          window.addEventListener('pageshow', checkNow);
-        });
+            };
+            listenUpdateFound(reg);
+            const intervalMs = 20_000;
+            setInterval(() => { if (document.visibilityState === 'visible') checkNow(); }, intervalMs);
+            window.addEventListener('focus', checkNow);
+            document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') checkNow(); });
+            window.addEventListener('pageshow', checkNow);
+          });
+
+          swRegistered = true;
+        };
+
+        if (window.APP_VERSION) {
+          initWorkbox();
+        } else {
+          window.addEventListener('versionLoaded', () => initWorkbox(), { once: true });
+          // Fallback: register after delay even if version load fails
+          setTimeout(() => initWorkbox(), 2000);
+        }
       }
     </script>
     <script nomodule>

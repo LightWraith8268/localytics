@@ -45,3 +45,15 @@ CSV Parsing
 - Added Orders, Clients, Staff, and Items tracking pages with richer summaries and tables.
 - Ensured all numeric outputs render with two decimal places, including totals and aggregated metrics.
 - Sorted date tables by most recent first and expanded order details with per-item breakdowns.
+
+---
+2025-10-04 - Hourly Revenue Fallback & Repo Status
+- App version loads from `version.json` (currently 1.18.4 / timestamp 20251005); service worker fallback string set to `wb-1.18.4-20251005`.
+- `index.html` defers to dynamic cache-busting for `assets/js/app.js` and `assets/css/styles.css` once the version module resolves.
+- Working tree currently has local edits in `assets/js/app.js` to improve hourly revenue aggregation.
+- Revenue-by-hour charts now parse 24-hour timestamps and fall back to full-day ranges when business-hour buckets are empty, preventing empty visualizations.
+- Normalisation preserves raw date/time and item strings so saved datasets keep category mappings and hour-of-day insights after reloads.
+- Added broader time format parsing (`HHMM`, stray AM/PM tokens) and console sampling for rows missing hour data to help diagnose uploads that omit a time component.
+- Chart helpers now pre-size hidden canvases and force post-render resizes so hour-of-day charts render consistently and zoom modal cloning works even when views were hidden on initial draw.
+- Desktop layout locks the body scroll and routes independent overflow to `.layout-main` and `.sidebar-scroll`, keeping the sidebar scrollable with hidden scrollbars as originally designed.
+- Settings now include a Raw Data Inspector card that lists the first 200 stored rows (with `__dateRaw`, `__hour`, etc.) and highlights records missing hour data for quick timestamp debugging.

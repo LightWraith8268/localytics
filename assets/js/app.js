@@ -50,7 +50,15 @@ const state = {
   itemSynonyms: [],
   // Page-specific display state (for export/print with filters)
   displayedOrders: null, // Currently displayed orders on Orders page (after filters)
+  rawInspector: {
+    rows: [],
+    lastLoaded: null,
+    loading: false,
+    error: null
+  }
 };
+
+const RAW_INSPECTOR_ROW_LIMIT = 200;
 
 let categoryMapDraft = {};
 let previousBodyOverflow = '';
@@ -119,6 +127,8 @@ function showView(hash) {
   } else if (view === 'history') {
     // Populate snapshots list when History page is viewed
     populateSnapshotsList();
+  } else if (view === 'settings') {
+    renderSettingsView();
   }
 }
 
@@ -196,6 +206,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Populate saved reports dropdown with templates (available immediately on page load)
   populateSavedReportsDropdown();
+
+  const btnRefreshRawData = qs('btnRefreshRawData');
+  if (btnRefreshRawData) {
+    btnRefreshRawData.addEventListener('click', () => refreshRawDataInspector(true));
+  }
+  const btnCopyRawData = qs('btnCopyRawData');
+  if (btnCopyRawData) {
+    btnCopyRawData.addEventListener('click', () => copyRawDataSample());
+  }
 
   // Load settings after authentication state is determined
   let authStateReady = false;
@@ -276,6 +295,10 @@ window.addEventListener('DOMContentLoaded', () => {
         state.headers = storedData.headers || [];
         state.mapping = storedData.mapping || state.mapping;
 
+        state.rawInspector.rows = storedData.rows || [];
+        state.rawInspector.lastLoaded = Date.now();
+        state.rawInspector.error = null;
+
         // DEBUG: Expose state to window and check for missing dates
         window.APP_STATE = state;
         const missingDates = state.rows.filter(r => !r.__dateIso);
@@ -299,6 +322,10 @@ window.addEventListener('DOMContentLoaded', () => {
         // (stored rows have old __category values from when they were saved)
         console.log('[app] Reapplying categoryMap after loading CSV data...');
         await reapplyCategoryMap();
+
+        if (isSettingsViewActive()) {
+          renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
+        }
       } else {
         // No stored data, load sample data for demo (but only after checking demo state)
         try {
@@ -435,9 +462,15 @@ window.addEventListener('DOMContentLoaded', () => {
         setProgress(Math.min(99, pct), `Reapplying map - ${pct}%`);
       });
       state.rows = normalized;
+      state.rawInspector.rows = normalized;
+      state.rawInspector.lastLoaded = Date.now();
+      state.rawInspector.error = null;
       state.report = computeReport(state.rows, state.mapping);
       renderReport();
       updateCategoryMapSummary();
+      if (isSettingsViewActive()) {
+        renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
+      }
     } catch (error) {
       console.warn('[app] Failed to reapply category mapping', error);
     } finally {
@@ -483,9 +516,16 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     console.log('[app] Normalization complete, setting state.rows to', normalized.length, 'rows');
     state.rows = normalized;
+    state.rawInspector.rows = normalized;
+    state.rawInspector.lastLoaded = Date.now();
+    state.rawInspector.error = null;
 
     // DEBUG: Expose state to window for console inspection
     window.APP_STATE = state;
+
+    if (isSettingsViewActive()) {
+      renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
+    }
 
     // Save CSV data to Firebase/localStorage for persistence
     await saveCsvData(normalized, headers, state.mapping);
@@ -1421,41 +1461,32 @@ function renderReport() {
   if (state.chartDowRevenue) { state.chartDowRevenue.destroy(); state.chartDowRevenue = null; }
   const chartDow = document.getElementById('chart-dow-revenue'); if (chartDow) state.chartDowRevenue = makeBarChart(chartDow, dowLabels, dowValues, 'Avg Revenue');
 
-  // Hour-of-day revenue (sum) - business hours only (7am-5pm)
-  const businessHourStart = 7;
-  const businessHourEnd = 17;
-  const businessHours = businessHourEnd - businessHourStart + 1; // 11 hours
-  const hourAgg = new Array(businessHours).fill(0);
-  let rowsWithHour = 0;
-
-  for (const r of allData) {
-    const h = (r.__hour ?? -1);
-    if (h !== -1 && h !== null && h !== undefined) rowsWithHour++;
-    if (h >= businessHourStart && h <= businessHourEnd) {
-      const index = h - businessHourStart;
-      hourAgg[index] += Number(r.__revenue || 0);
-    }
-  }
+  // Hour-of-day revenue summary
+  const hourSummary = aggregateRevenueByHour(allData, { mapping: state.mapping });
+  state.hourlyRevenue = hourSummary;
 
   console.log('[renderReport] Hour chart data:', {
     totalRows: allData.length,
-    rowsWithHour,
-    businessHours: hourAgg,
+    rowsWithHour: hourSummary?.stats?.rowsWithHour || 0,
+    chartRange: hourSummary?.stats?.chartRange,
+    fallback: hourSummary?.stats?.fallbackToObservedRange,
+    buckets: hourSummary?.buckets,
     sampleRows: allData.slice(0, 3).map(r => ({ __hour: r.__hour, __revenue: r.__revenue }))
-  });
-
-  const hourLabels = Array.from({length: businessHours}, (_, i) => {
-    const hour = businessHourStart + i;
-    const period = hour < 12 ? 'AM' : 'PM';
-    const displayHour = hour > 12 ? hour - 12 : hour;
-    return `${displayHour}${period}`;
   });
 
   if (state.chartHourRevenue) { state.chartHourRevenue.destroy(); state.chartHourRevenue = null; }
   const chartHour = document.getElementById('trends-chart-hour-revenue');
   if (chartHour) {
-    state.chartHourRevenue = makeBarChart(chartHour, hourLabels, hourAgg.map(v => Number(v.toFixed(2))), 'Revenue (Business Hours)');
-    console.log('[renderReport] Hour chart created:', !!state.chartHourRevenue);
+    const fallbackHour = hourSummary?.stats?.businessRange ? hourSummary.stats.businessRange[0] : 7;
+    const fallbackLabel = formatHourLabel(fallbackHour);
+    const labels = hourSummary.labels.length ? hourSummary.labels : [fallbackLabel];
+    const data = hourSummary.data.length ? hourSummary.data : [0];
+    state.chartHourRevenue = makeBarChart(chartHour, labels, data, hourSummary.title);
+    console.log('[renderReport] Hour chart created:', {
+      hasChart: !!state.chartHourRevenue,
+      title: hourSummary.title,
+      stats: hourSummary.stats
+    });
   } else {
     console.warn('[renderReport] Hour chart canvas not found');
   }
@@ -1828,6 +1859,239 @@ function renderItemTrackingView() {
   })), {
     defaultSort: { column: 'revenue', direction: 'desc' }
   });
+}
+
+
+function renderSettingsView() {
+  if (state.rawInspector.rows.length && !state.rawInspector.loading) {
+    renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
+  } else if (!state.rawInspector.loading) {
+    refreshRawDataInspector(false);
+  }
+}
+
+async function refreshRawDataInspector(force = false) {
+  if (state.rawInspector.loading) return;
+  const summaryEl = qs('rawDataSummary');
+  const wrap = qs('rawDataTableWrap');
+
+  const recentlyLoaded = state.rawInspector.lastLoaded && (Date.now() - state.rawInspector.lastLoaded < 60000);
+  if (!force && recentlyLoaded && state.rawInspector.rows.length) {
+    renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
+    return;
+  }
+
+  state.rawInspector.loading = true;
+  if (summaryEl) summaryEl.textContent = 'Loading raw rows from storage...';
+  if (wrap) wrap.innerHTML = '<div class="p-4 text-sm text-gray-500">Loading...</div>';
+
+  try {
+    const stored = await loadCsvData();
+    const rows = stored?.rows || [];
+    const mapping = stored?.mapping || state.mapping;
+    state.rawInspector.rows = rows;
+    state.rawInspector.lastLoaded = Date.now();
+    state.rawInspector.error = null;
+    renderRawDataInspectorTable(rows, mapping);
+  } catch (err) {
+    console.warn('[rawInspector] Failed to load raw data', err);
+    state.rawInspector.error = err;
+    if (summaryEl) {
+      summaryEl.textContent = `Failed to load raw data: ${err?.message || err}`;
+    }
+    if (wrap) {
+      wrap.innerHTML = '<div class="p-4 text-sm text-red-600">Unable to fetch raw data. Check console for details.</div>';
+    }
+    const missingEl = qs('rawDataMissing');
+    if (missingEl) missingEl.classList.add('hidden');
+  } finally {
+    state.rawInspector.loading = false;
+  }
+}
+
+function renderRawDataInspectorTable(rows, mapping = state.mapping) {
+  const summaryEl = qs('rawDataSummary');
+  const missingEl = qs('rawDataMissing');
+  const wrap = qs('rawDataTableWrap');
+  if (!wrap) return;
+
+  const total = Array.isArray(rows) ? rows.length : 0;
+  const lastLoaded = state.rawInspector.lastLoaded ? new Date(state.rawInspector.lastLoaded).toLocaleString() : 'never';
+  const showing = Math.min(total, RAW_INSPECTOR_ROW_LIMIT);
+  const missingHourTotal = Array.isArray(rows)
+    ? rows.reduce((acc, row) => acc + (row && (row.__hour === null || row.__hour === undefined || row.__hour === '' || Number.isNaN(Number(row.__hour))) ? 1 : 0), 0)
+    : 0;
+
+  if (summaryEl) {
+    summaryEl.textContent = total
+      ? `${total.toLocaleString()} rows stored (showing first ${showing.toLocaleString()}). Missing __hour: ${missingHourTotal.toLocaleString()}. Last refresh ${lastLoaded}.`
+      : 'No stored rows found. Upload a CSV and click Refresh to inspect the saved data.';
+  }
+
+  if (!total) {
+    wrap.innerHTML = '<div class="p-4 text-sm text-gray-500">No raw data available.</div>';
+    if (missingEl) missingEl.classList.add('hidden');
+    return;
+  }
+
+  const slice = rows.slice(0, showing);
+  const missingSample = slice.filter(row => row && (row.__hour === null || row.__hour === undefined || row.__hour === '' || Number.isNaN(Number(row.__hour))));
+  if (missingEl) {
+    if (missingSample.length) {
+      const sampleList = missingSample.slice(0, 5).map((row, idx) => {
+        const raw = row?.__dateRaw ?? '(missing __dateRaw)';
+        const mappedVal = mapping?.date ? row?.[mapping.date] : undefined;
+        const order = row?.__orderRaw ?? row?.__order ?? '';
+        const parts = [
+          `${idx + 1}. <code>${escapeHtml(String(raw))}</code>`
+        ];
+        if (mappedVal !== undefined) {
+          parts.push(`-> <code>${escapeHtml(String(mappedVal))}</code>`);
+        }
+        if (order) {
+          parts.push(`(order ${escapeHtml(String(order))})`);
+        }
+        return `<li class="py-0.5">${parts.join(' ')}</li>`;
+      }).join('');
+      missingEl.innerHTML = `<strong>${missingSample.length}</strong> of the first ${showing.toLocaleString()} rows are missing <code>__hour</code>.<ul class="mt-2 space-y-1">${sampleList}</ul>`;
+      missingEl.classList.remove('hidden');
+    } else {
+      missingEl.classList.add('hidden');
+      missingEl.innerHTML = '';
+    }
+  }
+
+  wrap.innerHTML = '';
+
+  const columns = [{ key: '__index', label: '#' }];
+  if (mapping?.date) columns.push({ key: mapping.date, label: `CSV (${mapping.date})` });
+  columns.push(
+    { key: '__dateRaw', label: '__dateRaw' },
+    { key: '__datePretty', label: '__datePretty' },
+    { key: '__dateIso', label: '__dateIso' },
+    { key: '__hour', label: '__hour' },
+    { key: '__orderRaw', label: '__orderRaw' },
+    { key: '__itemRaw', label: '__itemRaw' }
+  );
+  if (mapping?.item) columns.push({ key: mapping.item, label: `CSV (${mapping.item})` });
+  columns.push(
+    { key: '__revenue', label: '__revenue' },
+    { key: '__client', label: '__client' },
+    { key: '__staff', label: '__staff' }
+  );
+
+  const table = document.createElement('table');
+  table.className = 'min-w-full text-xs border-collapse';
+  const thead = document.createElement('thead');
+  thead.className = 'bg-gray-50 text-gray-600';
+  const headRow = document.createElement('tr');
+  columns.forEach(col => {
+    const th = document.createElement('th');
+    th.className = 'px-3 py-2 font-semibold text-left whitespace-nowrap';
+    th.textContent = col.label;
+    headRow.appendChild(th);
+  });
+  const thJson = document.createElement('th');
+  thJson.className = 'px-3 py-2 font-semibold text-left whitespace-nowrap';
+  thJson.textContent = 'Row JSON';
+  headRow.appendChild(thJson);
+  thead.appendChild(headRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  slice.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.className = idx % 2 === 0 ? 'bg-white border-b border-gray-100' : 'bg-gray-50 border-b border-gray-100';
+
+    columns.forEach(col => {
+      const td = document.createElement('td');
+      td.className = 'px-3 py-2 align-top whitespace-nowrap text-gray-800';
+      let value;
+      if (col.key === '__index') {
+        value = idx + 1;
+      } else {
+        value = row ? row[col.key] : undefined;
+      }
+
+      if (col.key === '__hour') {
+        const numVal = Number(value);
+        if (value === null || value === undefined || value === '' || Number.isNaN(numVal)) {
+          td.classList.add('text-red-600', 'font-semibold');
+          td.textContent = value === null || value === undefined || value === '' ? 'n/a' : String(value);
+        } else {
+          td.textContent = numVal.toString();
+        }
+      } else if (value === null || value === undefined || value === '') {
+        td.classList.add('text-gray-400');
+        td.textContent = '';
+      } else if (typeof value === 'number') {
+        td.textContent = Number.isFinite(value) ? value.toString() : '';
+      } else {
+        const str = String(value);
+        if (str.length > 64) {
+          td.textContent = `${str.slice(0, 61)}…`;
+          td.title = str;
+        } else {
+          td.textContent = str;
+        }
+      }
+
+      if ((col.key === '__dateRaw' || col.key === '__dateIso' || col.key === '__datePretty' || col.key === mapping?.date) && value) {
+        td.classList.add('font-mono');
+      }
+      tr.appendChild(td);
+    });
+
+    const tdJson = document.createElement('td');
+    tdJson.className = 'px-3 py-2 align-top text-gray-600';
+    const details = document.createElement('details');
+    details.className = 'max-w-[260px]';
+    const summary = document.createElement('summary');
+    summary.className = 'cursor-pointer text-blue-600';
+    summary.textContent = 'View';
+    const pre = document.createElement('pre');
+    pre.className = 'mt-1 bg-gray-100 rounded p-2 text-[10px] leading-snug overflow-x-auto max-h-40';
+    pre.textContent = JSON.stringify(row, null, 2);
+    details.appendChild(summary);
+    details.appendChild(pre);
+    tdJson.appendChild(details);
+    tr.appendChild(tdJson);
+
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+
+  wrap.appendChild(table);
+}
+
+async function copyRawDataSample() {
+  if (!state.rawInspector.rows.length) {
+    alert('No raw data loaded yet. Click Refresh first.');
+    return;
+  }
+
+  const sample = state.rawInspector.rows.slice(0, 20);
+  const json = JSON.stringify(sample, null, 2);
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(json);
+      alert('Copied the first 20 rows to the clipboard.');
+    } else {
+      throw new Error('Clipboard API not available');
+    }
+  } catch (err) {
+    console.warn('[rawInspector] Clipboard copy failed, showing prompt fallback', err);
+    try {
+      window.prompt('Copy sample JSON manually:', json);
+    } catch (promptErr) {
+      console.warn('[rawInspector] Prompt fallback failed', promptErr);
+    }
+  }
+}
+
+function isSettingsViewActive() {
+  const el = document.getElementById('view-settings');
+  return !!(el && !el.classList.contains('hidden'));
 }
 
 
@@ -4434,15 +4698,17 @@ function normalizeAndDedupe(rows, mapping) {
   const out = [];
   let rowIndex = 0;
   for (const r of rows) {
-    const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
-    const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
+    const rawOrderVal = orderCol ? (r.__orderRaw ?? r[orderCol]) : '';
+    const order = rawOrderVal != null ? String(rawOrderVal).trim() : '';
+    const rawItemVal = itemCol ? (r.__itemRaw ?? r[itemCol]) : '';
+    const name = rawItemVal != null ? String(rawItemVal).trim() : '';
     const canonName = canonicalizeItemName(name);
     const q = num(r[qtyCol]);
     const p = num(r[priceCol]);
     const c = num(r[costCol]);
     const revenue = Number((q * p).toFixed(2));
     const cost = Number((q * c).toFixed(2));
-    const originalDateVal = r[dateCol];
+    const originalDateVal = dateCol ? (r.__dateRaw ?? r[dateCol]) : (r.__dateRaw ?? r.__dateIso ?? r.__datePretty ?? '');
     const iso = toIsoDate(originalDateVal);
     const pretty = toPrettyDate(originalDateVal);
     const dFull = parseFullDate(originalDateVal);
@@ -4461,6 +4727,8 @@ function normalizeAndDedupe(rows, mapping) {
 
     const obj = { ...r };
     if (dateCol) obj[dateCol] = pretty; // replace display date
+    obj.__dateRaw = originalDateVal;
+    obj.__datePretty = pretty;
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
     obj.__hour = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
@@ -4471,6 +4739,8 @@ function normalizeAndDedupe(rows, mapping) {
     obj.__cost = cost || 0;
     obj.__profit = Number(((revenue || 0) - (cost || 0)).toFixed(2));
     obj.__order = order || 'undefined';
+    obj.__orderRaw = rawOrderVal != null ? String(rawOrderVal) : '';
+    obj.__itemRaw = rawItemVal != null ? String(rawItemVal) : '';
     obj.__client = clientCol ? (r[clientCol] || 'undefined') : 'undefined';
     obj.__staff = staffCol ? (r[staffCol] || 'undefined') : 'undefined';
     // Category: manual mapping overrides CSV
@@ -4516,15 +4786,17 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   const out = [];
   for (let i = 0; i < rows.length; i++) {
     const r = rows[i];
-    const order = orderCol ? String(r[orderCol] ?? '').trim() : '';
-    const name = itemCol ? String(r[itemCol] ?? '').trim() : '';
+    const rawOrderVal = orderCol ? (r.__orderRaw ?? r[orderCol]) : '';
+    const order = rawOrderVal != null ? String(rawOrderVal).trim() : '';
+    const rawItemVal = itemCol ? (r.__itemRaw ?? r[itemCol]) : '';
+    const name = rawItemVal != null ? String(rawItemVal).trim() : '';
     const canonName = canonicalizeItemName(name);
     const q = num(r[qtyCol]);
     const p = num(r[priceCol]);
     const c = num(r[costCol]);
     const revenue = Number((q * p).toFixed(2));
     const cost = Number((q * c).toFixed(2));
-    const originalDateVal = r[dateCol];
+    const originalDateVal = dateCol ? (r.__dateRaw ?? r[dateCol]) : (r.__dateRaw ?? r.__dateIso ?? r.__datePretty ?? '');
     const iso = toIsoDate(originalDateVal);
     const pretty = toPrettyDate(originalDateVal);
     const dFull = parseFullDate(originalDateVal);
@@ -4543,6 +4815,8 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
 
     const obj = { ...r };
     if (dateCol) obj[dateCol] = pretty;
+    obj.__dateRaw = originalDateVal;
+    obj.__datePretty = pretty;
     obj.__item = canonName; // Store canonicalized item name for synonym support
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
@@ -4554,6 +4828,8 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     obj.__cost = cost || 0;
     obj.__profit = Number(((revenue || 0) - (cost || 0)).toFixed(2));
     obj.__order = order || 'undefined';
+    obj.__orderRaw = rawOrderVal != null ? String(rawOrderVal) : '';
+    obj.__itemRaw = rawItemVal != null ? String(rawItemVal) : '';
     obj.__client = clientCol ? (r[clientCol] || 'undefined') : 'undefined';
     obj.__staff = staffCol ? (r[staffCol] || 'undefined') : 'undefined';
     const manualCat = state.categoryMap && name ? (state.categoryMap[name] || state.categoryMap[canonName] || '') : '';
@@ -4681,7 +4957,243 @@ function num(v){ if (v==null) return 0; if (typeof v==='number') return v; const
 function toIsoDate(v){ if(!v) return ''; try{ const m=String(v).match(/^([A-Za-z]{3})\s+(\d{1,2})\s+(\d{4})/); if(m){ const months={Jan:1,Feb:2,Mar:3,Apr:4,May:5,Jun:6,Jul:7,Aug:8,Sep:9,Oct:10,Nov:11,Dec:12}; const mm=String(months[m[1]]).padStart(2,'0'); const dd=String(m[2]).padStart(2,'0'); const yyyy=m[3]; return `${yyyy}-${mm}-${dd}`;} const d=new Date(v); if(!Number.isNaN(d.getTime())){ const yyyy=d.getFullYear(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `${yyyy}-${mm}-${dd}`; } }catch{} return ''; }
 function toPrettyDate(v){ if(!v) return ''; const m=String(v).match(/^([A-Za-z]{3}\s+\d{1,2}\s+\d{4})/); if(m) return m[1]; const isoMatch=String(v).match(/^(\d{4})-(\d{2})-(\d{2})$/); if(isoMatch){ const months=['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; return `${months[parseInt(isoMatch[2])]} ${parseInt(isoMatch[3])} ${isoMatch[1]}`; } try { return new Date(v).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'2-digit'}); } catch { return String(v); } }
 function parseFullDate(v){ try { const d = new Date(v); return Number.isNaN(d.getTime()) ? null : d; } catch { return null; } }
-function extractHourFromString(v){ if(!v) return null; try{ const m=String(v).match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i); if(m){ let hour=parseInt(m[1]); const period=m[3].toUpperCase(); if(period==='PM' && hour!==12) hour+=12; else if(period==='AM' && hour===12) hour=0; return hour; } }catch{} return null; }
+function extractHourFromString(v){
+  if (!v) return null;
+  try {
+    const str = String(v).trim();
+    if (!str) return null;
+
+    const ampmMatch = str.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)/i);
+    if (ampmMatch) {
+      let hour = parseInt(ampmMatch[1], 10);
+      const period = ampmMatch[3].toUpperCase();
+      if (period === 'PM' && hour !== 12) hour += 12;
+      else if (period === 'AM' && hour === 12) hour = 0;
+      return clampHour(hour);
+    }
+
+    const ampmCompactMatch = str.match(/(?:^|\s)(\d{1,2})\s*(AM|PM)(?:\b|\s)/i);
+    if (ampmCompactMatch) {
+      let hour = parseInt(ampmCompactMatch[1], 10);
+      const period = ampmCompactMatch[2].toUpperCase();
+      if (period === 'PM' && hour !== 12) hour += 12;
+      else if (period === 'AM' && hour === 12) hour = 0;
+      return clampHour(hour);
+    }
+
+    const isoMatch = str.match(/T(\d{2}):(\d{2})/);
+    if (isoMatch) {
+      return clampHour(parseInt(isoMatch[1], 10));
+    }
+
+    const twentyFourMatch = str.match(/\b(\d{1,2}):(\d{2})(?::\d{2})?\b/);
+    if (twentyFourMatch) {
+      return clampHour(parseInt(twentyFourMatch[1], 10));
+    }
+
+    const compactMatch = str.match(/(?:T|\s|_)(\d{2})(\d{2})(\d{2})(?:[.,]\d+)?(?:Z|[+-]\d{2}:?\d{2})?$/);
+    if (compactMatch) {
+      return clampHour(parseInt(compactMatch[1], 10));
+    }
+
+    const shortCompact = str.match(/(?:^|\s)(\d{2})(\d{2})(?:\d{2})?(?:\s|$)/);
+    if (shortCompact) {
+      return clampHour(parseInt(shortCompact[1], 10));
+    }
+  } catch (err) {
+    console.debug('[extractHourFromString] Failed to parse hour:', { value: v, error: err });
+  }
+  return null;
+}
+
+function clampHour(hour) {
+  const n = Number(hour);
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(23, Math.max(0, Math.floor(n)));
+}
+
+function formatHourLabel(hour) {
+  const h = clampHour(hour);
+  const period = h < 12 ? 'AM' : 'PM';
+  let display = h % 12;
+  if (display === 0) display = 12;
+  return `${display}${period}`;
+}
+
+function aggregateRevenueByHour(rows, options = {}) {
+  const {
+    businessStart = 7,
+    businessEnd = 17,
+    filterRow,
+    fallbackToUnfiltered = true,
+    mapping = null
+  } = options;
+
+  const totalRows = Array.isArray(rows) ? rows.length : 0;
+  const totalsAll = new Array(24).fill(0);
+  const totalsFiltered = filterRow ? new Array(24).fill(0) : null;
+  let rowsWithHourAll = 0;
+  let rowsWithHourFiltered = 0;
+
+  const seenSources = new WeakMap();
+  const missingHourSamples = [];
+  const missingHourLimit = 8;
+
+  function resolveHour(row) {
+    if (!row) return null;
+
+    const stored = row.__hour;
+    if (stored !== undefined && stored !== null && stored !== '') {
+      const n = Number(stored);
+      if (Number.isFinite(n)) return clampHour(n);
+    }
+
+    const cacheKey = row;
+    if (seenSources.has(cacheKey)) {
+      return seenSources.get(cacheKey);
+    }
+
+    const candidates = [];
+    if (row.__dateRaw) candidates.push(row.__dateRaw);
+    if (mapping?.date && row[mapping.date]) candidates.push(row[mapping.date]);
+    if (row.__dateIso) candidates.push(row.__dateIso);
+    if (row.__datePretty) candidates.push(row.__datePretty);
+
+    let computed = null;
+    for (const candidate of candidates) {
+      if (!candidate) continue;
+      const fromString = extractHourFromString(candidate);
+      if (fromString !== null && fromString !== undefined) {
+        computed = clampHour(fromString);
+        break;
+      }
+      const parsed = parseFullDate(candidate);
+      if (parsed) {
+        computed = clampHour(parsed.getHours());
+        break;
+      }
+    }
+
+    if (computed !== null && computed !== undefined) {
+      row.__hour = computed;
+    }
+
+    seenSources.set(cacheKey, computed);
+    return computed;
+  }
+
+  function recordMissing(row) {
+    if (!row || missingHourSamples.length >= missingHourLimit) return;
+    const sample = {
+      dateRaw: row.__dateRaw ?? null,
+      mappedValue: mapping?.date ? (row[mapping.date] ?? null) : null,
+      dateIso: row.__dateIso ?? null,
+      hourField: row.__hour ?? null
+    };
+    missingHourSamples.push(sample);
+  }
+
+  for (const row of rows || []) {
+    if (!row) continue;
+    const computedHour = resolveHour(row);
+    if (computedHour === null || computedHour === undefined) {
+      recordMissing(row);
+      continue;
+    }
+    const hour = clampHour(computedHour);
+    const revenue = Number(row.__revenue || 0);
+    rowsWithHourAll++;
+    totalsAll[hour] += revenue;
+    if (!filterRow || filterRow(row)) {
+      rowsWithHourFiltered++;
+      if (totalsFiltered) totalsFiltered[hour] += revenue;
+    }
+  }
+
+  let hourTotals = totalsAll;
+  let rowsWithHour = rowsWithHourAll;
+  let filterApplied = false;
+  let filterDropped = false;
+
+  if (filterRow) {
+    if (rowsWithHourFiltered > 0) {
+      hourTotals = totalsFiltered;
+      rowsWithHour = rowsWithHourFiltered;
+      filterApplied = true;
+    } else if (!fallbackToUnfiltered) {
+      hourTotals = totalsFiltered;
+      rowsWithHour = rowsWithHourFiltered;
+      filterApplied = true;
+    } else {
+      hourTotals = totalsAll;
+      rowsWithHour = rowsWithHourAll;
+      filterDropped = true;
+    }
+  }
+
+  const start = clampHour(businessStart);
+  const end = clampHour(Math.max(businessStart, businessEnd));
+  const businessSlice = hourTotals.slice(start, end + 1);
+  const businessSum = businessSlice.reduce((sum, val) => sum + val, 0);
+
+  let chartStart = start;
+  let chartEnd = end;
+  let fallbackRange = false;
+
+  if (businessSum === 0) {
+    let first = -1;
+    let last = -1;
+    for (let i = 0; i < hourTotals.length; i++) {
+      if (hourTotals[i] > 0) {
+        first = i;
+        break;
+      }
+    }
+    for (let i = hourTotals.length - 1; i >= 0; i--) {
+      if (hourTotals[i] > 0) {
+        last = i;
+        break;
+      }
+    }
+
+    if (first !== -1 && last !== -1 && first <= last) {
+      chartStart = first;
+      chartEnd = last;
+      fallbackRange = true;
+    }
+  }
+
+  const labels = [];
+  const data = [];
+  if (chartStart <= chartEnd) {
+    for (let h = chartStart; h <= chartEnd; h++) {
+      labels.push(formatHourLabel(h));
+      data.push(Number(hourTotals[h].toFixed(2)));
+    }
+  }
+
+  const totalRevenue = data.reduce((sum, val) => sum + val, 0);
+
+  return {
+    labels,
+    data,
+    title: fallbackRange ? 'Revenue by Hour' : 'Revenue (Business Hours)',
+    stats: {
+      totalRows,
+      rowsWithHour,
+      businessRange: [start, end],
+      chartRange: [chartStart, chartEnd],
+      fallbackToObservedRange: fallbackRange,
+      filterApplied,
+      filterDropped,
+      totalRevenue: Number(totalRevenue.toFixed(2)),
+      missingHourSamples
+    },
+    buckets: hourTotals.slice(),
+    rawAllBuckets: totalsAll.slice(),
+    rawFilteredBuckets: totalsFiltered ? totalsFiltered.slice() : null
+  };
+}
 
 // Chart rendering functions for new pages
 function renderTrendsCharts() {
@@ -4715,6 +5227,8 @@ function renderTrendsCharts() {
   // Trend Analysis charts - these would use more complex calculations
   renderTrendAnalysisCharts(labels, revenueData, qtyData);
   renderTimePatternCharts();
+
+  try { enableChartZoom(document.getElementById('view-trends') || document); } catch {}
 }
 
 function renderAnalyticsCharts() {
@@ -4779,6 +5293,8 @@ function renderAnalyticsCharts() {
   // Profitability Analysis
   renderProfitabilityCharts();
   renderSegmentAnalysisCharts();
+
+  try { enableChartZoom(document.getElementById('view-analytics') || document); } catch {}
 }
 
 function renderTrendAnalysisCharts(labels, revenueData, qtyData) {
@@ -4828,30 +5344,23 @@ function renderTimePatternCharts() {
   if (state.chartDowRevenue) state.chartDowRevenue.destroy();
   state.chartDowRevenue = makeBarChart(document.getElementById('trends-chart-dow-revenue'), dowLabels, dowData, 'Avg Revenue by Day of Week');
 
-  // Hour of day analysis (business hours 7am-5pm)
-  const businessHourStart = 7;
-  const businessHourEnd = 17;
-  const businessHours = businessHourEnd - businessHourStart + 1;
-  const hourAgg = new Array(businessHours).fill(0);
-
-  for (const r of allData) {
-    if (r.__client === 'Windsor Cash') continue; // Filter out Windsor Cash
-    const h = r.__hour;
-    if (h >= businessHourStart && h <= businessHourEnd) {
-      const index = h - businessHourStart;
-      hourAgg[index] += Number(r.__revenue || 0);
-    }
-  }
-
-  const hourLabels = Array.from({length: businessHours}, (_, i) => {
-    const hour = businessHourStart + i;
-    const period = hour < 12 ? 'AM' : 'PM';
-    const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-    return `${displayHour}${period}`;
+  // Hour of day analysis with Windsor Cash filtered, fallback to full dataset if empty
+  const hourSummary = aggregateRevenueByHour(allData, {
+    filterRow: (row) => row.__client !== 'Windsor Cash',
+    mapping: state.mapping
   });
 
+  console.log('[renderTimePatternCharts] Hour summary:', hourSummary.stats);
+
   if (state.chartHourRevenue) state.chartHourRevenue.destroy();
-  state.chartHourRevenue = makeBarChart(document.getElementById('trends-chart-hour-revenue'), hourLabels, hourAgg, 'Revenue (Business Hours)');
+  const hourCanvas = document.getElementById('trends-chart-hour-revenue');
+  if (hourCanvas) {
+    const fallbackHour = hourSummary?.stats?.businessRange ? hourSummary.stats.businessRange[0] : 7;
+    const fallbackLabel = formatHourLabel(fallbackHour);
+    const labels = hourSummary.labels.length ? hourSummary.labels : [fallbackLabel];
+    const data = hourSummary.data.length ? hourSummary.data : [0];
+    state.chartHourRevenue = makeBarChart(hourCanvas, labels, data, hourSummary.title);
+  }
 }
 
 function renderProfitabilityCharts() {

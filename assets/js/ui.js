@@ -152,10 +152,52 @@ export function renderSortableTable(container, columns, rows, options = {}) {
   container.appendChild(table);
 }
 
-export function makeChart(canvas, labels, data, label='Series') {
+function prepareCanvasForChart(canvas, fallbackHeight = 320) {
+  if (!canvas) return null;
+  try {
+    canvas.style.width = '100%';
+    if (!canvas.style.height) {
+      canvas.style.height = '100%';
+    }
+
+    const parent = canvas.parentElement;
+    if (parent && !parent.style.minHeight) {
+      parent.style.minHeight = `${fallbackHeight}px`;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    if (!rect || rect.width < 8) {
+      const width = parent?.clientWidth || canvas.width || 640;
+      canvas.width = Math.max(320, width);
+    }
+    if (!rect || rect.height < 8) {
+      const height = parent?.clientHeight || canvas.height || fallbackHeight;
+      canvas.height = Math.max(fallbackHeight, height);
+    }
+  } catch (err) {
+    console.debug('[ui] prepareCanvasForChart failed', { err });
+  }
+  return canvas.getContext ? canvas.getContext('2d') : null;
+}
+
+function finalizeChartInstance(chart) {
+  if (!chart) return chart;
+  try {
+    requestAnimationFrame(() => {
+      try { chart.resize(); } catch (err) {
+        console.debug('[ui] chart resize skipped', err);
+      }
+    });
+  } catch (err) {
+    console.debug('[ui] chart resize scheduling failed', err);
+  }
+  return chart;
+}
+
+export function makeChart(canvas, labels, data, label='Series', opts = {}) {
   if (!window.Chart) return null;
   if (!canvas) { console.info('[ui] makeChart: canvas element not found (skipping)'); return null; }
-  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  const ctx = prepareCanvasForChart(canvas, opts?.fallbackHeight || 320);
   if (!ctx) { console.info('[ui] makeChart: unable to acquire 2d context (skipping)'); return null; }
 
   // Create gradient for better visual appeal
@@ -163,7 +205,7 @@ export function makeChart(canvas, labels, data, label='Series') {
   gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
   gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
 
-  return new window.Chart(ctx, {
+  const chart = new window.Chart(ctx, {
     type: 'line',
     data: {
       labels,
@@ -257,12 +299,13 @@ export function makeChart(canvas, labels, data, label='Series') {
       }
     }
   });
+  return finalizeChartInstance(chart);
 }
 
 export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
   if (!window.Chart) return null;
   if (!canvas) { console.info('[ui] makeBarChart: canvas element not found (skipping)'); return null; }
-  const ctx = canvas.getContext ? canvas.getContext('2d') : null;
+  const ctx = prepareCanvasForChart(canvas, opts?.fallbackHeight || 320);
   if (!ctx) { console.info('[ui] makeBarChart: unable to acquire 2d context (skipping)'); return null; }
 
   const isHorizontal = opts.indexAxis === 'y';
@@ -274,7 +317,7 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
   gradient.addColorStop(0, '#3B82F6');
   gradient.addColorStop(1, '#1E40AF');
 
-  return new window.Chart(ctx, {
+  const chart = new window.Chart(ctx, {
     type: 'bar',
     data: {
       labels,
@@ -376,6 +419,7 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
       }
     }
   });
+  return finalizeChartInstance(chart);
 }
 
 export function makeChartTyped(canvas, type, labels, data, label='Series') {
@@ -481,6 +525,7 @@ export function makeChartTyped(canvas, type, labels, data, label='Series') {
       }
     }
   });
+  return finalizeChartInstance(chart);
 }
 
 export function makeStackedBarChart(canvas, labels, datasets) {
