@@ -48,7 +48,7 @@ CSV Parsing
 
 ---
 2025-10-04 - Hourly Revenue Fallback & Repo Status
-- App version loads from `version.json` (currently 1.18.5 / timestamp 20251005); service worker fallback string set to `wb-1.18.5-20251005`.
+- App version loads from `version.json` (currently 1.18.6 / timestamp 20251005); service worker fallback string set to `wb-1.18.6-20251005`.
 - `index.html` defers to dynamic cache-busting for `assets/js/app.js` and `assets/css/styles.css` once the version module resolves.
 - Working tree currently has local edits in `assets/js/app.js` to improve hourly revenue aggregation.
 - Revenue-by-hour charts now parse 24-hour timestamps and fall back to full-day ranges when business-hour buckets are empty, preventing empty visualizations.
