@@ -651,6 +651,15 @@ export function enableChartZoom(root=document) {
       closeBtn.addEventListener('click', closeChartZoomModal);
     }
 
+    // Print button handler (only add once)
+    const printBtn = document.getElementById('btnPrintChartZoom');
+    if (printBtn && !printBtn.hasAttribute('data-zoom-handler')) {
+      printBtn.setAttribute('data-zoom-handler', 'true');
+      printBtn.addEventListener('click', () => {
+        window.print();
+      });
+    }
+
     // Click outside to close (only add once)
     if (!modal.hasAttribute('data-zoom-handler')) {
       modal.setAttribute('data-zoom-handler', 'true');
@@ -715,6 +724,8 @@ function openChartZoomModal(title, sourceCanvas) {
 
   try {
     // Clone the chart configuration safely
+    const isPieOrDoughnut = sourceChart.config.type === 'pie' || sourceChart.config.type === 'doughnut';
+
     const config = {
       type: sourceChart.config.type,
       data: {
@@ -731,7 +742,7 @@ function openChartZoomModal(title, sourceCanvas) {
       options: {
         responsive: true,
         maintainAspectRatio: true,
-        aspectRatio: 2,
+        aspectRatio: isPieOrDoughnut ? 1.5 : 2,
         plugins: {
           legend: sourceChart.config.options?.plugins?.legend || {},
           title: {

@@ -5610,7 +5610,44 @@ function renderSegmentAnalysisCharts(categoryDataOverride) {
   const catData = categoryData.map(x => x.revenue);
 
   if (state.chartCatShare) state.chartCatShare.destroy();
-  state.chartCatShare = makeBarChart(document.getElementById('analytics-chart-category-share'), catLabels, catData, 'Category Share (Revenue)', { indexAxis: 'y' });
+
+  // Use pie chart with distinct colors from our palette
+  const colors = [
+    '#dc2626', '#2563eb', '#16a34a', '#f59e0b', '#9333ea',
+    '#06b6d4', '#ec4899', '#84cc16', '#f97316', '#8b5cf6',
+    '#14b8a6', '#ef4444', '#3b82f6', '#22c55e', '#eab308',
+    '#a855f7', '#0ea5e9', '#f43f5e', '#10b981', '#6366f1'
+  ];
+
+  const canvas = document.getElementById('analytics-chart-category-share');
+  if (canvas) {
+    state.chartCatShare = new Chart(canvas, {
+      type: 'pie',
+      data: {
+        labels: catLabels,
+        datasets: [{
+          data: catData,
+          backgroundColor: catLabels.map((_, i) => colors[i % colors.length]),
+          borderWidth: 2,
+          borderColor: '#fff'
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: 'right',
+            labels: { padding: 10, font: { size: 11 } }
+          },
+          title: {
+            display: true,
+            text: 'Category Share (Revenue)'
+          }
+        }
+      }
+    });
+  }
 }
 
 function calculateRollingAverage(data, window) {
