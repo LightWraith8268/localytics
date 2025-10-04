@@ -59,6 +59,15 @@ const state = {
 };
 
 const RAW_INSPECTOR_ROW_LIMIT = 200;
+const RAW_HOUR_OFFSET = -6; // shift raw parsed hour backwards 6 hours to align with local timezone
+
+function applyHourOffset(hour) {
+  if (hour === null || hour === undefined) return hour;
+  const n = Number(hour);
+  if (!Number.isFinite(n)) return hour;
+  const shifted = ((n + RAW_HOUR_OFFSET) % 24 + 24) % 24;
+  return shifted;
+}
 
 let categoryMapDraft = {};
 let previousBodyOverflow = '';
@@ -1924,7 +1933,7 @@ function renderRawDataInspectorTable(rows, mapping = state.mapping) {
 
   if (summaryEl) {
     summaryEl.textContent = total
-      ? `${total.toLocaleString()} rows stored (showing first ${showing.toLocaleString()}). Missing __hour: ${missingHourTotal.toLocaleString()}. Last refresh ${lastLoaded}.`
+      ? `${total.toLocaleString()} rows stored (showing first ${showing.toLocaleString()}). Missing __hour: ${missingHourTotal.toLocaleString()}. Hour offset applied: ${RAW_HOUR_OFFSET}. Last refresh ${lastLoaded}.`
       : 'No stored rows found. Upload a CSV and click Refresh to inspect the saved data.';
   }
 
@@ -1969,6 +1978,7 @@ function renderRawDataInspectorTable(rows, mapping = state.mapping) {
     { key: '__dateRaw', label: '__dateRaw' },
     { key: '__datePretty', label: '__datePretty' },
     { key: '__dateIso', label: '__dateIso' },
+    { key: '__hourRaw', label: '__hourRaw' },
     { key: '__hour', label: '__hour' },
     { key: '__orderRaw', label: '__orderRaw' },
     { key: '__itemRaw', label: '__itemRaw' }
@@ -4731,7 +4741,11 @@ function normalizeAndDedupe(rows, mapping) {
     obj.__datePretty = pretty;
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
-    obj.__hour = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
+    const rawHourCandidate = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
+    const rawHour = Number.isFinite(rawHourCandidate) ? clampHour(rawHourCandidate) : rawHourCandidate;
+    obj.__hourRaw = rawHour;
+    const adjustedHour = applyHourOffset(rawHour);
+    obj.__hour = Number.isFinite(adjustedHour) ? clampHour(adjustedHour) : adjustedHour;
     obj.__quantity = q || 0;
     obj.__price = p || 0;
     obj.__unitCost = c || 0;
@@ -4820,7 +4834,11 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     obj.__item = canonName; // Store canonicalized item name for synonym support
     obj.__dateIso = iso || '';
     obj.__dow = (dFull ? dFull.getDay() : null);
-    obj.__hour = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
+    const rawHourCandidate = extractHourFromString(originalDateVal) ?? (dFull ? dFull.getHours() : null);
+    const rawHour = Number.isFinite(rawHourCandidate) ? clampHour(rawHourCandidate) : rawHourCandidate;
+    obj.__hourRaw = rawHour;
+    const adjustedHour = applyHourOffset(rawHour);
+    obj.__hour = Number.isFinite(adjustedHour) ? clampHour(adjustedHour) : adjustedHour;
     obj.__quantity = q || 0;
     obj.__price = p || 0;
     obj.__unitCost = c || 0;
@@ -5075,7 +5093,11 @@ function aggregateRevenueByHour(rows, options = {}) {
     }
 
     if (computed !== null && computed !== undefined) {
-      row.__hour = computed;
+      const adjusted = applyHourOffset(computed);
+      row.__hourRaw = clampHour(computed);
+      const finalHour = Number.isFinite(adjusted) ? clampHour(adjusted) : adjusted;
+      row.__hour = finalHour;
+      computed = finalHour;
     }
 
     seenSources.set(cacheKey, computed);
@@ -5187,6 +5209,7 @@ function aggregateRevenueByHour(rows, options = {}) {
       filterApplied,
       filterDropped,
       totalRevenue: Number(totalRevenue.toFixed(2)),
+      hourOffset: RAW_HOUR_OFFSET,
       missingHourSamples
     },
     buckets: hourTotals.slice(),

@@ -57,3 +57,4 @@ CSV Parsing
 - Chart helpers now pre-size hidden canvases and force post-render resizes so hour-of-day charts render consistently and zoom modal cloning works even when views were hidden on initial draw.
 - Desktop layout locks the body scroll and routes independent overflow to `.layout-main` and `.sidebar-scroll`, keeping the sidebar scrollable with hidden scrollbars as originally designed.
 - Settings now include a Raw Data Inspector card that lists the first 200 stored rows (with `__dateRaw`, `__hour`, etc.) and highlights records missing hour data for quick timestamp debugging.
+- Hour parsing now stores both `__hourRaw` and an offset-adjusted `__hour` (currently shifting -6 hours to convert GMT-1 source stamps to local GMT-7 business time); inspector summaries show the applied offset.
