@@ -1127,6 +1127,73 @@
             </div>
           </div>
 
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <h3 class="text-sm font-semibold">Filters</h3>
+              <button id="trendsClearFilters" class="px-3 py-2 border app-border rounded-md text-xs font-medium">Clear Filters</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" id="trendsFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" id="trendsFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Item</label>
+                <select id="trendsFilterItem" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Items</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Category</label>
+                <select id="trendsFilterCategory" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Categories</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Client</label>
+                <select id="trendsFilterClient" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Clients</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Staff</label>
+                <select id="trendsFilterStaff" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Staff</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Order</label>
+                <select id="trendsFilterOrder" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Orders</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Revenue Min</label>
+                <input type="number" step="0.01" id="trendsFilterRevMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0.00">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Revenue Max</label>
+                <input type="number" step="0.01" id="trendsFilterRevMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Quantity Min</label>
+                <input type="number" step="0.01" id="trendsFilterQtyMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Quantity Max</label>
+                <input type="number" step="0.01" id="trendsFilterQtyMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="trendsFilterNoZero" class="h-4 w-4">
+                <label for="trendsFilterNoZero" class="text-xs text-gray-600">Hide zero revenue/quantity rows</label>
+              </div>
+            </div>
+          </div>
+
           <!-- Core Time Series Section -->
           <div class="mt-6">
             <h4 class="text-base font-medium text-blue-800 mb-4 border-b border-blue-200 pb-2">📊 Core Time Series</h4>
@@ -1201,6 +1268,73 @@
             <h2 class="text-lg md:text-xl font-medium">📊 Advanced Analytics</h2>
             <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <button id="btnPrintAnalytics" class="w-full sm:w-auto px-4 py-2 border app-border rounded-md text-sm font-medium">Print Analytics</button>
+            </div>
+          </div>
+
+          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+              <h3 class="text-sm font-semibold">Filters</h3>
+              <button id="analyticsClearFilters" class="px-3 py-2 border app-border rounded-md text-xs font-medium">Clear Filters</button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Start date</label>
+                <input type="date" id="analyticsFilterStart" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">End date</label>
+                <input type="date" id="analyticsFilterEnd" class="w-full border rounded-md px-3 py-2 text-sm">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Item</label>
+                <select id="analyticsFilterItem" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Items</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Category</label>
+                <select id="analyticsFilterCategory" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Categories</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Client</label>
+                <select id="analyticsFilterClient" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Clients</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Staff</label>
+                <select id="analyticsFilterStaff" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Staff</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Order</label>
+                <select id="analyticsFilterOrder" class="w-full border rounded-md px-3 py-2 text-sm">
+                  <option value="">All Orders</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Revenue Min</label>
+                <input type="number" step="0.01" id="analyticsFilterRevMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0.00">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Revenue Max</label>
+                <input type="number" step="0.01" id="analyticsFilterRevMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Quantity Min</label>
+                <input type="number" step="0.01" id="analyticsFilterQtyMin" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="0">
+              </div>
+              <div>
+                <label class="block text-xs text-gray-500 mb-1">Quantity Max</label>
+                <input type="number" step="0.01" id="analyticsFilterQtyMax" class="w-full border rounded-md px-3 py-2 text-sm" placeholder="">
+              </div>
+              <div class="flex items-center gap-2">
+                <input type="checkbox" id="analyticsFilterNoZero" class="h-4 w-4">
+                <label for="analyticsFilterNoZero" class="text-xs text-gray-600">Hide zero revenue/quantity rows</label>
+              </div>
             </div>
           </div>
 

@@ -157,9 +157,10 @@ export function aggregateByCategoryOverTime(rows, mapping, granularity = 'month'
   const cats = new Map(); // cat -> Map(period -> value)
   const totals = new Map(); // cat -> total metric
   for (const r of rows) {
-    const period = bucketDateKey(r[mapping.date], granularity);
+    const dateSource = r.__dateIso || r[mapping.date];
+    const period = bucketDateKey(dateSource, granularity);
     if (!period) continue;
-    const cat = (r[mapping.category] || 'Uncategorized').toString().trim() || 'Uncategorized';
+    const cat = (r.__category || r[mapping.category] || 'Uncategorized').toString().trim() || 'Uncategorized';
     const q = Number(r[mapping.qty] || 0) || 0;
     const price = mapping.revenue ? 0 : Number((r[mapping.price] || '').toString().replace(/[$,\s]/g,'')) || 0;
     const rev = mapping.revenue ? (Number((r[mapping.revenue] || '').toString().replace(/[$,\s]/g,'')) || 0) : (price * q);

@@ -44,6 +44,10 @@ const state = {
   chartRevYoy: null,
   chartCatTrend: null,
   filters: { ...DEFAULT_FILTERS },
+  trendsFilters: { ...DEFAULT_FILTERS },
+  trendsFilteredRows: null,
+  analyticsFilters: { ...DEFAULT_FILTERS },
+  analyticsFilteredRows: null,
   user: null,
   customChart: null,
   categoryMap: {},
@@ -216,6 +220,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Populate saved reports dropdown with templates (available immediately on page load)
   populateSavedReportsDropdown();
+  setupTrendsFilters();
+  setupAnalyticsFilters();
 
   const btnRefreshRawData = qs('btnRefreshRawData');
   if (btnRefreshRawData) {
@@ -342,6 +348,9 @@ window.addEventListener('DOMContentLoaded', () => {
         if (isSettingsViewActive()) {
           renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
         }
+
+        applyTrendsFilters({ silent: true });
+        applyAnalyticsFilters({ silent: true });
       } else {
         // No stored data, load sample data for demo (but only after checking demo state)
         try {
@@ -523,6 +532,8 @@ window.addEventListener('DOMContentLoaded', () => {
       if (isSettingsViewActive()) {
         renderRawDataInspectorTable(state.rawInspector.rows, state.mapping);
       }
+      applyTrendsFilters({ silent: true });
+      applyAnalyticsFilters({ silent: true });
     } catch (error) {
       console.warn('[app] Failed to reapply category mapping', error);
     } finally {
@@ -589,6 +600,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Save CSV data to Firebase/localStorage for persistence
     await saveCsvData(normalized, headers, state.mapping);
+
+    applyTrendsFilters({ silent: true });
+    applyAnalyticsFilters({ silent: true });
 
     // Compute report from ALL data (filters are display-level only)
     console.log('[app] Computing report from', normalized.length, 'rows');
@@ -5074,6 +5088,37 @@ function extractHourFromString(v){
   return null;
 }
 
+function collectFilterValues(prefix) {
+  const getInput = (suffix) => document.getElementById(`${prefix}Filter${suffix}`);
+  const value = (suffix) => (getInput(suffix)?.value || '').trim();
+  return {
+    start: value('Start'),
+    end: value('End'),
+    item: value('Item'),
+    client: value('Client'),
+    staff: value('Staff'),
+    order: value('Order'),
+    category: value('Category'),
+    revMin: value('RevMin'),
+    revMax: value('RevMax'),
+    qtyMin: value('QtyMin'),
+    qtyMax: value('QtyMax'),
+    noZero: !!getInput('NoZero')?.checked
+  };
+}
+
+function filtersMatchDefault(filters) {
+  if (!filters) return true;
+  return Object.keys(DEFAULT_FILTERS).every(key => {
+    const defaultVal = DEFAULT_FILTERS[key];
+    const current = filters[key];
+    if (key === 'noZero') {
+      return !!current === !!defaultVal;
+    }
+    return (current || '') === (defaultVal || '');
+  });
+}
+
 function clampHour(hour) {
   const n = Number(hour);
   if (!Number.isFinite(n)) return 0;
@@ -5270,102 +5315,131 @@ function aggregateRevenueByHour(rows, options = {}) {
 
 // Chart rendering functions for new pages
 function renderTrendsCharts() {
-  if (!state.report) return;
+  const usingFiltered = Array.isArray(state.trendsFilteredRows); 
+  const baseRows = usingFiltered ? state.trendsFilteredRows : state.rows;
+  const workingRows = Array.isArray(baseRows) ? baseRows : [];
 
-  // Core Time Series - aggregate by month for better readability
+  const reportData = computeReport(workingRows, state.mapping);
+
   if (state.chartRevenue) state.chartRevenue.destroy();
   if (state.chartQty) state.chartQty.destroy();
   if (state.chartOrders) state.chartOrders.destroy();
 
-  // Aggregate by month
   const monthlyData = new Map();
-  state.report.byDate.forEach(r => {
-    const monthKey = r.date.substring(0, 7); // Extract YYYY-MM from YYYY-MM-DD
+  reportData.byDate.forEach(entry => {
+    const iso = entry.date || '';
+    if (!iso) return;
+    const monthKey = iso.substring(0, 7);
     const existing = monthlyData.get(monthKey) || { revenue: 0, quantity: 0, orders: 0 };
-    existing.revenue += r.revenue;
-    existing.quantity += r.quantity;
-    existing.orders += (r.orders || 0);
+    existing.revenue += entry.revenue;
+    existing.quantity += entry.quantity;
+    existing.orders += (entry.orders || 0);
     monthlyData.set(monthKey, existing);
   });
 
-  const labels = Array.from(monthlyData.keys()).sort();
-  const revenueData = labels.map(l => monthlyData.get(l).revenue);
-  const qtyData = labels.map(l => monthlyData.get(l).quantity);
-  const ordersData = labels.map(l => monthlyData.get(l).orders);
+  const monthLabels = Array.from(monthlyData.keys()).sort();
+  const revenueSeries = monthLabels.map(label => round2(monthlyData.get(label).revenue));
+  const qtySeries = monthLabels.map(label => round2(monthlyData.get(label).quantity));
+  const ordersSeries = monthLabels.map(label => round2(monthlyData.get(label).orders));
 
-  state.chartRevenue = makeChart(document.getElementById('trends-chart-revenue'), labels, revenueData, 'Revenue by Month');
-  state.chartQty = makeChart(document.getElementById('trends-chart-qty'), labels, qtyData, 'Quantity by Month');
-  state.chartOrders = makeChart(document.getElementById('trends-chart-orders'), labels, ordersData, 'Orders by Month');
+  const safeLabels = monthLabels.length ? monthLabels : [''];
+  const safeRevenue = monthLabels.length ? revenueSeries : [0];
+  const safeQty = monthLabels.length ? qtySeries : [0];
+  const safeOrders = monthLabels.length ? ordersSeries : [0];
 
-  // Trend Analysis charts - these would use more complex calculations
-  renderTrendAnalysisCharts(labels, revenueData, qtyData);
-  renderTimePatternCharts();
+  const revenueEl = document.getElementById('trends-chart-revenue');
+  const qtyEl = document.getElementById('trends-chart-qty');
+  const ordersEl = document.getElementById('trends-chart-orders');
+
+  if (revenueEl) {
+    state.chartRevenue = makeChart(revenueEl, safeLabels, safeRevenue, 'Revenue by Month');
+  }
+  if (qtyEl) {
+    state.chartQty = makeChart(qtyEl, safeLabels, safeQty, 'Quantity by Month');
+  }
+  if (ordersEl) {
+    state.chartOrders = makeChart(ordersEl, safeLabels, safeOrders, 'Orders by Month');
+  }
+
+  renderTrendAnalysisCharts(safeLabels, safeRevenue, safeQty);
+  renderTimePatternCharts(workingRows);
+
+  const catTrendCanvas = document.getElementById('trends-chart-cat-trend');
+  if (catTrendCanvas) {
+    if (state.chartCatTrend) { state.chartCatTrend.destroy(); state.chartCatTrend = null; }
+    const catTrend = aggregateByCategoryOverTime(workingRows, state.mapping, 'month', 'revenue', 12);
+    if (catTrend.datasets.length) {
+      state.chartCatTrend = makeStackedBarChart(catTrendCanvas, catTrend.labels.length ? catTrend.labels : [''], catTrend.datasets);
+    } else {
+      const ctx = catTrendCanvas.getContext('2d');
+      ctx?.clearRect(0, 0, catTrendCanvas.width, catTrendCanvas.height);
+    }
+  }
 
   try { enableChartZoom(document.getElementById('view-trends') || document); } catch {}
 }
 
 function renderAnalyticsCharts() {
-  console.log('renderAnalyticsCharts called', { hasReport: !!state.report, reportKeys: state.report ? Object.keys(state.report) : [] });
+  const usingFiltered = Array.isArray(state.analyticsFilteredRows);
+  const baseRows = usingFiltered ? state.analyticsFilteredRows : state.rows;
+  const workingRows = Array.isArray(baseRows) ? baseRows : [];
+  const hasRows = workingRows.length > 0;
 
-  if (!state.report) {
-    console.warn('No state.report available for analytics');
-    return;
-  }
+  const reportData = hasRows ? computeReport(workingRows, state.mapping) : (state.report || computeReport([], state.mapping));
 
-  // Ensure aggregated data is available by regenerating it if needed
-  if (!state.byClient || !state.byStaff || !state.byCategory) {
-    console.log('Regenerating aggregated data for analytics');
-    const allData = state.rows; // Use all data for entity lists
-    state.byClient = aggregateByField(allData, r => {
-      const val = r.__client;
-      return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
-    });
-    state.byStaff = aggregateByField(allData, r => {
-      const val = r.__staff;
-      return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
-    });
-    const base = state.filtered || state.rows;
-    state.byCategory = aggregateByField(base, r => {
-      const val = r.__category;
-      return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
-    });
-    // Orders aggregation uses ALL data to show complete order list
-    state.byOrder = aggregateByOrder(allData, state.mapping);
-    console.log('Analytics data generated:', {
-      clientCount: state.byClient?.length || 0,
-      staffCount: state.byStaff?.length || 0,
-      categoryCount: state.byCategory?.length || 0
-    });
-  }
+  const byClient = hasRows
+    ? aggregateByField(workingRows, r => {
+        const val = r.__client;
+        return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+      })
+    : (state.byClient || []);
 
-  // Top Rankings
-  const topItems = state.report.byItem.slice(0, 10);
-  // Filter Windsor Cash from chart display (but keep in totals)
-  const topClients = state.byClient ? state.byClient.filter(c => c.label !== 'Windsor Cash').slice(0, 10) : [];
+  const byStaff = hasRows
+    ? aggregateByField(workingRows, r => {
+        const val = r.__staff;
+        const trimmed = String(val).trim();
+        return (val !== null && val !== undefined && val !== 'undefined' && trimmed !== '') ? val : '';
+      })
+    : (state.byStaff || []);
 
-  console.log('Rendering analytics charts:', { topItemsCount: topItems.length, topClientsCount: topClients.length });
+  const byCategory = hasRows
+    ? aggregateByField(workingRows, r => {
+        const val = r.__category;
+        return (val !== null && val !== undefined && val !== 'undefined' && String(val).trim() !== '') ? val : '';
+      })
+    : (state.byCategory || []);
 
-  if (state.chartTopItems) state.chartTopItems.destroy();
-  if (state.chartTopClients) state.chartTopClients.destroy();
+  const byOrder = hasRows ? aggregateByOrder(workingRows, state.mapping) : (state.byOrder || []);
+
+  const topItems = reportData.byItem.slice(0, 10);
+  const topClients = byClient.filter(c => c.label !== 'Windsor Cash').slice(0, 10);
+
+  if (state.chartTopItems) { state.chartTopItems.destroy(); state.chartTopItems = null; }
+  if (state.chartTopClients) { state.chartTopClients.destroy(); state.chartTopClients = null; }
 
   const topItemsCanvas = document.getElementById('analytics-chart-top-items');
   const topClientsCanvas = document.getElementById('analytics-chart-top-clients');
 
-  console.log('Canvas elements:', { topItemsCanvas: !!topItemsCanvas, topClientsCanvas: !!topClientsCanvas });
-
-  if (topItemsCanvas && topItems.length > 0) {
-    state.chartTopItems = makeBarChart(topItemsCanvas,
-      topItems.map(x => x.item), topItems.map(x => x.revenue), 'Top Items by Revenue');
+  if (topItemsCanvas) {
+    if (topItems.length) {
+      state.chartTopItems = makeBarChart(topItemsCanvas,
+        topItems.map(x => x.item), topItems.map(x => x.revenue), 'Top Items by Revenue');
+    } else {
+      topItemsCanvas.getContext('2d')?.clearRect(0, 0, topItemsCanvas.width, topItemsCanvas.height);
+    }
   }
 
-  if (topClientsCanvas && topClients.length > 0) {
-    state.chartTopClients = makeBarChart(topClientsCanvas,
-      topClients.map(x => x.label), topClients.map(x => x.revenue), 'Top Clients by Revenue');
+  if (topClientsCanvas) {
+    if (topClients.length) {
+      state.chartTopClients = makeBarChart(topClientsCanvas,
+        topClients.map(x => x.label), topClients.map(x => x.revenue), 'Top Clients by Revenue');
+    } else {
+      topClientsCanvas.getContext('2d')?.clearRect(0, 0, topClientsCanvas.width, topClientsCanvas.height);
+    }
   }
 
-  // Profitability Analysis
-  renderProfitabilityCharts();
-  renderSegmentAnalysisCharts();
+  renderProfitabilityCharts(reportData);
+  renderSegmentAnalysisCharts(byCategory);
 
   try { enableChartZoom(document.getElementById('view-analytics') || document); } catch {}
 }
@@ -5392,8 +5466,8 @@ function renderTrendAnalysisCharts(labels, revenueData, qtyData) {
   state.chartRevMom = makeChart(document.getElementById('trends-chart-rev-mom'), labels, momData, 'Revenue MoM Change %');
 }
 
-function renderTimePatternCharts() {
-  const allData = state.rows;
+function renderTimePatternCharts(rowsOverride) {
+  const allData = Array.isArray(rowsOverride) ? rowsOverride : state.rows;
 
   // Day of week analysis
   const dowMap = new Map();
@@ -5436,12 +5510,12 @@ function renderTimePatternCharts() {
   }
 }
 
-function renderProfitabilityCharts() {
-  if (!state.report) return;
+function renderProfitabilityCharts(reportOverride) {
+  const source = reportOverride || state.report;
+  if (!source) return;
 
-  // Aggregate by month
   const monthlyData = new Map();
-  state.report.byDate.forEach(r => {
+  source.byDate.forEach(r => {
     const monthKey = r.date.substring(0, 7); // Extract YYYY-MM
     const existing = monthlyData.get(monthKey) || { revenue: 0, cost: 0, profit: 0, count: 0 };
     existing.revenue += r.revenue;
@@ -5475,8 +5549,9 @@ function renderProfitabilityCharts() {
   state.chartIpo = makeChart(document.getElementById('analytics-chart-ipo'), labels, ipoData, 'Items per Order');
 }
 
-function renderSegmentAnalysisCharts() {
-  if (!state.byCategory || !state.byCategory.length) {
+function renderSegmentAnalysisCharts(categoryDataOverride) {
+  const categoryData = categoryDataOverride || state.byCategory || [];
+  if (!categoryData.length) {
     // If no category data, show a placeholder or message
     const categoryCanvas = document.getElementById('analytics-chart-category-share');
     if (categoryCanvas) {
@@ -5505,8 +5580,8 @@ function renderSegmentAnalysisCharts() {
     return;
   }
 
-  const catLabels = state.byCategory.map(x => x.label);
-  const catData = state.byCategory.map(x => x.revenue);
+  const catLabels = categoryData.map(x => x.label);
+  const catData = categoryData.map(x => x.revenue);
 
   if (state.chartCatShare) state.chartCatShare.destroy();
   state.chartCatShare = makeBarChart(document.getElementById('analytics-chart-category-share'), catLabels, catData, 'Category Share (Revenue)', { indexAxis: 'y' });
@@ -6335,6 +6410,19 @@ function populateDropdownFilters() {
   populateDropdown('#itemsFilterStaff', staff, 'All Staff');
   populateDropdown('#itemsFilterOrder', orders.slice(0, 100), 'All Orders');
   populateDropdown('#itemsFilterCategory', categories, 'All Categories');
+
+  // Trends / Analytics filters
+  populateDropdown('#trendsFilterClient', clients, 'All Clients');
+  populateDropdown('#trendsFilterStaff', staff, 'All Staff');
+  populateDropdown('#trendsFilterItem', items.slice(0, 100), 'All Items');
+  populateDropdown('#trendsFilterOrder', orders.slice(0, 100), 'All Orders');
+  populateDropdown('#trendsFilterCategory', categories, 'All Categories');
+
+  populateDropdown('#analyticsFilterClient', clients, 'All Clients');
+  populateDropdown('#analyticsFilterStaff', staff, 'All Staff');
+  populateDropdown('#analyticsFilterItem', items.slice(0, 100), 'All Items');
+  populateDropdown('#analyticsFilterOrder', orders.slice(0, 100), 'All Orders');
+  populateDropdown('#analyticsFilterCategory', categories, 'All Categories');
 }
 
 // ================================
@@ -6845,4 +6933,84 @@ function applyItemsFilters() {
 
   // Re-render the items view
   renderItemTrackingView();
+}
+
+function setupTrendsFilters() {
+  const ids = ['Start','End','Item','Client','Staff','Order','Category','RevMin','RevMax','QtyMin','QtyMax'];
+  const inputs = ids.map(suffix => document.getElementById(`trendsFilter${suffix}`)).filter(Boolean);
+  const noZero = document.getElementById('trendsFilterNoZero');
+  const clearBtn = document.getElementById('trendsClearFilters');
+
+  const handler = () => applyTrendsFilters();
+  inputs.forEach(input => {
+    if (input && !input.hasAttribute('data-trends-filter')) {
+      input.setAttribute('data-trends-filter', 'true');
+      input.addEventListener('input', handler);
+      input.addEventListener('change', handler);
+    }
+  });
+  if (noZero && !noZero.hasAttribute('data-trends-filter')) {
+    noZero.setAttribute('data-trends-filter', 'true');
+    noZero.addEventListener('change', handler);
+  }
+  if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
+    clearBtn.setAttribute('data-clear-handler', 'true');
+    clearBtn.addEventListener('click', () => {
+      inputs.forEach(input => { if (input) input.value = ''; });
+      if (noZero) noZero.checked = false;
+      applyTrendsFilters();
+    });
+  }
+}
+
+function setupAnalyticsFilters() {
+  const ids = ['Start','End','Item','Client','Staff','Order','Category','RevMin','RevMax','QtyMin','QtyMax'];
+  const inputs = ids.map(suffix => document.getElementById(`analyticsFilter${suffix}`)).filter(Boolean);
+  const noZero = document.getElementById('analyticsFilterNoZero');
+  const clearBtn = document.getElementById('analyticsClearFilters');
+
+  const handler = () => applyAnalyticsFilters();
+  inputs.forEach(input => {
+    if (input && !input.hasAttribute('data-analytics-filter')) {
+      input.setAttribute('data-analytics-filter', 'true');
+      input.addEventListener('input', handler);
+      input.addEventListener('change', handler);
+    }
+  });
+  if (noZero && !noZero.hasAttribute('data-analytics-filter')) {
+    noZero.setAttribute('data-analytics-filter', 'true');
+    noZero.addEventListener('change', handler);
+  }
+  if (clearBtn && !clearBtn.hasAttribute('data-clear-handler')) {
+    clearBtn.setAttribute('data-clear-handler', 'true');
+    clearBtn.addEventListener('click', () => {
+      inputs.forEach(input => { if (input) input.value = ''; });
+      if (noZero) noZero.checked = false;
+      applyAnalyticsFilters();
+    });
+  }
+}
+
+function applyTrendsFilters(opts = {}) {
+  const collected = collectFilterValues('trends');
+  const merged = { ...DEFAULT_FILTERS, ...collected };
+  state.trendsFilters = merged;
+  const filteredRows = applyFilters(state.rows || [], state.mapping, merged);
+  const hasFilters = !filtersMatchDefault(merged);
+  state.trendsFilteredRows = hasFilters ? filteredRows : null;
+  if (!opts.silent) {
+    renderTrendsCharts();
+  }
+}
+
+function applyAnalyticsFilters(opts = {}) {
+  const collected = collectFilterValues('analytics');
+  const merged = { ...DEFAULT_FILTERS, ...collected };
+  state.analyticsFilters = merged;
+  const filteredRows = applyFilters(state.rows || [], state.mapping, merged);
+  const hasFilters = !filtersMatchDefault(merged);
+  state.analyticsFilteredRows = hasFilters ? filteredRows : null;
+  if (!opts.silent) {
+    renderAnalyticsCharts();
+  }
 }
