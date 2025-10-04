@@ -1634,8 +1634,8 @@ function renderClientTrackingView() {
   if (searchInput && !searchInput.hasAttribute('data-state-restored')) {
     searchInput.setAttribute('data-state-restored', 'true');
     const savedState = loadSearchState('clients');
-    if (savedState && savedState.search) {
-      searchInput.value = savedState.search;
+    if (savedState) {
+      searchInput.value = savedState;
     }
   }
 
@@ -1755,8 +1755,8 @@ function renderItemTrackingView() {
   if (searchInput && !searchInput.hasAttribute('data-state-restored')) {
     searchInput.setAttribute('data-state-restored', 'true');
     const savedState = loadSearchState('items');
-    if (savedState && savedState.search) {
-      searchInput.value = savedState.search;
+    if (savedState) {
+      searchInput.value = savedState;
     }
   }
 
