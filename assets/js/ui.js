@@ -611,31 +611,36 @@ export function enableChartZoom(root=document) {
 
     let zoomableCount = 0;
     chartTitles.forEach(title => {
-      // Skip if already enabled
-      if (title.hasAttribute('data-zoom-enabled')) {
-        return;
-      }
-
       const nextElement = title.nextElementSibling;
       // Check if next element contains a canvas with data-zoom attribute
       const canvas = nextElement ? nextElement.querySelector('canvas[data-zoom]') : null;
-      if (canvas) {
-        zoomableCount++;
-        title.setAttribute('data-zoom-enabled', 'true');
-        title.style.cursor = 'pointer';
-        title.style.transition = 'color 0.2s';
 
-        const hoverEnter = () => { title.style.color = '#3b82f6'; };
-        const hoverLeave = () => { title.style.color = ''; };
-        const clickHandler = () => {
-          console.log('[enableChartZoom] Chart title clicked:', title.textContent);
-          openChartZoomModal(title.textContent, canvas);
-        };
-
-        title.addEventListener('mouseenter', hoverEnter);
-        title.addEventListener('mouseleave', hoverLeave);
-        title.addEventListener('click', clickHandler);
+      // Only process if canvas exists
+      if (!canvas) {
+        return;
       }
+
+      // Skip if already enabled for this specific canvas
+      if (title.hasAttribute('data-zoom-enabled') && title.getAttribute('data-zoom-canvas') === canvas.id) {
+        return;
+      }
+
+      zoomableCount++;
+      title.setAttribute('data-zoom-enabled', 'true');
+      title.setAttribute('data-zoom-canvas', canvas.id);
+      title.style.cursor = 'pointer';
+      title.style.transition = 'color 0.2s';
+
+      const hoverEnter = () => { title.style.color = '#3b82f6'; };
+      const hoverLeave = () => { title.style.color = ''; };
+      const clickHandler = () => {
+        console.log('[enableChartZoom] Chart title clicked:', title.textContent);
+        openChartZoomModal(title.textContent, canvas);
+      };
+
+      title.addEventListener('mouseenter', hoverEnter);
+      title.addEventListener('mouseleave', hoverLeave);
+      title.addEventListener('click', clickHandler);
     });
 
     console.log('[enableChartZoom] Made', zoomableCount, 'chart titles clickable');
