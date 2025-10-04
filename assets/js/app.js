@@ -1484,13 +1484,8 @@ function renderOrdersView() {
   const searchInput = qs('ordersSearch');
   if (!summaryEl || !tableEl) return;
 
-  // Restore search state and add persistence
+  // Search persistence (save only, no restoration - inputs start empty)
   if (searchInput) {
-    const savedSearch = loadSearchState('orders');
-    if (savedSearch && !searchInput.value) {
-      searchInput.value = savedSearch;
-    }
-
     // Save search state on input
     searchInput.addEventListener('input', () => {
       saveSearchState('orders', searchInput.value);
@@ -1630,14 +1625,7 @@ function renderClientTrackingView() {
     return;
   }
 
-  // Restore search state from localStorage
-  if (searchInput && !searchInput.hasAttribute('data-state-restored')) {
-    searchInput.setAttribute('data-state-restored', 'true');
-    const savedState = loadSearchState('clients');
-    if (savedState) {
-      searchInput.value = savedState;
-    }
-  }
+  // Search state restoration removed - inputs should start empty
 
   // Set up search event listener with state persistence
   if (searchInput && !searchInput.hasAttribute('data-listener')) {
@@ -1751,14 +1739,7 @@ function renderItemTrackingView() {
     return;
   }
 
-  // Restore search state from localStorage
-  if (searchInput && !searchInput.hasAttribute('data-state-restored')) {
-    searchInput.setAttribute('data-state-restored', 'true');
-    const savedState = loadSearchState('items');
-    if (savedState) {
-      searchInput.value = savedState;
-    }
-  }
+  // Search state restoration removed - inputs should start empty
 
   // Set up search event listener with state persistence
   if (searchInput && !searchInput.hasAttribute('data-listener')) {
