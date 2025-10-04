@@ -347,7 +347,9 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
-            callback: isHorizontal ? (v) => formatNumberTwo(v) : undefined,
+            callback: isHorizontal
+              ? (v) => formatNumberTwo(v)
+              : function(value) { return this.getLabelForValue(value); },
             color: '#6B7280',
             font: { size: 13, weight: '500' },
             maxRotation: isHorizontal ? 0 : 45,
@@ -363,7 +365,9 @@ export function makeBarChart(canvas, labels, data, label='Series', opts = {}) {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
-            callback: !isHorizontal ? (v) => formatNumberTwo(v) : undefined,
+            callback: !isHorizontal
+              ? (v) => formatNumberTwo(v)
+              : function(value) { return this.getLabelForValue(value); },
             color: '#6B7280',
             font: { size: 13, weight: '500' },
             autoSkip: false // Show all labels for horizontal bars
