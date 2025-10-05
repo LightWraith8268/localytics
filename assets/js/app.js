@@ -4142,26 +4142,9 @@ function populateSavedReportsDropdown() {
 }
 
 // ============================================
-// TEMPLATE BROWSER FUNCTIONS
+// TEMPLATE DEFINITIONS
 // ============================================
-
-function toggleTemplateBrowser() {
-  const browser = qs('templateBrowser');
-  const button = qs('btnToggleTemplates');
-  if (!browser || !button) return;
-
-  const isHidden = browser.classList.contains('hidden');
-
-  if (isHidden) {
-    browser.classList.remove('hidden');
-    button.textContent = 'Hide Templates';
-    // Populate templates on first show
-    populateTemplateBrowser();
-  } else {
-    browser.classList.add('hidden');
-    button.textContent = 'Show Templates';
-  }
-}
+// Pre-configured report templates used by the saved reports dropdown
 
 function getTemplateDefinitions() {
   const currentYear = new Date().getFullYear();
@@ -4355,130 +4338,9 @@ function getTemplateDefinitions() {
   ];
 }
 
-function populateTemplateBrowser() {
-  filterTemplates(); // Use filter function to populate initially
-}
-
-function filterTemplates() {
-  const categoryFilter = qs('templateCategoryFilter')?.value || '';
-  const templateList = qs('templateList');
-  if (!templateList) return;
-
-  const templates = getTemplateDefinitions();
-  const filtered = categoryFilter
-    ? templates.filter(t => t.name.includes(`[${categoryFilter}]`))
-    : templates;
-
-  if (filtered.length === 0) {
-    templateList.innerHTML = '<p class="text-sm text-gray-500 text-center py-4">No templates in this category</p>';
-    return;
-  }
-
-  templateList.innerHTML = filtered.map(template => `
-    <div class="flex items-center justify-between p-2 bg-white rounded border hover:border-blue-400 cursor-pointer template-item" data-template-name="${escapeHtml(template.name)}">
-      <div class="flex-1">
-        <div class="text-sm font-medium">${escapeHtml(template.name)}</div>
-        <div class="text-xs text-gray-500">Type: ${escapeHtml(template.reportType)} | Dates: ${template.startDate || 'All'} to ${template.endDate || 'Now'}</div>
-      </div>
-      <button class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 btn-load-single-template">Load & Run</button>
-    </div>
-  `).join('');
-
-  // Add click handlers for each template
-  templateList.querySelectorAll('.btn-load-single-template').forEach((btn, idx) => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      loadAndRunSingleTemplate(filtered[idx]);
-    });
-  });
-
-  // Add click handler for template items (load without running)
-  templateList.querySelectorAll('.template-item').forEach((item, idx) => {
-    item.addEventListener('click', (e) => {
-      if (e.target.classList.contains('btn-load-single-template')) return; // Skip if button clicked
-      loadTemplateToForm(filtered[idx]);
-    });
-  });
-}
-
-function loadTemplateToForm(template) {
-  // Load template configuration into the form fields
-  qs('reportType').value = template.reportType;
-  qs('reportStartDate').value = template.startDate || '';
-  qs('reportEndDate').value = template.endDate || '';
-  qs('reportItemFilter').value = template.itemFilter || '';
-  qs('reportClientFilter').value = template.clientFilter || '';
-  qs('reportStaffFilter').value = template.staffFilter || '';
-  qs('reportCategoryFilter').value = template.categoryFilter || '';
-  qs('reportSortBy').value = template.sortBy || 'revenue';
-  qs('reportLimit').value = template.limit || '';
-
-  // Set column checkboxes
-  qs('colItem').checked = template.columns.item !== false;
-  qs('colQuantity').checked = template.columns.quantity !== false;
-  qs('colRevenue').checked = template.columns.revenue !== false;
-  qs('colCost').checked = template.columns.cost !== false;
-  qs('colProfit').checked = template.columns.profit !== false;
-  qs('colMargin').checked = template.columns.margin !== false;
-  qs('colOrders').checked = template.columns.orders === true;
-  qs('colDate').checked = template.columns.date === true;
-
-  alert(`Template "${template.name}" loaded into form. Click "Generate Report" to run it, or modify settings and click "Save Report Config" to save your customized version.`);
-}
-
-function loadAndRunSingleTemplate(template) {
-  loadTemplateToForm(template);
-  // Auto-generate the report
-  setTimeout(() => generateAdvancedReport(), 100);
-}
-
-function loadAllTemplatesToSaved() {
-  if (!confirm('This will add all 60+ templates to your Saved Reports. Continue?')) return;
-
-  const templates = getTemplateDefinitions();
-
-  // Get existing reports
-  let savedReports = [];
-  try {
-    const stored = localStorage.getItem('savedReportConfigs');
-    if (stored) savedReports = JSON.parse(stored);
-  } catch (e) {
-    console.error('Error loading saved reports:', e);
-  }
-
-  // Add templates that don't already exist
-  let addedCount = 0;
-  templates.forEach(template => {
-    const exists = savedReports.some(r => r.name === template.name);
-    if (!exists) {
-      savedReports.push({ ...template, savedAt: new Date().toISOString() });
-      addedCount++;
-    }
-  });
-
-  // Save back
-  try {
-    localStorage.setItem('savedReportConfigs', JSON.stringify(savedReports));
-    populateSavedReportsDropdown();
-    alert(`Added ${addedCount} templates to Saved Reports! (${templates.length - addedCount} already existed)`);
-  } catch (e) {
-    console.error('Error saving templates:', e);
-    alert('Failed to load templates. Storage might be full.');
-  }
-}
-
-function clearAllSavedReports() {
-  if (!confirm('This will DELETE ALL saved report configurations. This cannot be undone. Continue?')) return;
-
-  try {
-    localStorage.removeItem('savedReportConfigs');
-    populateSavedReportsDropdown();
-    alert('All saved reports cleared!');
-  } catch (e) {
-    console.error('Error clearing saved reports:', e);
-    alert('Failed to clear saved reports.');
-  }
-}
+// ============================================
+// CHART FREEZE/RESTORE FOR PRINT
+// ============================================
 
 function freezeChartsForPrint(){
   try {
