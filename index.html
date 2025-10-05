@@ -189,9 +189,6 @@
           display: none !important;
         }
 
-        #print-cover {
-          display: none !important;
-        }
         /* Hide interactive elements during print */
         button, .dropdown-menu, details summary {
           display: none !important;
@@ -1554,36 +1551,6 @@
             </div>
           </details>
 
-          <!-- Branding Section -->
-          <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
-            <h2 class="text-lg md:text-xl font-medium mb-4">Branding & Identity</h2>
-            <div class="space-y-4">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Brand Name</label>
-                  <input type="text" id="brandName" placeholder="Your company" class="w-full border app-border rounded-md px-3 py-2 text-sm">
-                </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
-                  <input type="url" id="brandLogo" placeholder="https://...logo.png" class="w-full border app-border rounded-md px-3 py-2 text-sm">
-                </div>
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-2">Owner Email</label>
-                  <input type="email" id="ownerEmail" placeholder="you@example.com" class="w-full border app-border rounded-md px-3 py-2 text-sm">
-                  <p class="text-xs text-gray-600 mt-1">Restrict features to this user</p>
-                </div>
-                <div class="flex items-end">
-                  <button id="btnSaveOwner" class="px-4 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Save Owner</button>
-                </div>
-              </div>
-              <div>
-                <button id="btnSaveBrand" class="px-4 py-2 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700">Save Branding</button>
-              </div>
-            </div>
-          </div>
-
           <!-- Category Mapping Section -->
           <div class="app-card rounded-lg border app-border shadow-sm p-4 md:p-6">
             <h2 class="text-lg md:text-xl font-medium mb-4">Category Mapping</h2>
@@ -1859,28 +1826,6 @@
         navigator.serviceWorker.register('./service-worker.js');
       }
     </script>
-    
-    <!-- Print cover (hidden on screen) -->
-    <div id="print-cover" class="hidden">
-      <div class="container mx-auto px-4 py-10">
-        <div class="flex items-center gap-4">
-          <img id="printLogo" alt="Logo" style="max-height:60px; display:none;" />
-          <div>
-            <h1 id="printBrand" class="text-2xl font-semibold">Reports</h1>
-          </div>
-        </div>
-        <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <div class="text-xs text-gray-500">Filters</div>
-            <div class="mt-1 text-sm" id="printFilters">None</div>
-          </div>
-          <div>
-            <div class="text-xs text-gray-500">Column Mapping</div>
-            <div class="mt-1 text-sm" id="printMapping">—</div>
-          </div>
-        </div>
-      </div>
-    </div>
   
 <div id="categoryMapModal" class="hidden fixed inset-0 z-50">
   <div id="categoryMapModalBackdrop" class="absolute inset-0" style="background: rgba(17, 24, 39, 0.65);"></div>

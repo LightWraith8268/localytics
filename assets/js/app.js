@@ -307,16 +307,6 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     } catch (e) { console.warn('Failed to load allowed items settings:', e); }
 
-    // Load branding settings
-    try {
-      const nameInput = document.getElementById('brandName');
-      const logoInput = document.getElementById('brandLogo');
-      const name = await loadUserSettings('brandName');
-      const logo = await loadUserSettings('brandLogo');
-      if (nameInput && name) nameInput.value = name;
-      if (logoInput && logo) logoInput.value = logo;
-    } catch (e) { console.warn('Failed to load branding settings:', e); }
-
     // Load CSV data and demo state after authentication is determined
     try {
       const storedData = await loadCsvData();
@@ -977,8 +967,6 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnPrintTrends')?.addEventListener('click', () => printCurrentView());
   qs('btnPrintAnalytics')?.addEventListener('click', () => printCurrentView());
 
-  // Note: Branding now loaded in loadUserSettingsAfterAuth() after authentication
-  qs('btnSaveBrand').addEventListener('click', saveBranding);
   // Allowed items persist
   qs('btnSaveAllowed')?.addEventListener('click', async () => {
     const list = (document.getElementById('allowedItems')?.value || '').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
@@ -4781,39 +4769,6 @@ function monthYearOverYearChange(monthSeries){
   return { labels, values };
 }
 
-// loadBranding function removed - now handled in loadUserSettingsAfterAuth()
-
-async function saveBranding() {
-  const name = document.getElementById('brandName')?.value || '';
-  const logo = document.getElementById('brandLogo')?.value || '';
-  try { await saveUserSettings('brandName', name); await saveUserSettings('brandLogo', logo); alert('Branding saved.'); } catch { alert('Could not save branding.'); }
-}
-
-function preparePrintCover() {
-  const brand = document.getElementById('brandName')?.value || 'Localytics';
-  const logo = document.getElementById('brandLogo')?.value || '';
-  const elBrand = document.getElementById('printBrand'); if (elBrand) elBrand.textContent = brand;
-  const elLogo = document.getElementById('printLogo'); if (elLogo) { if (logo) { elLogo.src = logo; elLogo.style.display = 'block'; } else { elLogo.style.display = 'none'; } }
-  // Filters summary
-  const fs = state.filters; const fm = state.mapping;
-  const fParts = [];
-  if (fs.start) fParts.push(`Start: ${fs.start}`);
-  if (fs.end) fParts.push(`End: ${fs.end}`);
-  if (fs.item) fParts.push(`Item contains: ${fs.item}`);
-  if (fs.client) fParts.push(`Client contains: ${fs.client}`);
-  if (fs.staff) fParts.push(`Staff contains: ${fs.staff}`);
-  if (fs.order) fParts.push(`Order contains: ${fs.order}`);
-  if (fs.category) fParts.push(`Category contains: ${fs.category}`);
-  if (fs.revMin) fParts.push(`Min revenue: ${fs.revMin}`);
-  if (fs.revMax) fParts.push(`Max revenue: ${fs.revMax}`);
-  if (fs.qtyMin) fParts.push(`Min quantity: ${fs.qtyMin}`);
-  if (fs.qtyMax) fParts.push(`Max quantity: ${fs.qtyMax}`);
-  if (fs.noZero) fParts.push('Exclude zero qty/revenue');
-  document.getElementById('printFilters')?.replaceChildren(document.createTextNode(fParts.length? fParts.join(' | ') : 'None'));
-  const mParts = [];
-  ['date','item','qty','price','cost','revenue','category','order','client','staff'].forEach(k => { if (fm[k]) mParts.push(`${k}: ${fm[k]}`); });
-  document.getElementById('printMapping')?.replaceChildren(document.createTextNode(mParts.join(', ')));
-}
 function normalizeAndDedupe(rows, mapping) {
   console.log('[app] normalizeAndDedupe called with', rows.length, 'rows');
   console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
