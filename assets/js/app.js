@@ -1925,6 +1925,9 @@ function renderItemTrackingView() {
   const searchInput = qs('itemsSearch');
   if (!summaryEl || !highlightsEl || !tableEl) return;
 
+  // Setup live filtering for items advanced filters
+  setupItemsLiveFilters();
+
   if (!state.report || !state.byItem || !state.byItem.length) {
     summaryEl.textContent = state.report ? 'No item performance data for the current filters.' : 'Upload data to view item trends.';
     highlightsEl.innerHTML = '';
