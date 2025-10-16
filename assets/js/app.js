@@ -6665,58 +6665,11 @@ function setupStaffLiveFilters() {
   }
 }
 
-// Pre-populate items filter dropdown with data immediately when loaded
+// Items filter dropdown is now a simple selector with two static options: "All Items" and "Allowed Items"
+// No dynamic population needed - options are hardcoded in HTML
 function prepopulateItemsFilterDropdown() {
-  const itemsSelect = qs('itemsFilterItems');
-  if (!itemsSelect || !state.byItem || state.byItem.length === 0) return;
-
-  // Check if already populated
-  const existingOptions = itemsSelect.querySelectorAll('option:not([value=""]):not([value="allowed"])');
-  if (existingOptions.length > 0) return; // Already populated
-
-  // Add "All Items" option
-  let allItemsOption = itemsSelect.querySelector('option[value=""]');
-  if (!allItemsOption) {
-    allItemsOption = document.createElement('option');
-    allItemsOption.value = '';
-    allItemsOption.textContent = 'All Items';
-    itemsSelect.appendChild(allItemsOption);
-  }
-
-  // Add "Allowed Items" preset option
-  const allowedOption = document.createElement('option');
-  allowedOption.value = 'allowed';
-  allowedOption.textContent = '📌 Allowed Items (Top 40)';
-  allowedOption.style.fontWeight = 'bold';
-  allowedOption.style.backgroundColor = '#fef3c7';
-  itemsSelect.appendChild(allowedOption);
-
-  // Add all individual items
-  state.byItem.forEach(item => {
-    const option = document.createElement('option');
-    option.value = item.item;
-    option.textContent = item.item;
-    itemsSelect.appendChild(option);
-  });
-
-  // Listen for the "Allowed Items" preset selection
-  itemsSelect.addEventListener('change', handleAllowedItemsPreset, { once: false });
-}
-
-// Handle the allowed items preset selection
-function handleAllowedItemsPreset(e) {
-  const itemsSelect = qs('itemsFilterItems');
-  if (e.target.value === 'allowed') {
-    // Select all allowed items
-    Array.from(itemsSelect.options).forEach(option => {
-      if (option.value && option.value !== '' && option.value !== 'allowed') {
-        option.selected = ALLOWED_ITEMS.includes(option.value);
-      }
-    });
-    // Reset the select value to empty so the allowed items stay selected
-    itemsSelect.value = '';
-    applyItemsFilters();
-  }
+  // Placeholder function - dropdown options are now static in HTML
+  // This function is retained for compatibility but does nothing
 }
 
 function setupItemsLiveFilters() {
@@ -6730,8 +6683,8 @@ function setupItemsLiveFilters() {
     qs('itemsFilterOrder')
   ];
 
-  // Items dropdown is now pre-populated in prepopulateItemsFilterDropdown()
-  // Called during data load, so it appears immediately with page load
+  // Items dropdown now has static options: "All Items" and "Allowed Items"
+  // No dynamic population needed
 
   // Add live filtering event listeners
   filterInputs.forEach(input => {
@@ -6898,8 +6851,7 @@ function applyItemsFilters() {
   const startDate = qs('itemsFilterStart')?.value || '';
   const endDate = qs('itemsFilterEnd')?.value || '';
   const category = qs('itemsFilterCategory')?.value || '';
-  const itemsSelect = qs('itemsFilterItems');
-  const selectedItems = itemsSelect ? Array.from(itemsSelect.selectedOptions).map(opt => opt.value) : [];
+  const itemsFilter = qs('itemsFilterItems')?.value || '';
   const client = qs('itemsFilterClient')?.value || '';
   const staff = qs('itemsFilterStaff')?.value || '';
   const order = qs('itemsFilterOrder')?.value || '';
@@ -6918,11 +6870,11 @@ function applyItemsFilters() {
     });
   }
 
-  // Item selection filtering
-  if (selectedItems.length > 0) {
+  // Item selection filtering - "allowed" shows only allowed items, "" shows all items
+  if (itemsFilter === 'allowed') {
     filteredRows = filteredRows.filter(row => {
       const itemValue = (row.__item || '').toString();
-      return selectedItems.includes(itemValue);
+      return ALLOWED_ITEMS.includes(itemValue);
     });
   }
 
