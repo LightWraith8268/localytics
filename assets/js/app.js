@@ -809,6 +809,9 @@ window.addEventListener('DOMContentLoaded', () => {
   qs('btnEditReport')?.addEventListener('click', () => editReportConfiguration());
   qs('btnDeleteReport')?.addEventListener('click', () => deleteReportConfiguration());
 
+  // Load allowed items preset button
+  qs('reportLoadAllowedItems')?.addEventListener('click', () => loadAllowedItemsToReportFilter());
+
   // Report snapshot listeners
   qs('btnSaveSnapshot')?.addEventListener('click', () => saveReportSnapshot());
 
@@ -2669,6 +2672,14 @@ function clearReportFilters() {
   // Hide snapshot button when table is cleared
   const snapshotBtn = qs('btnSaveSnapshot');
   if (snapshotBtn) snapshotBtn.classList.add('hidden');
+}
+
+function loadAllowedItemsToReportFilter() {
+  // Populate the report item filter with the comma-separated list of allowed items
+  const itemFilterInput = qs('reportItemFilter');
+  if (itemFilterInput && ALLOWED_ITEMS.length > 0) {
+    itemFilterInput.value = ALLOWED_ITEMS.join(', ');
+  }
 }
 
 // ============================================
