@@ -37,7 +37,6 @@ export const ALLOWED_ITEMS = [
   "Screened Top Soil",
   "Tan Breeze",
   "Tan Road Base",
-  "Tri Color River Rock 1.5\"",
   "VTC"
 ];
 
