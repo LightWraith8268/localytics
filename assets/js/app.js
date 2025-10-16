@@ -6665,11 +6665,29 @@ function setupItemsLiveFilters() {
     qs('itemsFilterOrder')
   ];
 
-  // Populate items dropdown
+  // Populate items dropdown with all items from state
   const itemsSelect = qs('itemsFilterItems');
   if (itemsSelect && state.byItem && state.byItem.length > 0) {
-    const existingOptions = itemsSelect.querySelectorAll('option:not([value=""])');
+    const existingOptions = itemsSelect.querySelectorAll('option:not([value=""]):not([value="allowed"])');
     if (existingOptions.length === 0) {
+      // Add "All Items" option
+      let allItemsOption = itemsSelect.querySelector('option[value=""]');
+      if (!allItemsOption) {
+        allItemsOption = document.createElement('option');
+        allItemsOption.value = '';
+        allItemsOption.textContent = 'All Items';
+        itemsSelect.appendChild(allItemsOption);
+      }
+
+      // Add "Allowed Items" preset option
+      const allowedOption = document.createElement('option');
+      allowedOption.value = 'allowed';
+      allowedOption.textContent = '📌 Allowed Items (Top 40)';
+      allowedOption.style.fontWeight = 'bold';
+      allowedOption.style.backgroundColor = '#fef3c7';
+      itemsSelect.appendChild(allowedOption);
+
+      // Add all individual items
       state.byItem.forEach(item => {
         const option = document.createElement('option');
         option.value = item.item;
@@ -6677,6 +6695,23 @@ function setupItemsLiveFilters() {
         itemsSelect.appendChild(option);
       });
     }
+  }
+
+  // Listen for the "Allowed Items" preset selection
+  if (itemsSelect) {
+    itemsSelect.addEventListener('change', (e) => {
+      if (e.target.value === 'allowed') {
+        // Select all allowed items
+        Array.from(itemsSelect.options).forEach(option => {
+          if (option.value && option.value !== '' && option.value !== 'allowed') {
+            option.selected = ALLOWED_ITEMS.includes(option.value);
+          }
+        });
+        // Reset the select value to empty so the allowed items stay selected
+        itemsSelect.value = '';
+        applyItemsFilters();
+      }
+    });
   }
 
   // Add live filtering event listeners
