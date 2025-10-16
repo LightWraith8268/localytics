@@ -6659,10 +6659,25 @@ function setupItemsLiveFilters() {
     qs('itemsFilterStart'),
     qs('itemsFilterEnd'),
     qs('itemsFilterCategory'),
+    qs('itemsFilterItems'),
     qs('itemsFilterClient'),
     qs('itemsFilterStaff'),
     qs('itemsFilterOrder')
   ];
+
+  // Populate items dropdown
+  const itemsSelect = qs('itemsFilterItems');
+  if (itemsSelect && state.byItem && state.byItem.length > 0) {
+    const existingOptions = itemsSelect.querySelectorAll('option:not([value=""])');
+    if (existingOptions.length === 0) {
+      state.byItem.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.item;
+        option.textContent = item.item;
+        itemsSelect.appendChild(option);
+      });
+    }
+  }
 
   // Add live filtering event listeners
   filterInputs.forEach(input => {
@@ -6688,6 +6703,9 @@ function setupItemsLiveFilters() {
         if (input) {
           if (input.type === 'checkbox') {
             input.checked = false;
+          } else if (input.multiple) {
+            // For multi-select, clear all selections
+            Array.from(input.options).forEach(opt => opt.selected = false);
           } else {
             input.value = '';
           }
@@ -6826,6 +6844,8 @@ function applyItemsFilters() {
   const startDate = qs('itemsFilterStart')?.value || '';
   const endDate = qs('itemsFilterEnd')?.value || '';
   const category = qs('itemsFilterCategory')?.value || '';
+  const itemsSelect = qs('itemsFilterItems');
+  const selectedItems = itemsSelect ? Array.from(itemsSelect.selectedOptions).map(opt => opt.value) : [];
   const client = qs('itemsFilterClient')?.value || '';
   const staff = qs('itemsFilterStaff')?.value || '';
   const order = qs('itemsFilterOrder')?.value || '';
@@ -6841,6 +6861,14 @@ function applyItemsFilters() {
       if (startDate && iso < startDate) return false;
       if (endDate && iso > endDate) return false;
       return true;
+    });
+  }
+
+  // Item selection filtering
+  if (selectedItems.length > 0) {
+    filteredRows = filteredRows.filter(row => {
+      const itemValue = (row.__item || '').toString();
+      return selectedItems.includes(itemValue);
     });
   }
 
