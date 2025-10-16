@@ -4886,7 +4886,7 @@ function canonicalizeItemName(raw) {
   s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
-       .replace(/^planters mix\b.*$/i, 'Planters Mix');
+       .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix - 70/30');
 
   // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {

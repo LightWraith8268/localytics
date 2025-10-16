@@ -27,7 +27,7 @@ export const ALLOWED_ITEMS = [
   "Grey Breeze",
   "Mountain Granite Breeze",
   "Pea Gravel",
-  "Planters Mix",
+  "Planters Mix - 70/30",
   "Premium Natural Mulch",
   "Recycled Asphalt",
   "Recycled Concrete",
