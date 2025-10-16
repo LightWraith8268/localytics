@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(gh workflow:*)",
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(python:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(gh browse:*)",
+      "Bash(gh run:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:mxhub.github.io)",
+      "WebFetch(domain:lightwraith8268.github.io)",
+      "Bash(find:*)",
+      "Bash(git fetch:*)",
+      "Bash(git config:*)",
+      "Read(//d/**)",
+      "Bash(git log:*)",
+      "Bash(git init:*)",
+      "Bash(git remote add:*)",
+      "Bash(git checkout:*)"
+    ]
+  },
+  "outputStyle": "Explanatory"
+}

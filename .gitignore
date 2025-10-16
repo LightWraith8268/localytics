@@ -1,0 +1,31 @@
+# Local meta files (not to be pushed)
+# AGENTS.md is instructive for agents; keep in repo
+TODO.md
+
+# Common system/editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+node_modules/
+dist/
+build/
+
+# Firebase config (contains credentials)
+assets/js/firebase.js
+
+# Testing and development files
+test-*.html
+test-*.js
+*-test.html
+*-test.js
+execute-tests.js
+run-tests.js
+validate-storage.js
+test-results.json
+package.json
+quick-*.html
+simple-*.html
+fixed-*.html
+

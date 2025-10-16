@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="refresh" content="0; url=./#">
+    <title>Redirecting…</title>
+    <style>body{font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; padding: 2rem;}</style>
+  </head>
+  <body>
+    <h1>Not found</h1>
+    <p>Redirecting you back to the app… <a id="link" href="./#">Go now</a></p>
+    <script>
+      (function(){
+        var base = location.pathname.split('/').slice(0,2).join('/') || '/';
+        var hash = location.pathname.replace(base,'') + location.search + location.hash;
+        document.getElementById('link').href = base + '/#' + hash;
+        location.replace(base + '/#' + hash);
+      })();
+    </script>
+  </body>
+  </html>
