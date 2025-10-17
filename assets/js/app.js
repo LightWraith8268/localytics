@@ -1325,7 +1325,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
       // Refresh current view
       progress.update(98, 'Rendering view...', 'Updating display');
-      route();
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
 
       // Show success state
       console.log(`[btnReapplySynonyms] Successfully reapplied synonyms to ${state.rows.length} rows`);
