@@ -294,11 +294,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const synonymsTextarea = document.getElementById('itemSynonyms');
         if (synonymsTextarea) synonymsTextarea.value = syn.map(p => `${p.from} => ${p.to}`).join('\n');
       } else {
-        // Default include Tri Color => Northern
-        const defaultSynonyms = [
-          { from: 'Tri Color', to: 'Northern' },
-          { from: 'Tri-Color', to: 'Northern' }
-        ];
+        // No default synonyms - all variations are handled by canonicalization rules
+        const defaultSynonyms = [];
         state.itemSynonyms = defaultSynonyms;
         const synonymsTextarea = document.getElementById('itemSynonyms');
         if (synonymsTextarea && !synonymsTextarea.value.trim()) {
