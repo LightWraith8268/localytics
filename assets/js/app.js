@@ -5,6 +5,12 @@ import { saveReport, listReports, loadReport, deleteReport, observeAuth, signInW
 import { SAMPLE_ROWS } from './sample-data.js';
 import { ALLOWED_ITEMS } from './allowed-items.js';
 
+// Default invoices to exclude from all CSV processing
+const DEFAULT_EXCLUDED_INVOICES = [
+  'Invoice #tjttcc45nbfjg',
+  'Invoice #r8p3aq5h37zjc'
+];
+
 // APP_VERSION is now set by the centralized version system in version.js
 const DEFAULT_FILTERS = {
   start: '',
@@ -312,6 +318,19 @@ window.addEventListener('DOMContentLoaded', () => {
         }
       }
     } catch (e) { console.warn('Failed to load allowed items settings:', e); }
+
+    // Load excluded invoices
+    try {
+      const excl = await loadUserSettings('excludedInvoices');
+      if (Array.isArray(excl) && excl.length > 0) {
+        window.__excludedInvoices = excl;
+        console.log('[app] Excluded invoices loaded from settings:', excl.length, 'items');
+      } else {
+        // Use defaults if nothing saved
+        window.__excludedInvoices = DEFAULT_EXCLUDED_INVOICES;
+        console.log('[app] Using default excluded invoices:', DEFAULT_EXCLUDED_INVOICES.length, 'items');
+      }
+    } catch (e) { console.warn('Failed to load excluded invoices settings:', e); }
 
     // Load CSV data and demo state after authentication is determined
     try {
@@ -4740,11 +4759,8 @@ function normalizeAndDedupe(rows, mapping) {
   console.log('[app] normalizeAndDedupe called with', rows.length, 'rows');
   console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
 
-  // List of invoices to exclude from data processing
-  const EXCLUDED_INVOICES = [
-    'Invoice #tjttcc45nbfjg',
-    'Invoice #r8p3aq5h37zjc'
-  ];
+  // Use global excluded invoices list (loaded from settings or defaults)
+  const EXCLUDED_INVOICES = window.__excludedInvoices || DEFAULT_EXCLUDED_INVOICES;
 
   const orderCol = mapping.order;
   const dateCol = mapping.date;
@@ -4847,11 +4863,8 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   console.log('[app] Mapping:', mapping);
   console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
 
-  // List of invoices to exclude from data processing
-  const EXCLUDED_INVOICES = [
-    'Invoice #tjttcc45nbfjg',
-    'Invoice #r8p3aq5h37zjc'
-  ];
+  // Use global excluded invoices list (loaded from settings or defaults)
+  const EXCLUDED_INVOICES = window.__excludedInvoices || DEFAULT_EXCLUDED_INVOICES;
 
   const orderCol = mapping.order;
   const dateCol = mapping.date;
