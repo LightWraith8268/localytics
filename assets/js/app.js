@@ -4987,7 +4987,7 @@ function canonicalizeItemName(raw) {
   s = s.replace(/\s+/g, ' ').trim();
 
   // STEP 4: Fix known wording variants (standardize format before applying synonyms)
-  s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
+  s = s.replace(/\btri[-\s]?color\b/gi, 'Northern')
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
        .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix')
