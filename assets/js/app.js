@@ -280,7 +280,16 @@ window.addEventListener('DOMContentLoaded', () => {
         if (allowedItemsTextarea) allowedItemsTextarea.value = list.join('\n');
       }
       window.__allowedItemsList = list;
-      window.__allowedCanonSet = new Set(list.map(canonicalizeItemName));
+      // DEBUG: Log allowed items being loaded
+      console.log('[app] Allowed items loaded:', list.length, 'items');
+      if (list.length > 0) {
+        console.log('[app] First 3 allowed items:', list.slice(0, 3));
+        const clearCreek = list.filter(item => item.toLowerCase().includes('clear') && item.toLowerCase().includes('creek'));
+        console.log('[app] Clear Creek items in allowed list:', clearCreek);
+      }
+      const canonList = list.map(canonicalizeItemName);
+      console.log('[app] Canonical allowed items:', canonList.slice(0, 5), '...');
+      window.__allowedCanonSet = new Set(canonList);
       const enforce = await loadUserSettings('enforceAllowed');
       if (typeof enforce === 'boolean') {
         const enforceCheckbox = document.getElementById('enforceAllowed');
@@ -4818,7 +4827,14 @@ function normalizeAndDedupe(rows, mapping) {
     const enforce = window.__enforceAllowed || false;
     const allowedCanon = window.__allowedCanonSet || new Set(allowed.map(canonicalizeItemName));
     if (enforce && allowed.length) {
-      if (!allowedCanon.has(canonName)) continue;
+      if (!allowedCanon.has(canonName)) {
+        // DEBUG: Log when items are filtered out
+        if (name && name.toLowerCase().includes('creek')) {
+          console.log(`[app][normalizeAndDedupe] Filtering out item: "${name}" (canon: "${canonName}") - not in allowed list`);
+          console.log(`[app][normalizeAndDedupe] Allowed set contains:`, Array.from(allowedCanon).filter(i => i.includes('Creek')));
+        }
+        continue;
+      }
     }
     out.push(obj);
   }
@@ -4923,6 +4939,12 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     const allowedCanon = window.__allowedCanonSet || new Set(allowed.map(canonicalizeItemName));
     if (!(enforce && allowed.length && !allowedCanon.has(canonName))) {
       out.push(obj);
+    } else {
+      // DEBUG: Log when items are filtered out during async processing
+      if (name && name.toLowerCase().includes('creek') && i < 10) {
+        console.log(`[app][normalizeAndDedupeAsync] Filtering out item: "${name}" (canon: "${canonName}") - not in allowed list`);
+        console.log(`[app][normalizeAndDedupeAsync] Allowed set contains:`, Array.from(allowedCanon).filter(i => i.includes('Creek')));
+      }
     }
     if (onProgress && (i % chunk === 0 || i === rows.length - 1)) {
       const pct = total > 0 ? Math.floor(((i + 1) / total) * 100) : 100;
