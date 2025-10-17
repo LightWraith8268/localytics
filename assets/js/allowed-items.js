@@ -18,7 +18,7 @@ export const ALLOWED_ITEMS = [
   "5-12\" Northern Cobble",
   "Cascade Cedar Mulch",
   "Class 1 Compost",
-  "Clear Creek 3\"-15",
+  "Clear Creek 3\"-15\"",
   "Coffee Brown Mulch",
   "Concrete Sand",
   "Dairy Compost",

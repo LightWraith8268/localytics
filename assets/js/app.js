@@ -5013,7 +5013,7 @@ function canonicalizeItemName(raw) {
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
        .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix')
-       .replace(/clear\s+creek\s+3\s*[-"']?\s*15/gi, 'Clear Creek 3"-15')  // handles: clear creek 3-15, clear creek 3"15, clear creek 3'15, etc.
+       .replace(/clear\s+creek\s+3\s*[-"']?\s*15/gi, 'Clear Creek 3"-15"')  // handles: clear creek 3-15, clear creek 3"15, clear creek 3'15, etc. (outputs with inches markers on both sides)
        .replace(/5\s+1\/2\s*['"]?\s*t-?post/gi, "5' T-Post")
        .replace(/clear\s+creek\s+granite\b/gi, 'Clear Creek')
        .replace(/recycled\s+asphalt\s+road\s+base/gi, 'Recycled Asphalt')
