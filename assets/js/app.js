@@ -1084,6 +1084,78 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Reapply canonicalizations button
+  qs('btnReapplyCanonicalization')?.addEventListener('click', async () => {
+    if (!state.rows || state.rows.length === 0) {
+      alert('No CSV data to reprocess. Please upload CSV data first.');
+      return;
+    }
+
+    const progressContainer = qs('canonicalizationProgress');
+    const progressBar = qs('progressBar');
+    const progressPercent = qs('progressPercent');
+    const progressText = qs('progressText');
+    const progressDetail = qs('progressDetail');
+    const btn = qs('btnReapplyCanonicalization');
+
+    // Show progress UI
+    progressContainer.classList.remove('hidden');
+    btn.disabled = true;
+
+    try {
+      console.log('[app] Starting canonicalization reprocessing for', state.rows.length, 'rows');
+
+      // Reprocess data with progress updates
+      const processedRows = await normalizeAndDedupeAsync(
+        state.rows,
+        state.mapping,
+        (percent, processed) => {
+          const pct = Math.min(100, Math.round(percent));
+          progressBar.style.width = pct + '%';
+          progressPercent.textContent = pct + '%';
+          progressText.textContent = `Processing row ${processed} of ${state.rows.length}`;
+          progressDetail.textContent = `${pct}% complete`;
+        }
+      );
+
+      // Update state with reprocessed data
+      state.rows = processedRows;
+      console.log('[app] Canonicalization complete. Output rows:', state.rows.length);
+
+      // Recompute reports
+      progressDetail.textContent = 'Updating reports...';
+      const hashParts = window.location.hash.split('/');
+      const currentView = hashParts[1] || 'dashboard';
+
+      if (currentView === 'dashboard') {
+        state.report = computeReport(state.rows, state.filters);
+      }
+
+      // Re-render current view
+      progressDetail.textContent = 'Rendering updated view...';
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+
+      // Show success
+      setTimeout(() => {
+        progressDetail.textContent = '✅ Canonicalizations reapplied successfully!';
+        progressPercent.textContent = '100%';
+
+        setTimeout(() => {
+          progressContainer.classList.add('hidden');
+          btn.disabled = false;
+          alert('All canonicalizations have been reapplied. Your reports and data views have been updated.');
+        }, 2000);
+      }, 500);
+
+    } catch (e) {
+      console.error('[app] Canonicalization reprocessing failed:', e);
+      progressDetail.textContent = '❌ Error during reprocessing';
+      progressDetail.classList.add('text-red-600');
+      btn.disabled = false;
+      alert('Failed to reapply canonicalizations. Check the console for details.');
+    }
+  });
+
   // Synonyms save/clear with change detection
   const synonymsTextarea = document.getElementById('itemSynonyms');
   const btnSaveSynonyms = qs('btnSaveSynonyms');

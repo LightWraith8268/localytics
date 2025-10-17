@@ -1532,6 +1532,22 @@
                 <p><strong>Clear CSV Data:</strong> Removes uploaded CSV data but keeps settings and reports</p>
                 <p><strong>Delete All Data:</strong> Removes everything including settings, reports, and CSV data</p>
               </div>
+
+              <div class="border-t pt-4 mt-4">
+                <h3 class="text-sm font-medium mb-3">Reapply Canonicalizations</h3>
+                <p class="text-xs text-gray-600 mb-3">Reprocess all CSV data to apply the latest canonicalization rules and standardizations. This will update item names, currencies, and formats.</p>
+                <button id="btnReapplyCanonicalization" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700">🔄 Reapply All Canonicalizations</button>
+                <div id="canonicalizationProgress" class="hidden mt-3 space-y-2">
+                  <div class="flex items-center justify-between text-xs">
+                    <span id="progressText">Processing...</span>
+                    <span id="progressPercent">0%</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div id="progressBar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                  </div>
+                  <p id="progressDetail" class="text-xs text-gray-500">Starting reprocessing...</p>
+                </div>
+              </div>
             </div>
           </div>
 
