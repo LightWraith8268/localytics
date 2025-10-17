@@ -4994,7 +4994,26 @@ function canonicalizeItemName(raw) {
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
        .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix')
-       .replace(/clear\s+creek\s+3\s*[-"]?\s*15/gi, 'Clear Creek 3"-15');
+       .replace(/clear\s+creek\s+3\s*[-"]?\s*15/gi, 'Clear Creek 3"-15')
+       .replace(/5\s+1\/2\s*['"]?\s*t-?post/gi, "5' T-Post")
+       .replace(/clear\s+creek\s+granite\b/gi, 'Clear Creek')
+       .replace(/recycled\s+asphalt\s+road\s+base/gi, 'Recycled Asphalt')
+       .replace(/biocomp\s*\[?\s*class\s+1\s+compost\s*\]?/gi, 'Class 1 Compost')
+       .replace(/ecogro\s*\(?\s*class\s+1\s+compost\s*\)?/gi, 'Class 1 Compost')
+       .replace(/ecogro\s+compost/gi, 'Class 1 Compost')
+       .replace(/40d\s+nails(?!\s+5lbs)/gi, '40D Nails 5lbs - 5"')
+       .replace(/co\s+red\s+1\.5\s*"\s+random\s+ls\s+03\./gi, 'Co Red 1.5" Random Ls 03')
+       .replace(/\baz\s+buff\b/gi, 'AZ Buff')
+       .replace(/\bab\s+cap\b/gi, 'AB Cap')
+       .replace(/\bab\s+classic\b/gi, 'AB Classic')
+       .replace(/\bab\s+corner\s+pair\b/gi, 'AB Corner Pair')
+       .replace(/\bab\s+jumbo\s+junior\b/gi, 'AB Jumbo Junior')
+       .replace(/\bnm\s+buff\b/gi, 'NM Buff')
+       .replace(/\bok\s+blue\b/gi, 'OK Blue')
+       .replace(/\bok\s+brown\b/gi, 'OK Brown')
+       .replace(/\bsoblock\b/gi, 'SOBlock')
+       .replace(/\bvtc\b/gi, 'VTC')
+       .replace(/safe-?t-?post/gi, 'Safe-T-Post');
 
   // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {
