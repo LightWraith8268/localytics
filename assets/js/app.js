@@ -4734,6 +4734,12 @@ function normalizeAndDedupe(rows, mapping) {
   console.log('[app] normalizeAndDedupe called with', rows.length, 'rows');
   console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
 
+  // List of invoices to exclude from data processing
+  const EXCLUDED_INVOICES = [
+    'Invoice #tjttcc45nbfjg',
+    'Invoice #r8p3aq5h37zjc'
+  ];
+
   const orderCol = mapping.order;
   const dateCol = mapping.date;
   const itemCol = mapping.item;
@@ -4747,6 +4753,12 @@ function normalizeAndDedupe(rows, mapping) {
   for (const r of rows) {
     const rawOrderVal = orderCol ? (r.__orderRaw ?? r[orderCol]) : '';
     const order = rawOrderVal != null ? String(rawOrderVal).trim() : '';
+
+    // Skip rows with excluded invoice numbers
+    if (EXCLUDED_INVOICES.includes(order)) {
+      console.log('[normalizeAndDedupe] Skipping excluded invoice:', order);
+      continue;
+    }
     const rawItemVal = itemCol ? (r.__itemRaw ?? r[itemCol]) : '';
     const name = rawItemVal != null ? String(rawItemVal).trim() : '';
     const canonName = canonicalizeItemName(name);
@@ -4822,6 +4834,12 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
   console.log('[app] Mapping:', mapping);
   console.log('[app] Category map available:', state.categoryMap ? Object.keys(state.categoryMap).length + ' mappings' : 'none');
 
+  // List of invoices to exclude from data processing
+  const EXCLUDED_INVOICES = [
+    'Invoice #tjttcc45nbfjg',
+    'Invoice #r8p3aq5h37zjc'
+  ];
+
   const orderCol = mapping.order;
   const dateCol = mapping.date;
   const itemCol = mapping.item;
@@ -4839,6 +4857,12 @@ async function normalizeAndDedupeAsync(rows, mapping, onProgress) {
     const r = rows[i];
     const rawOrderVal = orderCol ? (r.__orderRaw ?? r[orderCol]) : '';
     const order = rawOrderVal != null ? String(rawOrderVal).trim() : '';
+
+    // Skip rows with excluded invoice numbers
+    if (EXCLUDED_INVOICES.includes(order)) {
+      console.log('[normalizeAndDedupeAsync] Skipping excluded invoice:', order);
+      continue;
+    }
     const rawItemVal = itemCol ? (r.__itemRaw ?? r[itemCol]) : '';
     const name = rawItemVal != null ? String(rawItemVal).trim() : '';
     const canonName = canonicalizeItemName(name);
