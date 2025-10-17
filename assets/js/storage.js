@@ -325,7 +325,9 @@ export async function saveCsvData(rows, headers, mapping) {
       }
 
       const metaRef = m.doc(db, 'userData', uid);
-      await m.setDoc(metaRef, { csvMetadata: metadataToSave }, { merge: true });
+      // Sanitize metadata to ensure no undefined values (Firestore requirement)
+      const sanitizedMetadata = sanitizeRowForFirestore(metadataToSave);
+      await m.setDoc(metaRef, { csvMetadata: sanitizedMetadata }, { merge: true });
       remoteSaved = true;
     }
   } catch (e) {
