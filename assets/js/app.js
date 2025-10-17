@@ -1163,7 +1163,7 @@ window.addEventListener('DOMContentLoaded', () => {
       await saveCsvData(state.rows);
 
       // Refresh current view
-      showView(location.hash);
+      route();
 
       // Show success state
       btn.textContent = '✅ Success!';
@@ -4987,19 +4987,19 @@ function canonicalizeItemName(raw) {
   s = s.replace(/\s+/g, ' ').trim();
 
   // STEP 4: Fix known wording variants (standardize format before applying synonyms)
-  s = s.replace(/\btri[-\s]?color\b/gi, 'Northern')
+  s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
        .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix')
-       .replace(/clear\s+creek\s+3\s*[-"]?\s*15/gi, 'Clear Creek 3"-15')
+       .replace(/clear\s+creek\s+3\s*[-"']?\s*15/gi, 'Clear Creek 3"-15')  // handles: clear creek 3-15, clear creek 3"15, clear creek 3'15, etc.
        .replace(/5\s+1\/2\s*['"]?\s*t-?post/gi, "5' T-Post")
        .replace(/clear\s+creek\s+granite\b/gi, 'Clear Creek')
        .replace(/recycled\s+asphalt\s+road\s+base/gi, 'Recycled Asphalt')
-       .replace(/\bclass\s+1\s+compost\b|\bbiocomp\s*\[?\s*class\s+1\s+compost\s*\]?/gi, 'Class 1 Compost')
-       .replace(/\becogro\s*\(?\s*class\s+1\s+compost\s*\)?/gi, 'Class 1 Compost')
-       .replace(/\becogro\s+compost\b/gi, 'Class 1 Compost')
-       .replace(/\b40d\s+nails(?!\s+5lbs)\b/gi, '40D Nails 5lbs - 5"')
-       .replace(/\bco\s+red\s+1\.5\s*"\s+random\s+ls\s+03\b/gi, 'Co Red 1.5" Random Ls 03')
+       .replace(/biocomp\s*\[?\s*class\s+1\s+compost\s*\]?/gi, 'Class 1 Compost')
+       .replace(/ecogro\s*\(?\s*class\s+1\s+compost\s*\)?/gi, 'Class 1 Compost')
+       .replace(/ecogro\s+compost/gi, 'Class 1 Compost')
+       .replace(/40d\s+nails(?!\s+5lbs)/gi, '40D Nails 5lbs - 5"')
+       .replace(/co\s+red\s+1\.5\s*"\s+random\s+ls\s+03\./gi, 'Co Red 1.5" Random Ls 03')
        .replace(/\baz\s+buff\b/gi, 'AZ Buff')
        .replace(/\bab\s+cap\b/gi, 'AB Cap')
        .replace(/\bab\s+classic\b/gi, 'AB Classic')
@@ -5010,7 +5010,7 @@ function canonicalizeItemName(raw) {
        .replace(/\bok\s+brown\b/gi, 'OK Brown')
        .replace(/\bsoblock\b/gi, 'SOBlock')
        .replace(/\bvtc\b/gi, 'VTC')
-       .replace(/\bsafe-?t-?post\b/gi, 'Safe-T-Post');
+       .replace(/safe-?t-?post/gi, 'Safe-T-Post');
 
   // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {
@@ -5037,10 +5037,15 @@ function canonicalizeItemName(raw) {
   s = s.replace(/\bTri[\-\s]?Color\s+River\s+Rock\b/gi, 'Northern River Rock')
        .replace(/\bTri[\-\s]?Color\s+Cobble\b/gi, 'Northern Cobble');
   // Title case words except those with quotes/numbers preserved
-  s = s.split(' ').map(w => {
-    if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
-    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
-  }).join(' ');
+  // IMPORTANT: Don't title-case if the string contains quotes with numbers (e.g., "3\"-15")
+  // These are size specifications that must remain intact
+  const hasQuotedNumbers = /\d+['\"]\s*[-\d]+["']?/.test(s);
+  if (!hasQuotedNumbers) {
+    s = s.split(' ').map(w => {
+      if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
+      return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+    }).join(' ');
+  }
   // Tidy quotes spacing
   s = s.replace(/\"\s+/g, '" ')
        .replace(/\s+\"/g, ' "');

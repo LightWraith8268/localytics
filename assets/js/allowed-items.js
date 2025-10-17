@@ -7,7 +7,7 @@ export const ALLOWED_ITEMS = [
   ".75\" Northern River Rock",
   "1.5\" Black Granite",
   "1.5\" Clear Creek",
-  "1.5\" Colorado rose",
+  "1.5\" Colorado Rose",
   "1.5\" Glacier River Rock",
   "1.5\" Local River Rock",
   "1.5\" Mountain Granite",
