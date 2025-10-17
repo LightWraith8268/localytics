@@ -5058,13 +5058,15 @@ function canonicalizeItemName(raw) {
   // STEP 6: Handle hardcoded rebrands (keep these for specific compound names that synonyms might miss)
   s = s.replace(/\bTri[\-\s]?Color\s+River\s+Rock\b/gi, 'Northern River Rock')
        .replace(/\bTri[\-\s]?Color\s+Cobble\b/gi, 'Northern Cobble');
-  // Title case words except those with quotes/numbers preserved
+  // Title case words except those with quotes/numbers preserved or acronyms
   // IMPORTANT: Don't title-case if the string contains quotes with numbers (e.g., "3\"-15")
   // These are size specifications that must remain intact
+  // Also don't title-case ALL-CAPS acronyms like VTC, AB, NM, OK, AZ
   const hasQuotedNumbers = /\d+['\"]\s*[-\d]+["']?/.test(s);
   if (!hasQuotedNumbers) {
     s = s.split(' ').map(w => {
       if (/^[0-9\.\-\"']/.test(w)) return w; // keep as-is for size/range tokens
+      if (/^[A-Z]{2,}$/.test(w)) return w; // keep acronyms like VTC, AB, NM, OK, AZ as-is
       return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
     }).join(' ');
   }
