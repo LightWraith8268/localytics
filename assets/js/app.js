@@ -1115,41 +1115,82 @@ window.addEventListener('DOMContentLoaded', () => {
     await saveUserSettings('itemSynonyms', []);
   });
 
-  // Reapply synonyms to existing data
-  qs('btnReapplySynonyms')?.addEventListener('click', async () => {
+  // Reapply synonyms to existing data with visual feedback
+  qs('btnReapplySynonyms')?.addEventListener('click', async function() {
+    const btn = this;
+    const originalText = btn.textContent;
+    const originalBg = btn.className;
+
     if (!state.rows || state.rows.length === 0) {
-      alert('No data loaded. Please upload a CSV file first.');
+      btn.textContent = '❌ No data loaded';
+      btn.classList.add('bg-red-600');
+      btn.classList.remove('bg-green-600');
+      btn.disabled = true;
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.className = originalBg;
+        btn.disabled = false;
+      }, 2000);
       return;
     }
 
-    console.log(`[btnReapplySynonyms] Reapplying ${state.itemSynonyms.length} synonym rules to ${state.rows.length} rows`);
+    try {
+      // Show loading state
+      btn.textContent = '⏳ Processing...';
+      btn.classList.add('bg-yellow-600');
+      btn.classList.remove('bg-green-600');
+      btn.disabled = true;
 
-    // Reprocess all rows to update __item with current synonyms
-    state.rows = state.rows.map(row => {
-      const itemCol = state.mapping.item;
-      const originalName = row[itemCol] || '';
-      const canonicalizedName = canonicalizeItemName(originalName);
-      return {
-        ...row,
-        __item: canonicalizedName
-      };
-    });
+      console.log(`[btnReapplySynonyms] Reapplying ${state.itemSynonyms.length} synonym rules to ${state.rows.length} rows`);
 
-    // Recompute reports with updated data
-    state.report = computeReport(state.rows, state.mapping);
+      // Reprocess all rows to update __item with current synonyms
+      state.rows = state.rows.map(row => {
+        const itemCol = state.mapping.item;
+        const originalName = row[itemCol] || '';
+        const canonicalizedName = canonicalizeItemName(originalName);
+        return {
+          ...row,
+          __item: canonicalizedName
+        };
+      });
 
-    // Update aggregations with recomputed report
-    state.byItem = state.report.byItem;
-    state.byClient = state.report.byClient;
-    state.byStaff = state.report.byStaff;
+      // Recompute reports with updated data
+      state.report = computeReport(state.rows, state.mapping);
 
-    // Save updated data
-    await saveCsvData(state.rows);
+      // Update aggregations with recomputed report
+      state.byItem = state.report.byItem;
+      state.byClient = state.report.byClient;
+      state.byStaff = state.report.byStaff;
 
-    // Refresh current view
-    route();
+      // Save updated data
+      await saveCsvData(state.rows);
 
-    alert(`Synonyms reapplied! Processed ${state.rows.length} rows with ${state.itemSynonyms.length} synonym rules.`);
+      // Refresh current view
+      route();
+
+      // Show success state
+      btn.textContent = '✅ Success!';
+      btn.classList.add('bg-green-600');
+      btn.classList.remove('bg-yellow-600', 'bg-red-600');
+      console.log(`[btnReapplySynonyms] Successfully reapplied synonyms to ${state.rows.length} rows`);
+
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.className = originalBg;
+        btn.disabled = false;
+      }, 2000);
+    } catch (error) {
+      console.error('[btnReapplySynonyms] Error reapplying synonyms:', error);
+      btn.textContent = '❌ Error!';
+      btn.classList.add('bg-red-600');
+      btn.classList.remove('bg-green-600', 'bg-yellow-600');
+
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.className = originalBg;
+        btn.disabled = false;
+      }, 2000);
+    }
   });
 
   // Print: ensure canvases are printable
