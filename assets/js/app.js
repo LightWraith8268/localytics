@@ -1163,7 +1163,7 @@ window.addEventListener('DOMContentLoaded', () => {
       await saveCsvData(state.rows);
 
       // Refresh current view
-      route();
+      showView(location.hash);
 
       // Show success state
       btn.textContent = '✅ Success!';
