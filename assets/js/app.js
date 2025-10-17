@@ -1059,7 +1059,24 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Synonyms save/clear
+  // Synonyms save/clear with change detection
+  const synonymsTextarea = document.getElementById('itemSynonyms');
+  const btnSaveSynonyms = qs('btnSaveSynonyms');
+  let originalSynonymsValue = synonymsTextarea?.value || '';
+
+  // Track changes to disable save button if no changes
+  if (synonymsTextarea && btnSaveSynonyms) {
+    const updateSaveButtonState = () => {
+      const hasChanged = synonymsTextarea.value !== originalSynonymsValue;
+      btnSaveSynonyms.disabled = !hasChanged;
+      btnSaveSynonyms.style.opacity = hasChanged ? '1' : '0.5';
+      btnSaveSynonyms.style.cursor = hasChanged ? 'pointer' : 'not-allowed';
+    };
+
+    synonymsTextarea.addEventListener('input', updateSaveButtonState);
+    updateSaveButtonState(); // Initial state
+  }
+
   qs('btnSaveSynonyms')?.addEventListener('click', async () => {
     const raw = document.getElementById('itemSynonyms')?.value || '';
     const map = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean).map(l => {
@@ -1070,11 +1087,31 @@ window.addEventListener('DOMContentLoaded', () => {
     state.itemSynonyms = map;
     console.log('[btnSaveSynonyms] Saving synonyms:', map);
     await saveUserSettings('itemSynonyms', map);
+
+    // Reset change detection after successful save
+    if (synonymsTextarea) {
+      originalSynonymsValue = synonymsTextarea.value;
+      if (btnSaveSynonyms) {
+        btnSaveSynonyms.disabled = true;
+        btnSaveSynonyms.style.opacity = '0.5';
+        btnSaveSynonyms.style.cursor = 'not-allowed';
+      }
+    }
+
     alert(`Synonyms saved (${map.length} rules). They will apply to new ingested data. Current synonyms in memory:` + JSON.stringify(map));
   });
   qs('btnClearSynonyms')?.addEventListener('click', async () => {
     state.itemSynonyms = [];
-    const ta = document.getElementById('itemSynonyms'); if (ta) ta.value = '';
+    const ta = document.getElementById('itemSynonyms');
+    if (ta) {
+      ta.value = '';
+      originalSynonymsValue = ''; // Reset change detection
+      if (btnSaveSynonyms) {
+        btnSaveSynonyms.disabled = true;
+        btnSaveSynonyms.style.opacity = '0.5';
+        btnSaveSynonyms.style.cursor = 'not-allowed';
+      }
+    }
     await saveUserSettings('itemSynonyms', []);
   });
 
@@ -1100,6 +1137,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Recompute reports with updated data
     state.report = computeReport(state.rows, state.mapping);
+
+    // Update aggregations with recomputed report
+    state.byItem = state.report.byItem;
+    state.byClient = state.report.byClient;
+    state.byStaff = state.report.byStaff;
 
     // Save updated data
     await saveCsvData(state.rows);
@@ -4886,8 +4928,7 @@ function canonicalizeItemName(raw) {
   s = s.replace(/\btri[-\s]?color\b/gi, 'Tri Color')
        .replace(/\bcolorado\s+rose\b/gi, 'Colorado Rose')
        .replace(/\bsqueegee\b/gi, 'Squeege')
-       .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix')
-       .replace(/clear\s+creek\s+3\s*[-\/\s]*15/gi, 'Clear Creek 3"-15');
+       .replace(/planters\s+mix\s*[-\/\s]+\s*70\s*[\/\-]\s*30/gi, 'Planters Mix');
 
   // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {
