@@ -5045,7 +5045,16 @@ function canonicalizeItemName(raw) {
        .replace(/\bok\s+brown\b/gi, 'OK Brown')
        .replace(/\bsoblock\b/gi, 'SOBlock')
        .replace(/\bvtc\b/gi, 'VTC')
-       .replace(/safe-?t-?post/gi, 'Safe-T-Post');
+       .replace(/safe-?t-?post/gi, 'Safe-T-Post')
+       // Additional canonicalizations for common variants
+       .replace(/cascade\s+cedar\s+mulch\s*\[?mulch\s+wagon\]?/gi, 'Cascade Cedar Mulch')  // removes [mulch Wagon] suffix
+       .replace(/3\s*"-\s*6\s*"\s+vtc/gi, 'VTC')  // 3"-6" VTC → VTC
+       .replace(/amended\s+topsoil\s+70\s*[\/\-]\s*30/gi, 'Planters Mix')  // Amended Topsoil 70/30 → Planters Mix
+       .replace(/4\s*"-\s*8\s*"\s+glacier\s+white\s+cobblestone/gi, '4"-8" Glacier White Cobble')  // Cobblestone → Cobble
+       .replace(/metro\s+brown\s+mulch\s*\(?\s*harvest\s+brown\s*\)?/gi, 'Harvest Brown Mulch')  // Metro Brown Mulch (harvest Brown) → Harvest Brown Mulch
+       .replace(/class\s+6\s+recycled\s+concrete/gi, 'Recycled Concrete')  // Class 6 Recycled Concrete → Recycled Concrete
+       .replace(/1\.25\s*"\s+recycled\s+asphalt/gi, 'Recycled Asphalt')  // 1.25" Recycled Asphalt → Recycled Asphalt
+       .replace(/\bbiocomp\b/gi, 'Class 1 Compost');  // Biocomp → Class 1 Compost
 
   // STEP 5: Apply user-defined synonyms (after standardization so variants are normalized)
   try {
