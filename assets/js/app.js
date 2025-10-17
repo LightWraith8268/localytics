@@ -79,6 +79,65 @@ const state = {
 const RAW_INSPECTOR_ROW_LIMIT = 200;
 const RAW_HOUR_OFFSET = -6; // shift raw parsed hour backwards 6 hours to align with local timezone
 
+// Utility function to show/update progress UI for any button
+// Usage: showProgress(buttonId, progressContainerId, callback)
+function createProgressUIHelper(buttonId, progressContainerId) {
+  const btn = qs(buttonId);
+  const progressContainer = qs(progressContainerId);
+
+  if (!btn || !progressContainer) {
+    console.warn(`[Progress UI] Missing button "${buttonId}" or container "${progressContainerId}"`);
+    return null;
+  }
+
+  const progressBar = progressContainer.querySelector('[data-progress-bar]');
+  const progressPercent = progressContainer.querySelector('[data-progress-percent]');
+  const progressText = progressContainer.querySelector('[data-progress-text]');
+  const progressDetail = progressContainer.querySelector('[data-progress-detail]');
+
+  if (!progressBar || !progressPercent || !progressText || !progressDetail) {
+    console.warn('[Progress UI] Missing progress UI elements');
+    return null;
+  }
+
+  return {
+    show: () => {
+      progressContainer.classList.remove('hidden');
+      btn.disabled = true;
+      progressBar.style.width = '0%';
+      progressPercent.textContent = '0%';
+      progressText.textContent = 'Starting...';
+      progressDetail.textContent = 'Initializing...';
+      progressDetail.classList.remove('text-red-600');
+    },
+    update: (percent, text, detail) => {
+      const pct = Math.min(100, Math.round(percent));
+      progressBar.style.width = pct + '%';
+      progressPercent.textContent = pct + '%';
+      if (text) progressText.textContent = text;
+      if (detail) progressDetail.textContent = detail;
+    },
+    complete: (message) => {
+      progressBar.style.width = '100%';
+      progressPercent.textContent = '100%';
+      progressDetail.textContent = message || '✅ Complete!';
+      setTimeout(() => {
+        progressContainer.classList.add('hidden');
+        btn.disabled = false;
+      }, 2000);
+    },
+    error: (message) => {
+      progressDetail.textContent = message || '❌ Error occurred';
+      progressDetail.classList.add('text-red-600');
+      btn.disabled = false;
+    },
+    hide: () => {
+      progressContainer.classList.add('hidden');
+      btn.disabled = false;
+    }
+  };
+}
+
 function applyHourOffset(hour) {
   if (hour === null || hour === undefined) return hour;
   const n = Number(hour);
@@ -1091,15 +1150,11 @@ window.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const progressContainer = qs('canonicalizationProgress');
-    const progressBar = qs('progressBar');
-    const progressPercent = qs('progressPercent');
-    const progressText = qs('progressText');
-    const progressDetail = qs('progressDetail');
+    const progress = createProgressUIHelper('btnReapplyCanonicalization', 'reapplyCanonicalization-progress');
     const btn = qs('btnReapplyCanonicalization');
 
     // Show progress UI
-    progressContainer.classList.remove('hidden');
+    progress.show();
     btn.disabled = true;
 
     try {
@@ -1111,10 +1166,9 @@ window.addEventListener('DOMContentLoaded', () => {
         state.mapping,
         (percent, processed) => {
           const pct = Math.min(100, Math.round(percent));
-          progressBar.style.width = pct + '%';
-          progressPercent.textContent = pct + '%';
-          progressText.textContent = `Processing row ${processed} of ${state.rows.length}`;
-          progressDetail.textContent = `${pct}% complete`;
+          progress.update(pct,
+            `Processing row ${processed} of ${state.rows.length}`,
+            `${pct}% complete`);
         }
       );
 
@@ -1123,7 +1177,7 @@ window.addEventListener('DOMContentLoaded', () => {
       console.log('[app] Canonicalization complete. Output rows:', state.rows.length);
 
       // Recompute reports
-      progressDetail.textContent = 'Updating reports...';
+      progress.update(90, 'Updating reports...', 'Recomputing analytics');
       const hashParts = window.location.hash.split('/');
       const currentView = hashParts[1] || 'dashboard';
 
@@ -1132,27 +1186,27 @@ window.addEventListener('DOMContentLoaded', () => {
       }
 
       // Re-render current view
-      progressDetail.textContent = 'Rendering updated view...';
+      progress.update(95, 'Rendering updated view...', 'Updating display');
       window.dispatchEvent(new HashChangeEvent('hashchange'));
 
       // Show success
-      setTimeout(() => {
-        progressDetail.textContent = '✅ Canonicalizations reapplied successfully!';
-        progressPercent.textContent = '100%';
+      progress.complete('✅ Canonicalizations reapplied successfully!');
 
-        setTimeout(() => {
-          progressContainer.classList.add('hidden');
-          btn.disabled = false;
-          alert('All canonicalizations have been reapplied. Your reports and data views have been updated.');
-        }, 2000);
-      }, 500);
+      setTimeout(() => {
+        progress.hide();
+        btn.disabled = false;
+        alert('All canonicalizations have been reapplied. Your reports and data views have been updated.');
+      }, 1500);
 
     } catch (e) {
       console.error('[app] Canonicalization reprocessing failed:', e);
-      progressDetail.textContent = '❌ Error during reprocessing';
-      progressDetail.classList.add('text-red-600');
+      progress.error('❌ Error during reprocessing');
       btn.disabled = false;
       alert('Failed to reapply canonicalizations. Check the console for details.');
+
+      setTimeout(() => {
+        progress.hide();
+      }, 1000);
     }
   });
 
@@ -1215,8 +1269,7 @@ window.addEventListener('DOMContentLoaded', () => {
   // Reapply synonyms to existing data with visual feedback
   qs('btnReapplySynonyms')?.addEventListener('click', async function() {
     const btn = this;
-    const originalText = btn.textContent;
-    const originalBg = btn.className;
+    const progress = createProgressUIHelper('btnReapplySynonyms', 'reapplySynonyms-progress');
 
     if (!state.rows || state.rows.length === 0) {
       btn.textContent = '❌ No data loaded';
@@ -1224,27 +1277,33 @@ window.addEventListener('DOMContentLoaded', () => {
       btn.classList.remove('bg-green-600');
       btn.disabled = true;
       setTimeout(() => {
-        btn.textContent = originalText;
-        btn.className = originalBg;
+        btn.textContent = 'Reapply to Current Data';
+        btn.className = 'px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700';
         btn.disabled = false;
       }, 2000);
       return;
     }
 
     try {
-      // Show loading state
-      btn.textContent = '⏳ Processing...';
-      btn.classList.add('bg-yellow-600');
-      btn.classList.remove('bg-green-600');
+      // Show progress UI
+      progress.show();
       btn.disabled = true;
 
       console.log(`[btnReapplySynonyms] Reapplying ${state.itemSynonyms.length} synonym rules to ${state.rows.length} rows`);
 
       // Reprocess all rows to update __item with current synonyms
-      state.rows = state.rows.map(row => {
+      state.rows = state.rows.map((row, idx) => {
         const itemCol = state.mapping.item;
         const originalName = row[itemCol] || '';
         const canonicalizedName = canonicalizeItemName(originalName);
+
+        // Update progress every 10 rows
+        if (idx % 10 === 0) {
+          progress.update(Math.round((idx / state.rows.length) * 100),
+            `Processing row ${idx} of ${state.rows.length}`,
+            `${Math.round((idx / state.rows.length) * 100)}% complete`);
+        }
+
         return {
           ...row,
           __item: canonicalizedName
@@ -1252,6 +1311,7 @@ window.addEventListener('DOMContentLoaded', () => {
       });
 
       // Recompute reports with updated data
+      progress.update(90, 'Updating reports...', 'Recomputing analytics');
       state.report = computeReport(state.rows, state.mapping);
 
       // Update aggregations with recomputed report
@@ -1260,33 +1320,33 @@ window.addEventListener('DOMContentLoaded', () => {
       state.byStaff = state.report.byStaff;
 
       // Save updated data
+      progress.update(95, 'Saving data...', 'Persisting to storage');
       await saveCsvData(state.rows);
 
       // Refresh current view
+      progress.update(98, 'Rendering view...', 'Updating display');
       route();
 
       // Show success state
-      btn.textContent = '✅ Success!';
-      btn.classList.add('bg-green-600');
-      btn.classList.remove('bg-yellow-600', 'bg-red-600');
       console.log(`[btnReapplySynonyms] Successfully reapplied synonyms to ${state.rows.length} rows`);
+      progress.complete('✅ Synonyms reapplied successfully!');
 
       setTimeout(() => {
-        btn.textContent = originalText;
-        btn.className = originalBg;
+        progress.hide();
+        btn.textContent = 'Reapply to Current Data';
+        btn.className = 'px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700';
         btn.disabled = false;
-      }, 2000);
+      }, 1500);
     } catch (error) {
       console.error('[btnReapplySynonyms] Error reapplying synonyms:', error);
-      btn.textContent = '❌ Error!';
-      btn.classList.add('bg-red-600');
-      btn.classList.remove('bg-green-600', 'bg-yellow-600');
+      progress.error('❌ Failed to reapply synonyms');
+      btn.disabled = false;
 
       setTimeout(() => {
-        btn.textContent = originalText;
-        btn.className = originalBg;
-        btn.disabled = false;
-      }, 2000);
+        progress.hide();
+        btn.textContent = 'Reapply to Current Data';
+        btn.className = 'px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700';
+      }, 1500);
     }
   });
 
@@ -1406,21 +1466,63 @@ window.addEventListener('DOMContentLoaded', () => {
   });
 
   qs('btnCategoryApplyBulk')?.addEventListener('click', () => {
+    const btn = qs('btnCategoryApplyBulk');
+    const progress = createProgressUIHelper('btnCategoryApplyBulk', 'categoryApplyBulk-progress');
     const textarea = qs('categoryMapBulkInput');
     if (!textarea) return;
-    const rowsRaw = (textarea.value || '').replace(/\r/g, '').split('\n');
-    const current = collectCategoryMapDraft('categoryMapList');
-    rowsRaw.forEach(line => {
-      const trimmed = line.trim();
-      if (!trimmed) return;
-      const parts = trimmed.split(/,|\t/);
-      if (parts.length < 2) return;
-      const item = parts[0].trim();
-      const category = parts.slice(1).join(',').trim();
-      if (item && category) current[item] = category;
-    });
-    setCategoryMapDraft(current);
-    textarea.value = '';
+
+    try {
+      // Show progress UI
+      progress.show();
+      btn.disabled = true;
+
+      const rowsRaw = (textarea.value || '').replace(/\r/g, '').split('\n');
+      const validRows = rowsRaw.filter(line => line.trim());
+
+      progress.update(20, 'Parsing rows...', `Processing ${validRows.length} rows`);
+
+      const current = collectCategoryMapDraft('categoryMapList');
+      let addedCount = 0;
+
+      rowsRaw.forEach((line, idx) => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+        const parts = trimmed.split(/,|\t/);
+        if (parts.length < 2) return;
+        const item = parts[0].trim();
+        const category = parts.slice(1).join(',').trim();
+        if (item && category) {
+          current[item] = category;
+          addedCount++;
+        }
+
+        // Update progress every 5 rows
+        if (idx % 5 === 0) {
+          progress.update(Math.round(20 + (idx / rowsRaw.length) * 60),
+            `Processing row ${idx + 1} of ${rowsRaw.length}`,
+            `Added ${addedCount} mappings`);
+        }
+      });
+
+      progress.update(85, 'Saving mappings...', 'Updating interface');
+      setCategoryMapDraft(current);
+      textarea.value = '';
+
+      progress.complete(`✅ Added ${addedCount} category mappings!`);
+
+      setTimeout(() => {
+        progress.hide();
+        btn.disabled = false;
+      }, 1000);
+    } catch (error) {
+      console.error('[btnCategoryApplyBulk] Error:', error);
+      progress.error('❌ Failed to apply bulk mappings');
+      btn.disabled = false;
+
+      setTimeout(() => {
+        progress.hide();
+      }, 1000);
+    }
   });
 
   qs('btnCategoryClearBulk')?.addEventListener('click', () => {
@@ -1505,6 +1607,8 @@ window.addEventListener('DOMContentLoaded', () => {
   const btnReapplyCategories = qs('btnReapplyCategories');
   if (btnReapplyCategories) {
     btnReapplyCategories.addEventListener('click', async () => {
+      const progress = createProgressUIHelper('btnReapplyCategories', 'reapplyCategories-progress');
+
       if (!state.rows || !state.rows.length) {
         alert('No data loaded. Please upload CSV data first.');
         return;
@@ -1516,9 +1620,33 @@ window.addEventListener('DOMContentLoaded', () => {
         return;
       }
 
-      console.log(`[ReapplyCategories] Reapplying ${mapCount} category mappings to data`);
-      await reapplyCategoryMap();
-      alert(`✅ Successfully applied ${mapCount} category mappings to your data!`);
+      try {
+        // Show progress UI
+        progress.show();
+        btnReapplyCategories.disabled = true;
+
+        console.log(`[ReapplyCategories] Reapplying ${mapCount} category mappings to data`);
+        progress.update(10, 'Starting reprocessing...', `Applying ${mapCount} category mappings`);
+
+        await reapplyCategoryMap();
+
+        progress.complete(`✅ Successfully applied ${mapCount} category mappings!`);
+
+        setTimeout(() => {
+          progress.hide();
+          btnReapplyCategories.disabled = false;
+          alert(`✅ Successfully applied ${mapCount} category mappings to your data!`);
+        }, 1000);
+      } catch (error) {
+        console.error('[ReapplyCategories] Error:', error);
+        progress.error('❌ Failed to apply category mappings');
+        btnReapplyCategories.disabled = false;
+
+        setTimeout(() => {
+          progress.hide();
+          alert('Failed to apply category mappings. Check the console for details.');
+        }, 1000);
+      }
     });
   } else {
     console.warn('[app] btnReapplyCategories not found in DOM');

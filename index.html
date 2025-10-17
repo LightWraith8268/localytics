@@ -1537,15 +1537,15 @@
                 <h3 class="text-sm font-medium mb-3">Reapply Canonicalizations</h3>
                 <p class="text-xs text-gray-600 mb-3">Reprocess all CSV data to apply the latest canonicalization rules and standardizations. This will update item names, currencies, and formats.</p>
                 <button id="btnReapplyCanonicalization" class="px-4 py-2 bg-purple-600 text-white rounded-md text-sm font-medium hover:bg-purple-700">🔄 Reapply All Canonicalizations</button>
-                <div id="canonicalizationProgress" class="hidden mt-3 space-y-2">
+                <div id="reapplyCanonicalization-progress" class="hidden mt-3 space-y-2" data-progress-container="reapplyCanonicalization">
                   <div class="flex items-center justify-between text-xs">
-                    <span id="progressText">Processing...</span>
-                    <span id="progressPercent">0%</span>
+                    <span data-progress-text>Processing...</span>
+                    <span data-progress-percent>0%</span>
                   </div>
                   <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div id="progressBar" class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div data-progress-bar class="bg-purple-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
                   </div>
-                  <p id="progressDetail" class="text-xs text-gray-500">Starting reprocessing...</p>
+                  <p data-progress-detail class="text-xs text-gray-500">Starting reprocessing...</p>
                 </div>
               </div>
             </div>
@@ -1599,6 +1599,16 @@
                 <button id="btnReapplyCategories" class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">🔄 Apply to Data</button>
               </div>
               <p id="categoryMapSummary" class="text-xs text-gray-500">No categories configured yet.</p>
+              <div id="reapplyCategories-progress" class="hidden mt-3 space-y-2" data-progress-container="reapplyCategories">
+                <div class="flex items-center justify-between text-xs">
+                  <span data-progress-text>Processing...</span>
+                  <span data-progress-percent>0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div data-progress-bar class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p data-progress-detail class="text-xs text-gray-500">Starting reprocessing...</p>
+              </div>
             </div>
           </div>
 
@@ -1630,6 +1640,16 @@
                 <button id="btnClearSynonyms" class="px-4 py-2 border border-orange-300 text-orange-700 rounded-md text-sm font-medium hover:bg-orange-50">Clear Synonyms</button>
               </div>
               <p class="text-xs text-gray-500">💡 Tip: After saving synonyms, click "Reapply to Current Data" to update existing data without re-uploading.</p>
+              <div id="reapplySynonyms-progress" class="hidden mt-3 space-y-2" data-progress-container="reapplySynonyms">
+                <div class="flex items-center justify-between text-xs">
+                  <span data-progress-text>Processing...</span>
+                  <span data-progress-percent>0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div data-progress-bar class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p data-progress-detail class="text-xs text-gray-500">Starting reprocessing...</p>
+              </div>
             </div>
           </div>
 
@@ -1878,9 +1898,21 @@
           <div class="space-y-2">
             <label for="categoryMapBulkInput" class="text-sm font-medium text-gray-700">Paste mappings (Item,Category per line)</label>
             <textarea id="categoryMapBulkInput" rows="6" class="w-full border app-border rounded-md px-3 py-2 text-sm font-mono" placeholder="Item A,Category 1&#10;Item B,Category 2"></textarea>
-            <div class="flex gap-2">
-              <button id="btnCategoryApplyBulk" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100">Apply Pasted Rows</button>
-              <button id="btnCategoryClearBulk" class="px-3 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Clear</button>
+            <div class="flex flex-col gap-2">
+              <div class="flex gap-2">
+                <button id="btnCategoryApplyBulk" class="px-3 py-2 bg-blue-50 text-blue-700 rounded-md text-sm font-medium hover:bg-blue-100">Apply Pasted Rows</button>
+                <button id="btnCategoryClearBulk" class="px-3 py-2 border app-border rounded-md text-sm font-medium hover:bg-gray-50">Clear</button>
+              </div>
+              <div id="categoryApplyBulk-progress" class="hidden space-y-2" data-progress-container="categoryApplyBulk">
+                <div class="flex items-center justify-between text-xs">
+                  <span data-progress-text>Processing...</span>
+                  <span data-progress-percent>0%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                  <div data-progress-bar class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p data-progress-detail class="text-xs text-gray-500">Processing bulk rows...</p>
+              </div>
             </div>
           </div>
         </div>
